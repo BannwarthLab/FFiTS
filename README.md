@@ -2,11 +2,22 @@
 
 
 
-## Getting started
+## Introduction
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+This project is a Python wrapper for the [CREST code](git@git.rwth-aachen.de:bannwarthlab/crest.git) in branch FF_TSsearch. The goal of the whole program is to calculate a transition state (TS) guess from reactant and product structures of a given reaction. This guess can then be further optimized with common optimization methods, like the [ORCA optts keyword](https://sites.google.com/site/orcainputlibrary/geometry-optimizations) to get a true TS with one imaginary mode. 
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+This python wrapper serves several purposes (wip):
+- a python interface to changing parameters in the toml style input files
+- an alignment procedure of multiple molecules in one xyz file to improve the TS guess calculation
+- straight forward way to generate and change FF values, generated through the FF generation of the tsff method in CREST 
+
+
+## How does TS guess calculation in CREST work?
+Grundsätzlich erklären wie es funktioniert
+
+
+## CREST Installation
+look at Link 
 
 ## Add your files
 
