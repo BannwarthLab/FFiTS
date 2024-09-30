@@ -13,7 +13,7 @@ class HeaderBlock:
                 continue
             value = getattr(self, att)
             if value is None:
-                pass
+                continue
             outp += format_line(att, value)
         return outp
 
@@ -49,9 +49,10 @@ class CalculationlevelBlock:
 
 @dataclass
 class SsffBlock(CalculationlevelBlock):
+    _name = "yeah"
     method: str 
     refgeo: str
-    refhessian: str 
+    refhessian: str
     refwbo: str
     refff: str 
     useff: bool 

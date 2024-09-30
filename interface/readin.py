@@ -1,12 +1,29 @@
 #!/bin/python
 
-from datatype.calculation_data import CalculationParameters
+from datatype.calculation_data import *
+
 import json 
 
 def readin_config(calc_param: CalculationParameters, config_path):
     with open(config_path, 'r') as f:
         config = json.load(f)
-    calc_param.struc1 = config["filepaths_structure1"]["xyz"]
+    calc_param.struc1.path.xyz_filename =     config["filepaths_structure1"]["xyz"]
+    calc_param.struc1.path.wbo_filename =     config["filepaths_structure1"]["wbo"]
+    calc_param.struc1.path.hessian_filename = config["filepaths_structure1"]["hessian"]
+    calc_param.struc1.path.ff_filename =      config["filepaths_structure1"]["forcefield"]
+
+    calc_param.struc2.path.xyz_filename =     config["filepaths_structure2"]["xyz"]
+    calc_param.struc2.path.wbo_filename =     config["filepaths_structure2"]["wbo"]
+    calc_param.struc2.path.hessian_filename = config["filepaths_structure2"]["hessian"]
+    calc_param.struc2.path.ff_filename =      config["filepaths_structure2"]["forcefield"]
+
+    calc_param.ts.path.xyz_filename =     config["filepaths_transition_state"]["xyz"]
+    calc_param.ts.path.wbo_filename =     config["filepaths_transition_state"]["wbo"]
+    calc_param.ts.path.hessian_filename = config["filepaths_transition_state"]["hessian"]
+    calc_param.ts.path.ff_filename =      config["filepaths_transition_state"]["forcefield"]
+
+    calc_param.perform_alignment = config["calculation_details"]["perform_alignment"]
+    calc_param.perform_ts_search = config["calculation_details"]["perform_ts_search"]
 
     
 
