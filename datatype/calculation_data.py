@@ -9,7 +9,7 @@ from typing import List
 class Reaction:
     structure1: Structure 
     structure2: Structure
-    transition_structure: Structure
+    # transition_structure: Structure
     unique_bonds: List[int]
 
 @dataclass

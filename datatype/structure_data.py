@@ -18,6 +18,11 @@ class StructurePath:
 
 @dataclass
 class ForceField:
+    """ 
+    The force field (FF) is defined through FF parameters (matrices starting with c_) as well 
+    as the reference values (bondlengths, angles, dihedral angles and repulsion references) 
+    and corresponging atom combinations (between which two atoms is the bond). 
+    """
     nat: int
     c_bond = np.array
     c_angle = np.array
@@ -37,13 +42,14 @@ class StructuralInformation:
     nat: int
     xyz: List[float]
     wbo_list: List[float]
+    molecule_count: int
     complete_graph: nx.Graph
-    seperate_molecule_graph: List[nx.Graph]
+    seperate_molecule_list: List[nx.Graph]
 
 
 
 @dataclass
 class Structure:
     path: StructurePath 
-    forcefield: ForceField
-    graph: StructuralInformation
+    ff: ForceField
+    info: StructuralInformation
