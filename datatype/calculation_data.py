@@ -1,7 +1,7 @@
 #!/bin/python
 
 from dataclasses import dataclass
-from structure_data import Structure
+import structure_data
 from typing import List
 
 
@@ -14,5 +14,7 @@ class Reaction:
 
 @dataclass
 class CalculationParameters:
+    working_dir: str
     struc1: StructurePath
     struc2: StructurePath
+    ts: StructurePath

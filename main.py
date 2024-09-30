@@ -110,12 +110,6 @@ def first_ts_search(path_to_crest, nr_atoms):
 
     return rc
 
-def print_box(name: str, width=80):
-    print('┏' +    "━"*width       + "┓")
-    print('┃' + name.center(width) + '┃')
-    print('┗' +    "━"*width       + "┛")
-
-
 
 def main_align(struc_id: str, xyz: str, wbo: str, hess: str):
     wbo1 = 'wbo1'

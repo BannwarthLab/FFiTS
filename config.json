@@ -1,0 +1,25 @@
+{
+    "filepaths_structure1": {
+        "xyz":          "struc1.xyz",
+        "hessian":      "hess1",
+        "wbo":          "wbo1",
+        "forcefield":   "ff1"
+    }, 
+
+    "filepaths_structure2": {
+        "xyz":          "struc2.xyz",
+        "hessian":      "hess2",
+        "wbo":          "wbo2",
+        "forcefield":   "ff2"
+    },
+
+    "filepaths_transition_state": {
+        "forcefield":   "tsff"
+    },
+
+    "calculation_details": {
+        "perform_alignment": true,
+        "perform_ts_search": true
+    }
+
+}

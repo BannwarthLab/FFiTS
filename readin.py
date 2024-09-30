@@ -1,6 +1,14 @@
 #!/bin/python
 
-import datatype.structure_data 
+from datatype.calculation_data import CalculationParameters
+import json 
+
+def readin_config(calc_param: CalculationParameters, config_path):
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+    calc_param.struc1 = config["filepaths_structure1"]["xyz"]
+
+    
 
 def readin_xyz(xyz_path):
     with open(xyz_path, 'r') as file:
