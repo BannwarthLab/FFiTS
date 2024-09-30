@@ -11,13 +11,12 @@ import numpy as np
 import pandas as pd
 import os
 import networkx as nx
-from wbo_processort import Structure
-from wbo_processort import Reaction
-from call_xtb import Xtb
-from input_library import input_ff_calc, input_ff_opt1, input_ff_opt2
-from forcefield import Hopot
-from call_crest import Crest
-import time
+from calculator.wbo_processort import Structure
+from calculator.wbo_processort import Reaction
+from interface.call_xtb import Xtb
+from interface.input_library import input_ff_calc, input_ff_opt1, input_ff_opt2
+from calculator.forcefield import Hopot
+from interface.call_crest import Crest
 
 import sys
 import threading
