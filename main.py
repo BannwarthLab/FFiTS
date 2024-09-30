@@ -1,5 +1,6 @@
 #!/bin/python
 
+from dataclasses import dataclass
 import copy
 import re
 import shutil
@@ -20,6 +21,17 @@ import time
 
 import sys
 import threading
+
+# @dataclass
+# class CalculationParameters:
+#     xyz1: str 
+#     hess1: str 
+#     wbo1: str 
+#     ff1: str
+#     xyz2: str 
+#     hess2: str 
+#     wbo2: str 
+#     ff2: str
 
 def get_atom_pair(reaction: Reaction, struc: Structure):
     at1 = 0

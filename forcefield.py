@@ -12,6 +12,11 @@ class Forcefield:
 
 class Hopot:
     def __init__(self, nat: int):
+        """ 
+        The force field (FF) is defined through FF parameters (matrices starting with c_) as well 
+        as the reference values (bondlengths, angles, dihedral angles and repulsion references) 
+        and corresponging atom combinations (between which two atoms is the bond). 
+        """
         self.nat = nat
         self.c_bond = np.zeros((nat,nat))
         self.c_angle = np.zeros((nat,nat,nat))
