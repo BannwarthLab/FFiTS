@@ -17,16 +17,6 @@ def readin_xyz(xyz_path):
     return lines
     
 
-def read_wbo_file(wbo_path):
-    """Reads WBO data from a file and parses it into a dictionary of bonds and their WBO values."""
-    wbo_dict = {}
-    with open(wbo_path, 'r') as file:
-        for line in file:
-            if line.strip():  # skip empty lines
-                atom1, atom2, wbo = line.split()
-                bond = tuple(sorted((int(atom1), int(atom2))))
-                wbo_dict[bond] = float(wbo)
-    return wbo_dict
 
 def readin_forcefield(struc: Structure):
     struc.ff.c_bond = np.zeros((nat,nat))

@@ -47,10 +47,7 @@ class Xtb:
         
     def hesscalc(self, hess_filename, input_xyz: str) -> None:
         #creates hess file after xtb hess call
-        if not os.path.exists(input_xyz):
-            raise FileExistsError(input_xyz, 'does not exist in current working directory: ', os.getcwd())
-        print(f'.', end=" ")
-        command = "xtb " + input_xyz + " --hess"
+        command = self.get_command(input_xyz, '--hess') 
         with open('xtbhess.out', 'w') as stdout_file, open('xtbhess_err.out', 'w') as stderr_file:
             p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
             p.wait()
@@ -64,24 +61,32 @@ class Xtb:
             else:
                 raise Exception("An Error happend during the xTB Hessian calculation, with the return code ", rc)
     
-    def wbocalc(self, wbo_filename, input_xyz: str) -> None:
+    def read_wbo_file(self, wbo_path) -> dict:
+        """Reads WBO data from a file and parses it into a dictionary of bonds and their WBO values."""
+        wbo_dict = {}
+        with open(wbo_path, 'r') as file:
+            for line in file:
+                if line.strip():  # skip empty lines
+                    atom1, atom2, wbo = line.split()
+                    bond = tuple(sorted((int(atom1), int(atom2))))
+                    wbo_dict[bond] = float(wbo)
+        return wbo_dict
+
+    def wbocalc(self, wbo_filename, input_xyz: str) -> dict:
         # creates wbo file
-        if not os.path.exists(input_xyz):
-            raise FileExistsError(input_xyz, 'does not exist in current working directory: ', os.getcwd())
-        print(f'.', end=" ")
-        command = "xtb " + input_xyz + " --wbo"
-        with open('xtbhess.out', 'w') as stdout_file, open('xtbhess_err.out', 'w') as stderr_file:
+        command = self.get_command(input_xyz, '--wbo') 
+        with open('xtbwbo.out', 'w') as stdout_file, open('xtbwbo_err.out', 'w') as stderr_file:
             p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
             p.wait()
             rc = p.returncode
             if rc == 0:
                 if os.path.isfile("wbo"):
                     os.rename("wbo", wbo_filename)
-                    # print("WBO of", input_xyz, "was generated to file", wbo_filename)
                 else:
                     raise Exception("No WBO was generated")
             else:
                 raise Exception("An Error happend during the WBO calculation, with the return code ", rc)
+            return self.read_wbo_file(wbo_filename)
             
     def get_negative_frequencies(self, vibspectrum_filename, input_xyz: str) -> list:
         command = "xtb " + input_xyz + " --hess"
