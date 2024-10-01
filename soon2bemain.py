@@ -1,9 +1,9 @@
 #!/bin/python
-from interface.readin import *
-import json
+from interface import *
+from datatype import *
 
 def initialization():
-    readin_config(None, 'config.json')
+    calc_param = readin_config('config.json')
 
 def main_alignment(calc_param: CalculationParameters): 
     pass

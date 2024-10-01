@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import List
 import networkx as nx
 import numpy as np
+import json
 
 @dataclass
 class StructurePath:
@@ -15,6 +16,15 @@ class StructurePath:
     hess_filename: str 
     wbo_filename: str 
     ff_filename: str
+
+    @staticmethod
+    def from_json(id: int, str):
+        return StructurePath(id=id,
+                             xyz_filename = str["xyz"],
+                             wbo_filename = str["wbo"],
+                             hess_filename = str["hessian"],
+                             ff_filename = str["forcefield"])   
+
 
 @dataclass
 class ForceField:

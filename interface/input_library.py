@@ -15,8 +15,15 @@ In this file I am using crest-input_generator to construct the necessary inputs 
 def input_ff_optimization(starting_struc: str):
     return generate_input(header=HeaderBlock(input='struc1.xyz', runtype='ancopt', threads=4),
                         calculation=CalcBlock(id=3, maxcycle=219),
-                        ssff1=SsffBlock(method='ssff', refgeo='struc2.xyz', refhessian='hess2', refwbo='wbo2', refff='ff2', useff=False),
-                        ssff2=SsffBlock(method='ssff', refgeo='struc2.xyz', refhessian='hess2', refwbo='wbo2', refff='ff2', useff=False),
+                        ssff1=SsffBlock(
+                            method='ssff', 
+                            refgeo='struc2.xyz', 
+                            refhessian='hess2', 
+                            refwbo='wbo2', 
+                            refff='ff2', 
+                            useff=False),
+                        ssff2=SsffBlock(
+                            method='ssff', refgeo='struc2.xyz', refhessian='hess2', refwbo='wbo2', refff='ff2', useff=False),
                         tsff=TsffBlock(method='tsff', refff='tsff.txt', id1=1, id2=2))
 
 
