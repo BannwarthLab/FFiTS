@@ -2,13 +2,13 @@
 
 import subprocess
 import os 
-from input_library import input_avff1, input_avff2, input_ff_calc, input_start1, input_start2, input_ff_opt1, input_ff_opt2, input_avff_optimize
+from input_library import input_ff_optimization, input_ts_search
 
 
     
 class Crest:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, crest_path="/home/guests/dbabushkina//1_ts_search2024/crest/_build/crest") -> None:
+        self.crest_path = crest_path
     
 
     def get_rmsd(self, xyz1: str, xyz2: str) -> float:
@@ -29,14 +29,13 @@ class Crest:
         with open(filename, 'w') as file:
             file.write(input)
 
-    def calc_fitted_ff(self, input_filename: str):
-        command = "/home/guests/dbabushkina/master_thesis/crest/_build/crest -i " + input_filename
+    def calc_fitted_ff(self, input_file: str):
+        command = f"{self.crest_path} -i {input_file}"
         with open('fitff.out', 'w') as stdout_file, open('fitff_err.out', 'w') as stderr_file:
             p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
             p.wait()
             rc = p.returncode
             if rc == 0:
-                print('Fitted FF calculated to from ', input_filename)
                 return rc
             else:
                 raise Exception("An Error happend during the FF fitting ", rc)

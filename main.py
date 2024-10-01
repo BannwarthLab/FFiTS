@@ -33,10 +33,17 @@ def initialization(config_path):
     return calc_params
 
 def generate_data_for_calculation(input_structure: StructurePath, calc_params: CalculationParameters):
-    xyz, energy = GeometryOptimization.with_xtb(input_structure)
+    nat, energy, xyz = GeometryOptimization.with_xtb(input_structure)
     HessianCalculation.with_xtb(input_structure)
-    wbo_dict = WboCalculation.with_xtb(input_structure)
-    print(wbo_dict)
+    wbo = WboCalculation.with_xtb(input_structure)
+    return StructuralInformation(nat, energy, xyz, wbo)
+    
+
+def generate_ff(struc_path: StructurePath, struc_info: StructuralInformation):
+    return FittedFfGeneration.with_crest(struc_info.nat, struc_path.xyz_filename, struc_path)
+    
+def alignment():
+    pass
 
 # def main_alignment(calc_param: CalculationParameters): 
 #     pass
@@ -48,8 +55,16 @@ def generate_data_for_calculation(input_structure: StructurePath, calc_params: C
 
 def main():
     calc_params = initialization('/home/guests/dbabushkina/1_ts_search2024/pytsguess/config.json')
-    generate_data_for_calculation(calc_params.struc1, calc_params)
-    generate_data_for_calculation(calc_params.struc1, calc_params)
+
+    struc1_info = generate_data_for_calculation(calc_params.struc1, calc_params)
+    struc1_ff = generate_ff(calc_params.struc1, struc1_info)
+    struc1 = Structure(calc_params.struc1, struc1_ff, struc1_info)
+
+    struc2_info = generate_data_for_calculation(calc_params.struc2, calc_params)
+    struc2_ff = generate_ff(calc_params.struc2, struc2_info)
+    struc2 = Structure(calc_params.struc2, struc2_ff, struc2_info)
+    
+    # TODO als nächstes: Atom Pair relevance erhöhen und neue Optimierung machen 
     
 
     

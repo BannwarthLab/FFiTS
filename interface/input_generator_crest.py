@@ -79,13 +79,13 @@ def format_line(att, value):
     else:
         return f'{att} = "{value}"\n'
     
-def generate_input(header: HeaderBlock, calculation: CalcBlock, ssff1: SsffBlock, ssff2: SsffBlock = None, tsff: TsffBlock = None) :
+def generate_input(header: HeaderBlock, calculation: CalcBlock, ssff1: SsffBlock, ssff2: SsffBlock = '', tsff: TsffBlock = '') :
     return f"{header} \n{calculation} \n{ssff1} \n{ssff2} \n{tsff} \n "
 
-block1 = HeaderBlock(input='struc2.xyz', runtype='ancopt', threads=4)
-block2 = CalcBlock(id=3, maxcycle=219)
-block3 = SsffBlock(method='ssff', refgeo='struc1.xyz', refhessian='hess1', refwbo='wbo1', refff='ff1', useff=False)
-block4 = SsffBlock(method='ssff', refgeo='struc2.xyz', refhessian='hess2', refwbo='wbo2', refff='ff2', useff=False)
-block5 = TsffBlock(method='tsff', refff='tsff.txt', id1=1, id2=2)
+# block1 = HeaderBlock(input='struc2.xyz', runtype='ancopt', threads=4)
+# block2 = CalcBlock(id=3, maxcycle=219)
+# block3 = SsffBlock(method='ssff', refgeo='struc1.xyz', refhessian='hess1', refwbo='wbo1', refff='ff1', useff=False)
+# block4 = SsffBlock(method='ssff', refgeo='struc2.xyz', refhessian='hess2', refwbo='wbo2', refff='ff2', useff=False)
+# block5 = TsffBlock(method='tsff', refff='tsff.txt', id1=1, id2=2)
 
-print(generate_input(block1, block2, block3, block4, block5))
+# print(generate_input(block1, block2, block3, block4, block5))

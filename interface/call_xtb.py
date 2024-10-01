@@ -34,7 +34,16 @@ class Xtb:
     def readin_xyz(self, xyz_path):
         with open(xyz_path, 'r') as file:
             lines = file.readlines()
-        return lines
+        xyz_dict = {}
+        for i in range(2, len(lines)):
+            line = lines[i]
+            if line.strip():  # skip empty lines
+                atom, x, y, z = line.split()
+                coordinate = [float(x), float(y), float(z)]
+                xyz_dict[atom+str(i-1)] = coordinate
+        energy = float(lines[1].split(' ')[2])
+        nat = int(lines[0].strip())
+        return nat, energy, xyz_dict
     
 
     def geomopt(self, input_xyz: str) -> float:
@@ -46,9 +55,7 @@ class Xtb:
             rc = p.returncode
             if rc == 0:
                 os.rename('xtbopt.xyz', input_xyz)
-                with open(input_xyz, 'r') as f:
-                    lines = f.readlines()
-                return self.readin_xyz(input_xyz), float(lines[1].split(' ')[2])
+                return self.readin_xyz(input_xyz)
             else:
                 raise Exception("An Error happend during the xTB geometry optimization, with the return code ", rc)
         

@@ -2,6 +2,8 @@ from interface.call_xtb import *
 # from interface.call_crest import *
 from datatype.calculation_data import *
 from datatype.structure_data import *
+from input_library import *
+from interface.call_crest import *
 
 # class Calculation:
 #     def __init__(self, input_xyz: str, calculation_data: CalculationParameters):
@@ -18,10 +20,10 @@ class GeometryOptimization:
     def with_xtb(input_structure: StructurePath, xtb_path='xtb'):
         input_xyz = input_structure.xyz_filename
         xtb = Xtb(xtb_path=xtb_path)
-        xyz, energy = xtb.geomopt(input_xyz)
+        nat, energy, xyz = xtb.geomopt(input_xyz)
         print(f'> xTB geometry optimization of {input_xyz} finished with a final energy of {round(energy, 5)}.')
         print(f'> New xTB geometry is written to {input_xyz}.')
-        return xyz, energy
+        return nat, energy, xyz
 
 
 class HessianCalculation:
@@ -44,3 +46,16 @@ class WboCalculation:
         print(f'> xTB WBO calculation for {input_xyz} finished.')
         print(f'> WBO is written to {input_structure.wbo_filename}.')
         return wbo_dict
+
+class FittedFfGeneration:
+    @staticmethod
+    def with_crest(nat, start_structure: str, structure_for_fit: StructurePath):
+        crest = Crest()
+        input = input_ff_optimization(starting_struc=start_structure, useff=False,struc=structure_for_fit)
+        crest_input_filename = 'input_ff_fit.toml'
+        crest.write_input2file(input, crest_input_filename)
+        rc = crest.calc_fitted_ff(crest_input_filename)
+        print(f'> FF Fitting for {structure_for_fit.xyz_filename} finished.')
+        print(f'> FF is written to {structure_for_fit.ff_filename}.')
+        return ForceField(nat, structure_for_fit.ff_filename)
+        

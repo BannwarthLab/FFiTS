@@ -26,35 +26,91 @@ class StructurePath:
                              ff_filename = str["forcefield"])   
 
 
-@dataclass
 class ForceField:
     """ 
     The force field (FF) is defined through FF parameters (matrices starting with c_) as well 
     as the reference values (bondlengths, angles, dihedral angles and repulsion references) 
     and corresponging atom combinations (between which two atoms is the bond). 
     """
-    nat: int
-    c_bond = np.array
-    c_angle = np.array
-    c_dihedral = np.array
-    c_lj = np.array
-    bond_list: List[int]
-    angle_list: List[int]
-    dihedral_list: List[int]
-    lj_list: List[int]
-    bondlengths: List[float]
-    angles: List[float]
-    dihedrals: List[float]
-    sigmas: List[float]
+    def __init__(self, nat, ff_filename):
+        self.c_bond = np.zeros((nat,nat))
+        self.c_angle = np.zeros((nat,nat,nat))
+        self.c_dihedral = np.zeros((nat,nat,nat,nat))
+        self.c_lj = np.zeros((nat,nat))
+        self.bond_list = []
+        self.angle_list = []
+        self.dihedral_list = []
+        self.lj_list = []
+        self.bondlengths = []
+        self.angles = []
+        self.dihedrals = []
+        self.sigmas = []
+        self.readin_forcefield(ff_filename)
 
-@dataclass
+        
+    def readin_forcefield(self, ff_filename: str):
+        with open(ff_filename, 'r') as file:
+            section = None
+            for line in file:
+                line = line.strip()
+                if line.startswith("$"):
+                    section = line.split(',')[0].strip(',')[1:]
+                elif section == "bonds":
+                    atom1, atom2, param, bondlength = map(float, line.split(','))
+                    self.bond_list.append([int(atom1), int(atom2)])
+                    self.c_bond[int(atom1)-1, int(atom2)-1] = param
+                    self.bondlengths.append(bondlength)
+                elif section == "angles":
+                    atom1, atom2, atom3, param, angle = map(float, line.split(','))
+                    self.angle_list.append([int(atom1), int(atom2), int(atom3)])
+                    self.c_angle[int(atom1)-1, int(atom2)-1, int(atom3)-1] = param
+                    self.angles.append(angle)
+                elif section == "dihedrals":
+                    atom1, atom2, atom3, atom4, param, dihedral_angle = map(float, line.split(','))
+                    self.dihedral_list.append([int(atom1), int(atom2), int(atom3), int(atom4)])
+                    self.c_dihedral[int(atom1)-1, int(atom2)-1, int(atom3)-1, int(atom4)-1] = param
+                    self.dihedrals.append(dihedral_angle)
+                elif section == "lj-terms":
+                    atom1, atom2, param, sigma = map(float, line.split(','))
+                    self.lj_list.append([int(atom1), int(atom2)])
+                    self.c_lj[int(atom1)-1, int(atom2)-1] = param
+                    self.sigmas.append(sigma)
+        if section == None:
+            raise Exception('File seems to be empty or not contain the section markers.')
+
+
+
+
 class StructuralInformation:
-    nat: int
-    xyz: List[float]
-    wbo_list: List[float]
-    molecule_count: int
-    complete_graph: nx.Graph
-    seperate_molecule_list: List[nx.Graph]
+    def __init__(self, nat, energy, xyz, wbo_list):
+        self.nat = nat 
+        self.energy = energy 
+        self.wbo = wbo_list
+        self.xyz = xyz
+        self.complete_graph = self.create_graph_from_wbo()
+        self.seperate_molecule_list = self.split_in_subgraphs()
+        self.molecule_count = len(self.seperate_molecule_list)
+
+    def create_graph_from_wbo(self) -> nx.Graph:
+        G = nx.Graph()
+        for node1, node2 in self.wbo:
+            bo = self.wbo[(node1, node2)]
+            if bo < 0.2:
+                continue
+            G.add_node(node1)
+            G.add_node(node2)
+            G.add_edge(node1, node2)
+            nx.set_edge_attributes(G, {(node1, node2):{'bondorder': bo}})
+        return G
+    
+    def split_in_subgraphs(self):
+        G = self.complete_graph
+        S = [G.subgraph(c).copy() for c in nx.connected_components(G)]
+        for graph in S:
+            nodes = {node: {'id_in_subgraph': idx} for idx, node in enumerate(graph.nodes(), start=1)}
+            nx.set_node_attributes(graph, nodes)
+            # print(graph.nodes(data=True))
+        return S
 
 
 
