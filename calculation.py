@@ -8,30 +8,25 @@ from datatype.structure_data import *
 #         self.input_xyz = input_xyz
 #         self.calc = calculation_data
 
+# def 
+
+
 # @dataclass
 class GeometryOptimization:
         # TODO add a wbo calc and check to check whether topology changes and issue a warning
-
     @staticmethod
-    def with_xtb(input_structure: StructurePath, calc: CalculationParameters, xtb_path='xtb'):
-        if not calc.perform_geometryoptimization:
-            print(f'> No geometryoptimization will be performed because perform_geometryoptimization is set to {calc.perform_geometryoptimization}.')
-            return None
+    def with_xtb(input_structure: StructurePath, xtb_path='xtb'):
         input_xyz = input_structure.xyz_filename
         xtb = Xtb(xtb_path=xtb_path)
-        energy = xtb.geomopt(input_xyz)
+        xyz, energy = xtb.geomopt(input_xyz)
         print(f'> xTB geometry optimization of {input_xyz} finished with a final energy of {round(energy, 5)}.')
         print(f'> New xTB geometry is written to {input_xyz}.')
-        return energy
+        return xyz, energy
 
 
 class HessianCalculation:
-
     @staticmethod
-    def with_xtb(input_structure: StructurePath, calc: CalculationParameters, xtb_path='xtb'):
-        if not calc.perform_hesscalculation:
-            print(f'> No Hessian Calculation will be performed because perform_geometryoptimization is set to {calc.perform_hesscalculation}.')
-            return None
+    def with_xtb(input_structure: StructurePath, xtb_path='xtb'):
         input_xyz = input_structure.xyz_filename
         xtb = Xtb(xtb_path=xtb_path)
         xtb.hesscalc(input_structure.hess_filename, input_xyz)
@@ -41,12 +36,8 @@ class HessianCalculation:
 
 
 class WboCalculation:
-
     @staticmethod
-    def with_xtb(input_structure: StructurePath, calc: CalculationParameters, xtb_path='xtb'):
-        if not calc.perform_wbocalculation:
-            print(f'> No WBO Calculation will be performed because perform_geometryoptimization is set to {calc.perform_wbocalculation}.')
-            return None
+    def with_xtb(input_structure: StructurePath, xtb_path='xtb'):
         input_xyz = input_structure.xyz_filename
         xtb = Xtb(xtb_path=xtb_path)
         wbo_dict = xtb.wbocalc(input_structure.wbo_filename, input_xyz)

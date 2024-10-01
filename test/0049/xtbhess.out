@@ -88,7 +88,7 @@
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2024/10/01 at 10:57:08.374     
+ * started run on 2024/10/01 at 11:12:56.978     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -163,9 +163,9 @@ CAMM data taken from xtbrestart
           ...................................................
 
  iter      E             dE          RMSdq      gap      omega  full diag
-   1    -22.0253325 -0.220253E+02  0.500E-09    5.04       0.0  T
-   2    -22.0253325 -0.355271E-14  0.310E-09    5.04  100000.0  T
-   3    -22.0253325 -0.106581E-13  0.232E-09    5.04  100000.0  T
+   1    -22.0253325 -0.220253E+02  0.518E-10    5.04       0.0  T
+   2    -22.0253325 -0.710543E-14  0.331E-10    5.04  100000.0  T
+   3    -22.0253325 -0.355271E-14  0.248E-10    5.04  100000.0  T
 
    *** convergence criteria satisfied after 3 iterations ***
 
@@ -191,26 +191,26 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1853880 Eh            5.0447 eV
              Fermi-level           -0.2836637 Eh           -7.7189 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.018 sec
- SCC setup                      ...        0 min,  0.000 sec (  0.764%)
- Dispersion                     ...        0 min,  0.000 sec (  1.034%)
- classical contributions        ...        0 min,  0.000 sec (  0.670%)
- integral evaluation            ...        0 min,  0.000 sec (  1.943%)
- iterations                     ...        0 min,  0.016 sec ( 87.952%)
- molecular gradient             ...        0 min,  0.001 sec (  7.224%)
- printout                       ...        0 min,  0.000 sec (  0.338%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.016 sec
+ SCC setup                      ...        0 min,  0.000 sec (  0.978%)
+ Dispersion                     ...        0 min,  0.000 sec (  1.877%)
+ classical contributions        ...        0 min,  0.000 sec (  0.893%)
+ integral evaluation            ...        0 min,  0.000 sec (  2.108%)
+ iterations                     ...        0 min,  0.014 sec ( 87.923%)
+ molecular gradient             ...        0 min,  0.001 sec (  5.751%)
+ printout                       ...        0 min,  0.000 sec (  0.367%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -21.762063853601 Eh    ::
-         :: gradient norm              0.000952086955 Eh/a0 ::
-         :: HOMO-LUMO gap              5.044663436162 eV    ::
+         :: gradient norm              0.000952086944 Eh/a0 ::
+         :: HOMO-LUMO gap              5.044663436269 eV    ::
          ::.................................................::
          :: SCC energy               -22.025310794220 Eh    ::
-         :: -> isotropic ES            0.056212730362 Eh    ::
-         :: -> anisotropic ES          0.001292590740 Eh    ::
-         :: -> anisotropic XC          0.005172917368 Eh    ::
+         :: -> isotropic ES            0.056212730370 Eh    ::
+         :: -> anisotropic ES          0.001292590741 Eh    ::
+         :: -> anisotropic XC          0.005172917369 Eh    ::
          :: -> dispersion             -0.007734959243 Eh    ::
          :: repulsion energy           0.263246940619 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
@@ -225,13 +225,13 @@ SCC accuracy         :   0.30000
 Hessian scale factor :   1.00000
 frozen atoms in %    :   0.00000    0
 RMS gradient         :   0.00095
-estimated CPU  time      0.08 min
-estimated wall time      0.01 min
+estimated CPU  time      0.06 min
+estimated wall time      0.00 min
 
 writing file <hessian>.
 
  projected vibrational frequencies (cm⁻¹)
-eigval :       -0.00    -0.00    -0.00     0.00     0.00     0.00
+eigval :       -0.00    -0.00     0.00     0.00     0.00     0.00
 eigval :        9.99    32.38    60.44    74.51   117.65   151.89
 eigval :      255.31   257.60   290.87   403.59   425.73   460.90
 eigval :      522.34   539.75   806.77   837.24   983.64  1031.13
@@ -346,7 +346,7 @@ molecular quadrupole (traceless):
           |               Frequency Printout                |
            -------------------------------------------------
  projected vibrational frequencies (cm⁻¹)
-eigval :       -0.00    -0.00    -0.00     0.00     0.00     0.00
+eigval :       -0.00    -0.00     0.00     0.00     0.00     0.00
 eigval :        9.99    32.38    60.44    74.51   117.65   151.89
 eigval :      255.31   257.60   290.87   403.59   425.73   460.90
 eigval :      522.34   539.75   806.77   837.24   983.64  1031.13
@@ -355,14 +355,14 @@ eigval :     1396.57  1408.98  1469.07  1474.75  1486.51  1493.91
 eigval :     1555.21  1756.67  2989.80  3007.89  3013.89  3032.86
 eigval :     3040.52  3055.35  3068.49  3513.50  3527.53  3655.58
  reduced masses (amu)
-   1: 11.42   2: 10.83   3: 11.12   4: 11.42   5: 12.15   6: 14.06   7: 12.52   8: 11.55
+   1: 14.06   2: 11.18   3: 10.72   4: 11.31   5: 11.32   6: 12.42   7: 12.52   8: 11.55
    9:  1.56  10:  1.55  11:  1.44  12: 13.25  13:  9.27  14:  9.12  15:  1.90  16:  1.76
   17: 10.32  18:  7.62  19:  9.94  20:  4.84  21:  2.70  22: 10.16  23:  4.45  24:  4.81
   25:  4.88  26:  4.30  27:  6.90  28:  4.84  29:  9.83  30:  4.76  31:  3.81  32:  3.54
   33:  1.56  34:  1.61  35:  1.56  36:  1.61  37:  2.10  38: 11.64  39:  1.93  40:  1.50
   41:  1.82  42:  1.63  43:  1.78  44:  1.70  45:  1.73  46:  1.85  47:  1.85  48:  1.85
  IR intensities (km·mol⁻¹)
-   1:  0.37   2:  0.57   3:  0.40   4:  0.12   5:  0.60   6:  0.61   7: 15.40   8:  3.91
+   1:  0.72   2:  0.38   3:  0.02   4:  0.75   5:  0.02   6:  0.76   7: 15.40   8:  3.91
    9: 70.91  10:  0.56  11: 29.01  12:  1.18  13:  3.99  14:  1.71  15:108.14  16:108.23
   17: 22.76  18: 44.99  19: 15.33  20:212.39  21: 19.57  22: 12.92  23: 19.60  24:  9.86
   25: 11.72  26:  6.69  27: 12.07  28:159.49  29:189.72  30: 22.80  31: 16.23  32:  5.53
@@ -433,7 +433,7 @@ c1  symmetry found (for desy threshold:  0.10E+00) used in thermo
          ::.................................................::
          :: total energy              -21.762063853601 Eh   ::
          :: zero point energy           0.132492064659 Eh   ::
-         :: G(RRHO) w/o ZPVE           -0.035942213344 Eh   ::
+         :: G(RRHO) w/o ZPVE           -0.035942213343 Eh   ::
          :: G(RRHO) contrib.            0.096549851316 Eh   ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -441,23 +441,23 @@ c1  symmetry found (for desy threshold:  0.10E+00) used in thermo
           | TOTAL ENERGY              -21.762063853601 Eh   |
           | TOTAL ENTHALPY            -21.618037608644 Eh   |
           | TOTAL FREE ENERGY         -21.665514002285 Eh   |
-          | GRADIENT NORM               0.000952082388 Eh/α |
-          | HOMO-LUMO GAP               5.044663409470 eV   |
+          | GRADIENT NORM               0.000952082392 Eh/α |
+          | HOMO-LUMO GAP               5.044663409432 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2024/10/01 at 10:57:08.861     
+ * finished run on 2024/10/01 at 11:12:57.217     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.487 sec
- *  cpu-time:     0 d,  0 h,  0 min,  5.093 sec
- * ratio c/w:    10.467 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.239 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  3.269 sec
+ * ratio c/w:    13.690 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.018 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.253 sec
- * ratio c/w:    13.943 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.016 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.234 sec
+ * ratio c/w:    14.230 speedup
  analytical hessian:
- * wall-time:     0 d,  0 h,  0 min,  0.118 sec
- *  cpu-time:     0 d,  0 h,  0 min,  1.589 sec
- * ratio c/w:    13.470 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.090 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  1.213 sec
+ * ratio c/w:    13.537 speedup
 

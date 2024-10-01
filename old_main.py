@@ -210,11 +210,6 @@ def main_run():
         print('start1.xyz renamed to final.xyz')
         os.rename('start1.xyz', 'final.xyz')
 
-def run_geometryoptimization(xtbcaller: Xtb, filename_in: str, filename_out: str):
-    # TODO add a wbo calc and check to check whether topology changes and issue a warning
-    xtbcaller = Xtb()
-    xtbcaller.geomopt(filename_out, filename_in)
-    print(f'.', end=" ")
 
 if __name__ == "__main__":
     #### Parameters

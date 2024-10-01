@@ -30,6 +30,13 @@ class Xtb:
             if rc != 0:
                 raise Exception("An Error happend during the xTB geometry optimization, with the return code ", rc)
     
+
+    def readin_xyz(self, xyz_path):
+        with open(xyz_path, 'r') as file:
+            lines = file.readlines()
+        return lines
+    
+
     def geomopt(self, input_xyz: str) -> float:
         #return xtb energy 
         command = self.get_command(input_xyz, '--opt') 
@@ -41,7 +48,7 @@ class Xtb:
                 os.rename('xtbopt.xyz', input_xyz)
                 with open(input_xyz, 'r') as f:
                     lines = f.readlines()
-                return float(lines[1].split(' ')[2])
+                return self.readin_xyz(input_xyz), float(lines[1].split(' ')[2])
             else:
                 raise Exception("An Error happend during the xTB geometry optimization, with the return code ", rc)
         
