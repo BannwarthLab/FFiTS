@@ -21,6 +21,9 @@
     },
 
     "calculation_details": {
+        "perform_geometryoptimization": true , 
+        "perform_hesscalculation": true , 
+        "perform_wbocalculation": true, 
         "perform_alignment": true,
         "perform_ts_search": true
     }

@@ -1,8 +1,8 @@
 #!/bin/python
 
 from dataclasses import dataclass, field
-from structure_data import Structure 
-from structure_data import StructurePath 
+from datatype.structure_data import Structure 
+from datatype.structure_data import StructurePath 
 import os
 from typing import List
 import json
@@ -17,6 +17,9 @@ class Reaction:
 
 @dataclass
 class CalculationParameters:
+    perform_geometryoptimization: bool 
+    perform_hesscalculation: bool 
+    perform_wbocalculation: bool
     perform_alignment: bool
     perform_ts_search: bool
     struc1: StructurePath
@@ -26,7 +29,10 @@ class CalculationParameters:
 
     @staticmethod
     def from_json(config):
-        return CalculationParameters(perform_alignment=config["calculation_details"]["perform_alignment"],
+        return CalculationParameters(perform_geometryoptimization=config["calculation_details"]["perform_geometryoptimization"],
+                                     perform_hesscalculation=config["calculation_details"]["perform_hesscalculation"],
+                                     perform_wbocalculation=config["calculation_details"]["perform_wbocalculation"],
+                                     perform_alignment=config["calculation_details"]["perform_alignment"],
                                      perform_ts_search=config["calculation_details"]["perform_ts_search"],
                                      struc1=StructurePath.from_json(1, config["filepaths_structure1"]),
                                      struc2=StructurePath.from_json(2, config["filepaths_structure2"]),

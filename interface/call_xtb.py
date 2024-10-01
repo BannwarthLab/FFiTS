@@ -4,9 +4,12 @@ import subprocess
 import os
 
 class Xtb:
-    def __init__(self) -> None:
+    def __init__(self, xtb_path='xtb') -> None:
         # maybe define all names here instead of giving them in func
-        pass
+        self.xtb_path = xtb_path
+
+    def get_command(self, input, keyword: str) -> str:
+        return f"{self.xtb_path} {input} {keyword}"
     
     def find_energy_in_output(self, output_filename: str) -> float:
         with open(output_filename, 'r') as f:
@@ -27,18 +30,16 @@ class Xtb:
             if rc != 0:
                 raise Exception("An Error happend during the xTB geometry optimization, with the return code ", rc)
     
-    def geomopt(self, xyz_filename_out, input_xyz: str) -> float:
+    def geomopt(self, input_xyz: str) -> float:
         #return xtb energy 
-        if not os.path.exists(input_xyz):
-            raise FileExistsError(input_xyz, 'does not exist in current working directory: ', os.getcwd())
-        command = "xtb " + input_xyz + " --opt"
+        command = self.get_command(input_xyz, '--opt') 
         with open('xtb.out', 'w') as stdout_file, open('xtb_err.out', 'w') as stderr_file:
             p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
             p.wait()
             rc = p.returncode
             if rc == 0:
-                os.rename('xtbopt.xyz', xyz_filename_out)
-                with open(xyz_filename_out, 'r') as f:
+                os.rename('xtbopt.xyz', input_xyz)
+                with open(input_xyz, 'r') as f:
                     lines = f.readlines()
                 return float(lines[1].split(' ')[2])
             else:
