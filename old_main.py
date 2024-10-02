@@ -139,7 +139,7 @@ def main_align(struc_id: str, xyz: str, wbo: str, hess: str):
     xtbcaller.hesscalc(hess,xyz)
     input_filename = 'ff_fit_input.toml'
     crestcaller.write_input2file(input_ff_calc, input_filename)
-    crestcaller.calc_fitted_ff(input_filename)
+    crestcaller.run_input(input_filename)
 
     ff_name = 'force_field_' + struc_id
     print(ff_name)
@@ -167,13 +167,13 @@ def main_align(struc_id: str, xyz: str, wbo: str, hess: str):
         hopot.write_force_field(ff_name)
         input_filename = 'ff_opt.toml'
         crestcaller.write_input2file(input_ff_opt1, input_filename)
-        crestcaller.calc_fitted_ff(input_filename)
+        crestcaller.run_input(input_filename)
     elif struc_id == 'struc2':
         ff_name = 'force_field2_mod'
         hopot.write_force_field(ff_name)
         input_filename = 'ff_opt.toml'
         crestcaller.write_input2file(input_ff_opt2, input_filename)
-        crestcaller.calc_fitted_ff(input_filename)
+        crestcaller.run_input(input_filename)
 
     # copying
     path = cwd + '/crestopt.xyz'

@@ -12,6 +12,7 @@ from interface.call_crest import *
 
 # def 
 
+#TODO make all new names a class with staticmethods so that they are fixed
 
 # @dataclass
 class GeometryOptimization:
@@ -24,6 +25,23 @@ class GeometryOptimization:
         print(f'> xTB geometry optimization of {input_xyz} finished with a final energy of {round(energy, 5)}.')
         print(f'> New xTB geometry is written to {input_xyz}.')
         return nat, energy, xyz
+
+    @staticmethod
+    def with_ff_potential_crest(input_structure: StructurePath, ff: ForceField):
+        crest = Crest()
+        new_ff_name = f'{input_structure.ff_filename}_modified'
+        ff.write_force_field(ff, new_ff_name)
+        inpu_struc = input_structure.deepcopy()
+        inpu_struc.ff_filename = new_ff_filename
+        input = input_ff_optimization(starting_struc=inpu_struc.xyz_filename, useff=True, struc=inpu_struc)
+        crest_input_filename = 'input_ff_opt.toml'
+        crest.write_input2file(input, crest_input_filename)
+        rc = crest.run_input(crest_input_filename, 'ff_fit')
+        print(f'> FF based geometry optimization for {structure_for_fit.xyz_filename} finished.')
+        print(f'> FF is written to {structure_for_fit.ff_filename}.')
+        return rc
+
+
 
 
 class HessianCalculation:
@@ -54,8 +72,10 @@ class FittedFfGeneration:
         input = input_ff_optimization(starting_struc=start_structure, useff=False,struc=structure_for_fit)
         crest_input_filename = 'input_ff_fit.toml'
         crest.write_input2file(input, crest_input_filename)
-        rc = crest.calc_fitted_ff(crest_input_filename)
+        rc = crest.run_input(crest_input_filename, 'ff_fit')
         print(f'> FF Fitting for {structure_for_fit.xyz_filename} finished.')
         print(f'> FF is written to {structure_for_fit.ff_filename}.')
         return ForceField(nat, structure_for_fit.ff_filename)
+
+
         

@@ -32,7 +32,8 @@ class ForceField:
     as the reference values (bondlengths, angles, dihedral angles and repulsion references) 
     and corresponging atom combinations (between which two atoms is the bond). 
     """
-    def __init__(self, nat, ff_filename):
+    def __init__(self, nat, ff_filename, readff=True):
+        self.filename = filename
         self.c_bond = np.zeros((nat,nat))
         self.c_angle = np.zeros((nat,nat,nat))
         self.c_dihedral = np.zeros((nat,nat,nat,nat))
@@ -45,7 +46,8 @@ class ForceField:
         self.angles = []
         self.dihedrals = []
         self.sigmas = []
-        self.readin_forcefield(ff_filename)
+        if readff:
+            self.readin_forcefield(ff_filename)
 
         
     def readin_forcefield(self, ff_filename: str):
@@ -78,6 +80,33 @@ class ForceField:
         if section == None:
             raise Exception('File seems to be empty or not contain the section markers.')
 
+
+    def write_force_field(self, ff: ForceField, filename):
+        print('WRITES TO', filename)
+        with open(filename, 'w') as file:
+            if len(ff.bond_list) > 0:
+                file.write(f"$bonds, {len(ff.bond_list)}\n")
+                for (atom1, atom2), bondlength in zip(ff.bond_list, ff.bondlengths):
+                    param = ff.c_bond[atom1-1, atom2-1]
+                    file.write(f"{atom1}, {atom2}, {param}, {bondlength}\n")
+
+            if len(ff.angle_list) > 0:
+                file.write(f"$angles, {len(ff.angle_list)}\n")
+                for (atom1, atom2, atom3), angle in zip(ff.angle_list, ff.angles):
+                    param = ff.c_angle[atom1-1, atom2-1, atom3-1]
+                    file.write(f"{atom1}, {atom2}, {atom3}, {param}, {angle}\n")
+
+            if len(ff.dihedral_list) > 0:
+                file.write(f"$dihedrals, {len(ff.dihedral_list)}\n")
+                for (atom1, atom2, atom3, atom4), dihedral_angle in zip(ff.dihedral_list, ff.dihedrals):
+                    param = ff.c_dihedral[atom1-1, atom2-1, atom3-1, atom4-1]
+                    file.write(f"{atom1}, {atom2}, {atom3}, {atom4}, {param}, {dihedral_angle}\n")
+
+            if len(ff.lj_list) > 0:
+                file.write(f"$lj-terms, {len(ff.lj_list)}\n")
+                for (atom1, atom2), sigma in zip(ff.lj_list, ff.sigmas):
+                    param = ff.c_lj[atom1-1, atom2-1]
+                    file.write(f"{atom1}, {atom2}, {param}, {sigma}\n")
 
 
 

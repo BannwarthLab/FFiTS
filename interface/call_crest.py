@@ -29,42 +29,42 @@ class Crest:
         with open(filename, 'w') as file:
             file.write(input)
 
-    def calc_fitted_ff(self, input_file: str):
+    def run_input(self, input_file: str, output_name: str):
         command = f"{self.crest_path} -i {input_file}"
-        with open('fitff.out', 'w') as stdout_file, open('fitff_err.out', 'w') as stderr_file:
+        with open(f'{output_name}.out', 'w') as stdout_file, open(f'{output_name}_err.out', 'w') as stderr_file:
             p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
             p.wait()
             rc = p.returncode
             if rc == 0:
                 return rc
             else:
-                raise Exception("An Error happend during the FF fitting ", rc)
+                raise Exception("An Error happend during the CREST calculation with rc ", rc)
 
-    def run_ts_search(self, startstruc: int, path_to_crest: str, input_filename: str):
-        if startstruc == 1:
-            self.write_input2file(input_avff1, input_filename)
-        elif startstruc == 2:
-            self.write_input2file(input_avff2, input_filename)
-        elif startstruc == -1:
-            self.write_input2file(input_start1, input_filename)
-        elif startstruc == -2:
-            self.write_input2file(input_start2, input_filename)
-        elif startstruc == 0:
-            self.write_input2file(input_avff_optimize, input_filename)
-        else:
-            raise Exception("Startstruc can only be 1, 2, -1 or -2.")
+    # def run_ts_search(self, startstruc: int, path_to_crest: str, input_filename: str):
+    #     if startstruc == 1:
+    #         self.write_input2file(input_avff1, input_filename)
+    #     elif startstruc == 2:
+    #         self.write_input2file(input_avff2, input_filename)
+    #     elif startstruc == -1:
+    #         self.write_input2file(input_start1, input_filename)
+    #     elif startstruc == -2:
+    #         self.write_input2file(input_start2, input_filename)
+    #     elif startstruc == 0:
+    #         self.write_input2file(input_avff_optimize, input_filename)
+    #     else:
+    #         raise Exception("Startstruc can only be 1, 2, -1 or -2.")
         
-        command = path_to_crest + " -i " + input_filename
-        with open('tssearch.out', 'w') as stdout_file, open('tssearch_err.out', 'w') as stderr_file:
-            p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
-            p.wait()
-            rc = p.returncode
-        if os.path.exists('crestopt.xyz'):
-            print('IT DOES EXIST')
-            return 0
-        else:
-            return 20
-                # raise Exception("An Error happend during the TS search, with the return code ", rc)
+    #     command = path_to_crest + " -i " + input_filename
+    #     with open('tssearch.out', 'w') as stdout_file, open('tssearch_err.out', 'w') as stderr_file:
+    #         p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
+    #         p.wait()
+    #         rc = p.returncode
+    #     if os.path.exists('crestopt.xyz'):
+    #         print('IT DOES EXIST')
+    #         return 0
+    #     else:
+    #         return 20
+    #             # raise Exception("An Error happend during the TS search, with the return code ", rc)
         
 
 ### testing
