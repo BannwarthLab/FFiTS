@@ -71,4 +71,13 @@ class FittedFfGeneration:
         return ForceField(nat, Name.fitted_ff(structure_for_fit.ff_filename))
 
 
+class TsGuessCalculation:
+    @staticmethod
+    def with_crest(start_struc: str, calc_params):
+        crest = Crest()
+        input = input_ts_search(start_struc, calc)
+        crest_input_filename = 'input_tssearch.toml'
+        crest.write_input2file(input, crest_input_filename)
+        rc = crest.run_input(crest_input_filename, 'tssearch')
+        # TODO postprocessing 
         
