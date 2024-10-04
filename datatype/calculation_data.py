@@ -14,6 +14,31 @@ class Reaction:
     structure2: Structure
     # transition_structure: Structure
     unique_bonds: List[int]
+    
+    @staticmethod
+    def with_unique_bonds(struc1: Structure, struc2: Structure, threshold=0.8):
+        """Compares two WBO data files and returns unique atom indices, 
+        including those with significant WBO differences."""
+        wbo_dict1 = struc1.info.wbo 
+        wbo_dict2 = struc2.info.wbo 
+        all_bonds = set(wbo_dict1.keys()).union(set(wbo_dict2.keys()))
+        
+        unique_bonds = set()
+        for bond in all_bonds:
+            # print(bond)
+            wbo1 = wbo_dict1.get(bond, 0)
+            wbo2 = wbo_dict2.get(bond, 0)
+            if bond not in wbo_dict1 or bond not in wbo_dict2 or abs(wbo1 - wbo2) > threshold:
+                unique_bonds.add(bond)
+        # print(unique_bonds)
+        # return list(unique_bonds)
+        unique_atoms = set()
+        for bond in unique_bonds:
+            unique_atoms.update(bond)
+
+        sorted_unique_atoms = sorted(unique_atoms)
+        return Reaction(structure1=struc1, structure2=struc2, unique_bonds=unique_bonds)
+
 
 @dataclass
 class CalculationParameters:

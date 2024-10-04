@@ -4,6 +4,7 @@ from datatype.calculation_data import *
 from datatype.structure_data import *
 from input_library import *
 from interface.call_crest import *
+import copy
 
 # class Calculation:
 #     def __init__(self, input_xyz: str, calculation_data: CalculationParameters):
@@ -30,15 +31,14 @@ class GeometryOptimization:
     def with_ff_potential_crest(input_structure: StructurePath, ff: ForceField):
         crest = Crest()
         new_ff_name = f'{input_structure.ff_filename}_modified'
-        ff.write_force_field(ff, new_ff_name)
-        inpu_struc = input_structure.deepcopy()
-        inpu_struc.ff_filename = new_ff_filename
-        input = input_ff_optimization(starting_struc=inpu_struc.xyz_filename, useff=True, struc=inpu_struc)
+        ff.write_force_field(new_ff_name)
+        inpu_struc = copy.deepcopy(input_structure)
+        inpu_struc.ff_filename = new_ff_name
+        input = input_ff_optimization(starting_struc=input_structure.xyz_filename, useff=True, struc=input_structure)
         crest_input_filename = 'input_ff_opt.toml'
         crest.write_input2file(input, crest_input_filename)
         rc = crest.run_input(crest_input_filename, 'ff_fit')
-        print(f'> FF based geometry optimization for {structure_for_fit.xyz_filename} finished.')
-        print(f'> FF is written to {structure_for_fit.ff_filename}.')
+        print(f'> FF based geometry optimization for {input_structure.xyz_filename} finished.')
         return rc
 
 
@@ -52,7 +52,6 @@ class HessianCalculation:
         xtb.hesscalc(input_structure.hess_filename, input_xyz)
         print(f'> xTB Hessian calculation for {input_xyz} finished.')
         print(f'> Hessian is written to {input_structure.hess_filename}.')
-        return None
 
 
 class WboCalculation:

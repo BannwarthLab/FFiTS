@@ -1,7 +1,7 @@
 #!/bin/python
 
 import networkx as nx
-import datatype.structure_data
+# import datatype.structure_data
 
 # -------
 def get_unique_bonds(wbo_dict1, wbo_dict2, threshold=0.8):

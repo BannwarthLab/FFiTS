@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import datatype.structure_data 
+from datatype.structure_data import *
 
 
 def increase_atompair_relevance(ff: ForceField, at1: int, at2: int, factor=10):
