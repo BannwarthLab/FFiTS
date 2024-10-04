@@ -4,7 +4,7 @@ import shutil
 import os
 from src.datatype.structure_data import StructurePath, Name, StructuralInformation
 from src.datatype.calculation_data import CalculationParameters
-from src.interface.readin import readin_config
+from src.interface.reader import readin_config
 from src.calculation import GeometryOptimization, WboCalculation, HessianCalculation, FittedFfGeneration
 
 def copy_original_structure(temp_name):

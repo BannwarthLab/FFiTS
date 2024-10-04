@@ -2,7 +2,7 @@
 
 import subprocess
 import os
-from src.interface.readin import read_wbo_file, readin_xyz
+from src.interface.reader import read_wbo_file, readin_xyz
 
 class Xtb:
     def __init__(self, xtb_path='xtb') -> None:

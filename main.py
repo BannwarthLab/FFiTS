@@ -7,7 +7,7 @@ from src.datatype.calculation_data import *
 from src.initialization import *
 from src.calculation import *
 from src.alignment import align
-from src.interface.readin import *
+from src.interface.reader import *
 from src.interface.xtb import *
 
 
