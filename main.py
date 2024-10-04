@@ -89,6 +89,9 @@ def align(struc1: Structure, struc2: Structure, reac: Reaction, calc: Calculatio
 
     return struc1, struc2
 
+def tssearch(struc1: Structure, struc2: Structure, calc: CalculationParameters):
+     pass
+
 def main(calc_params):
     # TODO ich muss noch fälle festlegen wenn man Sachen nicht berechnen will, dass sie dann immer noch eingelesen werden .
     # calc_params = initialization('/home/guests/dbabushkina/1_ts_search2024/pytsguess/config.json')
