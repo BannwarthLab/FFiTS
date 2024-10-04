@@ -1,6 +1,6 @@
 #!/bin/python
 
-import datatype.structure_data 
+import src.datatype.structure_data 
 
 def print_box(name: str, width=80):
     print('┏' +    "━"*width       + "┓")

@@ -2,31 +2,8 @@
 
 import subprocess
 import os
+from src.interface.readin import read_wbo_file, readin_xyz
 
-
-def readin_xyz(xyz_path):
-    with open(xyz_path, 'r') as file:
-        lines = file.readlines()
-    xyz_dict = {}
-    for i in range(2, len(lines)):
-        line = lines[i]
-        if line.strip():  # skip empty lines
-            atom, x, y, z = line.split()
-            coordinate = [float(x), float(y), float(z)]
-            xyz_dict[atom+str(i-1)] = coordinate
-    energy = float(lines[1].split(' ')[2])
-    nat = int(lines[0].strip())
-    return nat, energy, xyz_dict
-def read_wbo_file(wbo_path) -> dict:
-    """Reads WBO data from a file and parses it into a dictionary of bonds and their WBO values."""
-    wbo_dict = {}
-    with open(wbo_path, 'r') as file:
-        for line in file:
-            if line.strip():  # skip empty lines
-                atom1, atom2, wbo = line.split()
-                bond = tuple(sorted((int(atom1), int(atom2))))
-                wbo_dict[bond] = float(wbo)
-    return wbo_dict
 class Xtb:
     def __init__(self, xtb_path='xtb') -> None:
         # maybe define all names here instead of giving them in func

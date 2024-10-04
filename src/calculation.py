@@ -1,20 +1,10 @@
-from interface.call_xtb import *
-# from interface.call_crest import *
-from datatype.calculation_data import *
-from datatype.structure_data import *
-from input_library import *
-from interface.call_crest import *
+from src.interface.xtb import *
+from src.datatype.calculation_data import *
+from src.datatype.structure_data import *
+from src.input_library import *
+from src.interface.crest import *
 import copy
 import shutil
-
-# class Calculation:
-#     def __init__(self, input_xyz: str, calculation_data: CalculationParameters):
-#         self.input_xyz = input_xyz
-#         self.calc = calculation_data
-
-# def 
-
-#TODO make all new names a class with staticmethods so that they are fixed
 
 # @dataclass
 class GeometryOptimization:

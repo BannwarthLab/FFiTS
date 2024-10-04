@@ -1,8 +1,8 @@
 #!/bin/python
 
 from dataclasses import dataclass, field
-from datatype.structure_data import Structure 
-from datatype.structure_data import StructurePath 
+from src.datatype.structure_data import Structure 
+from src.datatype.structure_data import StructurePath 
 import os
 from typing import List
 import json
