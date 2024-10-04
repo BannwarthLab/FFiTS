@@ -15,8 +15,8 @@
 
     "filepaths_transition_state": {
         "xyz":          "final.xyz",
-        "hessian":      "_",
-        "wbo":          "_",
+        "hessian":      "hess_ts",
+        "wbo":          "wbo_ts",
         "forcefield":   "tsff"
     },
 

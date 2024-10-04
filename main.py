@@ -9,12 +9,10 @@ from src.calculation import *
 from src.alignment import align
 from src.interface.reader import *
 from src.interface.xtb import *
+from src.tssearch import search_ts
 
 
 
-
-def tssearch(struc1: Structure, struc2: Structure, calc: CalculationParameters):
-     pass
 
 def main(calc_params):
     # TODO ich muss noch fälle festlegen wenn man Sachen nicht berechnen will, dass sie dann immer noch eingelesen werden .
@@ -32,13 +30,9 @@ def main(calc_params):
     
     struc1, struc2 = align(struc1, struc2, reac, calc_params)
 
-    
+    ts_ff = search_ts(struc1, struc2, calc_params)
 
     
-
-
-
-
 
 if __name__ == "__main__":
     calc_params = initialization('/home/guests/dbabushkina/1_ts_search2024/pytsguess/config.json')

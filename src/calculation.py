@@ -5,6 +5,7 @@ from src.input_library import *
 from src.interface.crest import *
 import copy
 import shutil
+from src.interface.exceptions import ConvergenceError
 
 # @dataclass
 class GeometryOptimization:
@@ -30,10 +31,12 @@ class GeometryOptimization:
         input = input_ff_optimization(starting_struc=input_structure.xyz_filename, useff=True, struc=input_structure)
         crest_input_filename = 'input_ff_opt.toml'
         crest.write_input2file(input, crest_input_filename)
-        rc = crest.run_input(crest_input_filename, 'ff_fit')
-        shutil.copy('crestopt.xyz', output_xyz)
-        print(f'> FF based geometry optimization for {input_structure.xyz_filename} finished.')
-        return rc
+        rc = crest.run_input(crest_input_filename, 'ff_opt') # NAME
+        if crest.check_convergence('ff_opt.out'):  
+            shutil.copy('crestopt.xyz', output_xyz)
+            print(f'> FF based geometry optimization for {input_structure.xyz_filename} finished.')
+            return rc
+        raise ConvergenceError('Not converged')
 
 
 
@@ -73,11 +76,16 @@ class FittedFfGeneration:
 
 class TsGuessCalculation:
     @staticmethod
-    def with_crest(start_struc: str, calc_params):
+    def with_crest(start_struc: str, calc: CalculationParameters):
         crest = Crest()
         input = input_ts_search(start_struc, calc)
         crest_input_filename = 'input_tssearch.toml'
         crest.write_input2file(input, crest_input_filename)
-        rc = crest.run_input(crest_input_filename, 'tssearch')
-        # TODO postprocessing 
-        
+        rc = crest.run_input(crest_input_filename, 'tssearch')  # NAME
+        converged = crest.check_convergence('tssearch.out') 
+        if converged: 
+            shutil.copy('crestopt.xyz', 'ts.xyz')  # NAME
+            return readin_xyz('ts.xyz', False)
+        else: 
+            raise ConvergenceError('Not converged') 
+            

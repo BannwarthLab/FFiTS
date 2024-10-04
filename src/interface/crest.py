@@ -2,7 +2,7 @@
 
 import subprocess
 import os 
-from src.input_library import input_ff_optimization, input_ts_search
+# from src.input_library import input_ff_optimization, input_ts_search
 
 
     
@@ -10,6 +10,14 @@ class Crest:
     def __init__(self, crest_path="/home/guests/dbabushkina//1_ts_search2024/crest/_build/crest") -> None:
         self.crest_path = crest_path
     
+
+    def check_convergence(self, filepath: str):
+        with open(filepath, 'r') as f:
+            lines = f.readlines()
+        for line in reversed(lines):
+            if "geometry successfully optimized" in line:
+                return True
+        return False
 
     def get_rmsd(self, xyz1: str, xyz2: str) -> float:
         print('rmsd calc')
@@ -40,3 +48,4 @@ class Crest:
             else:
                 raise Exception("An Error happend during the CREST calculation with rc ", rc)
 
+        
