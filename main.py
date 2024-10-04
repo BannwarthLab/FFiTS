@@ -61,9 +61,7 @@ def modify_ff(struc: Structure, reac: Reaction):
     atompairs_left = True
     while atompairs_left:
         at1, at2 = get_ffatom_pair(reac, struc, forbidden_pairs)
-        print('At1, At2', at1, at2)  
         forbidden_pairs.append([at1, at2])
-        print('AAAAAA', forbidden_pairs)
         if at1 == 0 and at2 == 0:
             atompairs_left = False
             break 
@@ -85,19 +83,11 @@ def modify_ff(struc: Structure, reac: Reaction):
 def align(struc1: Structure, struc2: Structure, reac: Reaction, calc: CalculationParameters):
     if not calc.perform_alignment:
         return None 
-    struc1.ff = modify_ff(struc1, reac)
 
+    struc1.ff = modify_ff(struc1, reac)
     struc2.ff = modify_ff(struc2, reac)
 
     return struc1, struc2
-
-# def main_alignment(calc_param: CalculationParameters): 
-#     pass
-
-
-# def main_ts_search(calc_param: CalculationParameters): 
-#     pass
-
 
 def main(calc_params):
     # TODO ich muss noch fälle festlegen wenn man Sachen nicht berechnen will, dass sie dann immer noch eingelesen werden .
@@ -112,11 +102,9 @@ def main(calc_params):
     struc2 = Structure(calc_params.struc2, struc2_ff, struc2_info)
 
     reac = Reaction.with_unique_bonds(struc1, struc2)
-    # print(reac)
     
-    new_struc1, new_struc2 = align(struc1, struc2, reac, calc_params)
+    struc1, struc2 = align(struc1, struc2, reac, calc_params)
 
-    # TODO als nächstes: Atom Pair relevance erhöhen und neue Optimierung machen 
     
 
     
@@ -133,5 +121,3 @@ if __name__ == "__main__":
         # shutil.copy(Name.original_xyz(calc_params.struc1.xyz_filename), calc_params.struc1.xyz_filename)
         # shutil.copy(Name.original_xyz(calc_params.struc2.xyz_filename), calc_params.struc2.xyz_filename)
         # print(error)
-    # main_alignment(calc_param)
-    # main_ts_search(calc_param)

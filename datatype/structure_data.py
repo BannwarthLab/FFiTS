@@ -102,7 +102,6 @@ class ForceField:
 
 
     def write_force_field(self, filename):
-        print('WRITES TO', filename)
         with open(filename, 'w') as file:
             if len(self.bond_list) > 0: 
                 file.write(f"$bonds, {len(self.bond_list)}\n")
