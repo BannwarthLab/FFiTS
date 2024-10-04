@@ -30,7 +30,8 @@ class Reaction:
             wbo2 = wbo_dict2.get(bond, 0)
             if bond not in wbo_dict1 or bond not in wbo_dict2 or abs(wbo1 - wbo2) > threshold:
                 unique_bonds.add(bond)
-        # print(unique_bonds)
+        print('')
+        print(unique_bonds)
         # return list(unique_bonds)
         unique_atoms = set()
         for bond in unique_bonds:

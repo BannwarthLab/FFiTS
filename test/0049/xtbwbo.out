@@ -88,7 +88,7 @@
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2024/10/04 at 09:53:32.136     
+ * started run on 2024/10/04 at 11:29:45.051     
 
            -------------------------------------------------
           |                Calculation Setup                |
@@ -157,8 +157,8 @@ CAMM data taken from xtbrestart
 
  iter      E             dE          RMSdq      gap      omega  full diag
    1    -22.0077213 -0.220077E+02  0.203E-05   11.46       0.0  T
-   2    -22.0077213 -0.319744E-13  0.122E-05   11.46    2052.3  T
-   3    -22.0077213 -0.142109E-13  0.783E-07   11.46   31935.6  T
+   2    -22.0077213 -0.497380E-13  0.122E-05   11.46    2052.3  T
+   3    -22.0077213  0.000000E+00  0.783E-07   11.46   31937.1  T
 
    *** convergence criteria satisfied after 3 iterations ***
 
@@ -173,41 +173,41 @@ CAMM data taken from xtbrestart
         17        2.0000           -0.4393541             -11.9554
         18        2.0000           -0.4314334             -11.7399
         19        2.0000           -0.3981707             -10.8348 (HOMO)
-        20                          0.0228649               0.6222 (LUMO)
+        20                          0.0228650               0.6222 (LUMO)
         21                          0.0673695               1.8332
         22                          0.0719926               1.9590
-        23                          0.0942701               2.5652
+        23                          0.0942702               2.5652
         24                          0.1202612               3.2725
        ...                                ...                  ...
         34                          0.2818974               7.6708
       -------------------------------------------------------------
-                  HL-Gap            0.4210356 Eh           11.4570 eV
+                  HL-Gap            0.4210357 Eh           11.4570 eV
              Fermi-level           -0.1876529 Eh           -5.1063 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.024 sec
- SCC setup                      ...        0 min,  0.000 sec (  1.046%)
- Dispersion                     ...        0 min,  0.000 sec (  0.936%)
- classical contributions        ...        0 min,  0.000 sec (  0.613%)
- integral evaluation            ...        0 min,  0.001 sec (  2.907%)
- iterations                     ...        0 min,  0.021 sec ( 85.018%)
- molecular gradient             ...        0 min,  0.002 sec (  9.016%)
- printout                       ...        0 min,  0.000 sec (  0.347%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.018 sec
+ SCC setup                      ...        0 min,  0.001 sec (  3.362%)
+ Dispersion                     ...        0 min,  0.000 sec (  1.191%)
+ classical contributions        ...        0 min,  0.000 sec (  1.207%)
+ integral evaluation            ...        0 min,  0.001 sec (  7.026%)
+ iterations                     ...        0 min,  0.009 sec ( 51.766%)
+ molecular gradient             ...        0 min,  0.006 sec ( 33.684%)
+ printout                       ...        0 min,  0.000 sec (  1.382%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
-         :: total energy             -21.786991627753 Eh    ::
-         :: gradient norm              0.000561686995 Eh/a0 ::
-         :: HOMO-LUMO gap             11.456962448485 eV    ::
+         :: total energy             -21.786991627822 Eh    ::
+         :: gradient norm              0.000561661923 Eh/a0 ::
+         :: HOMO-LUMO gap             11.456963529844 eV    ::
          ::.................................................::
-         :: SCC energy               -22.007699609355 Eh    ::
-         :: -> isotropic ES            0.051484593324 Eh    ::
-         :: -> anisotropic ES          0.003136786707 Eh    ::
-         :: -> anisotropic XC          0.002820896537 Eh    ::
-         :: -> dispersion             -0.008821871204 Eh    ::
-         :: repulsion energy           0.220707981602 Eh    ::
+         :: SCC energy               -22.007699639034 Eh    ::
+         :: -> isotropic ES            0.051484591067 Eh    ::
+         :: -> anisotropic ES          0.003136786484 Eh    ::
+         :: -> anisotropic XC          0.002820894619 Eh    ::
+         :: -> dispersion             -0.008821871245 Eh    ::
+         :: repulsion energy           0.220708011212 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
-         :: total charge              -0.000000000000 e     ::
+         :: total charge               0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
            -------------------------------------------------
@@ -233,21 +233,21 @@ CAMM data taken from xtbrestart
         17        2.0000           -0.4393541             -11.9554
         18        2.0000           -0.4314334             -11.7399
         19        2.0000           -0.3981707             -10.8348 (HOMO)
-        20                          0.0228649               0.6222 (LUMO)
+        20                          0.0228650               0.6222 (LUMO)
         21                          0.0673695               1.8332
         22                          0.0719926               1.9590
-        23                          0.0942701               2.5652
+        23                          0.0942702               2.5652
         24                          0.1202612               3.2725
         25                          0.1339058               3.6438
         26                          0.1383484               3.7647
-        27                          0.1725771               4.6961
-        28                          0.1944557               5.2914
+        27                          0.1725772               4.6961
+        28                          0.1944558               5.2914
         29                          0.2032934               5.5319
         30                          0.2391188               6.5068
        ...                                ...                  ...
         34                          0.2818974               7.6708
       -------------------------------------------------------------
-                  HL-Gap            0.4210356 Eh           11.4570 eV
+                  HL-Gap            0.4210357 Eh           11.4570 eV
              Fermi-level           -0.1876529 Eh           -5.1063 eV
 
      #   Z          covCN         q      C6AA      α(0)
@@ -268,8 +268,8 @@ CAMM data taken from xtbrestart
     15   8 O        1.656    -0.444    21.722     6.292
     16   1 H        0.923     0.036     2.508     2.476
 
- Mol. C6AA /au·bohr⁶  :       1734.927578
- Mol. C8AA /au·bohr⁸  :      35707.159778
+ Mol. C6AA /au·bohr⁶  :       1734.927582
+ Mol. C8AA /au·bohr⁸  :      35707.159836
  Mol. α(0) /au        :         60.826371
 
 
@@ -316,20 +316,20 @@ molecular quadrupole (traceless):
 
 
            -------------------------------------------------
-          | TOTAL ENERGY              -21.786991627753 Eh   |
-          | GRADIENT NORM               0.000561686995 Eh/α |
-          | HOMO-LUMO GAP              11.456962448485 eV   |
+          | TOTAL ENERGY              -21.786991627822 Eh   |
+          | GRADIENT NORM               0.000561661923 Eh/α |
+          | HOMO-LUMO GAP              11.456963529844 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2024/10/04 at 09:53:32.383     
+ * finished run on 2024/10/04 at 11:29:45.254     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.247 sec
- *  cpu-time:     0 d,  0 h,  0 min,  2.850 sec
- * ratio c/w:    11.548 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.203 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  2.834 sec
+ * ratio c/w:    13.981 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.025 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.275 sec
- * ratio c/w:    11.198 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.019 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.283 sec
+ * ratio c/w:    15.237 speedup
 

@@ -8,13 +8,13 @@ from calculation import *
 from forcefield import increase_atompair_relevance
 from align import get_ffatom_pair
 import copy
+from interface.call_xtb import *
 
-def original_name(name):
-    return 'original' + name
+
 
 def copy_original_structure(temp_name):
-    shutil.copy(temp_name, original_name(temp_name))
-    print(f'> {temp_name} was copied to {original_name(temp_name)}. {temp_name} may change in further calculations.')
+    shutil.copy(temp_name, Name.original_xyz(temp_name))
+    print(f'> {temp_name} was copied to {Name.original_xyz(temp_name)}. {temp_name} may change in further calculations.')
 
 def initial_check(calc_params: CalculationParameters, struc: StructurePath):
     print(f'> Calculations will be performed in {os.getcwd()}')
@@ -36,9 +36,16 @@ def initialization(config_path):
     return calc_params
 
 def generate_data_for_calculation(input_structure: StructurePath, calc_params: CalculationParameters):
-    nat, energy, xyz = GeometryOptimization.with_xtb(input_structure)
-    HessianCalculation.with_xtb(input_structure)
-    wbo = WboCalculation.with_xtb(input_structure)
+    if calc_params.perform_geometryoptimization:
+        nat, energy, xyz = GeometryOptimization.with_xtb(input_structure)
+    else:
+        nat, energy, xyz = readin_xyz(input_structure.xyz_filename)
+    if calc_params.perform_hesscalculation:
+        HessianCalculation.with_xtb(input_structure)
+    if calc_params.perform_wbocalculation:
+        wbo = WboCalculation.with_xtb(input_structure)
+    else:   
+        wbo = read_wbo_file(input_structure.wbo_filename)
     return StructuralInformation(nat, energy, xyz, wbo)
     
 
@@ -46,13 +53,17 @@ def generate_ff(struc_path: StructurePath, struc_info: StructuralInformation):
     return FittedFfGeneration.with_crest(struc_info.nat, struc_path.xyz_filename, struc_path)
 
 def modify_ff(struc: Structure, reac: Reaction):
+    if len(struc.info.seperate_molecule_list) == 1:
+        print(f'>! Only one molecule present in {struc.path.xyz_filename}, no alignment needed.')
+        return struc.ff
+    print(f'> Alignment of structures in {struc.path.xyz_filename} starts.')
     forbidden_pairs = [[]]
     atompairs_left = True
     while atompairs_left:
         at1, at2 = get_ffatom_pair(reac, struc, forbidden_pairs)
-        print(at1, at2)  
+        print('At1, At2', at1, at2)  
         forbidden_pairs.append([at1, at2])
-        print(forbidden_pairs)
+        print('AAAAAA', forbidden_pairs)
         if at1 == 0 and at2 == 0:
             atompairs_left = False
             break 
@@ -65,6 +76,7 @@ def modify_ff(struc: Structure, reac: Reaction):
 
     struc.ff.write_force_field(struc.path.ff_filename)
     print(f'> FF for alignment written to {struc.path.ff_filename}')
+    GeometryOptimization.with_ff_potential_crest(struc.path, struc.ff)
     return struc.ff
 
 
@@ -72,12 +84,10 @@ def modify_ff(struc: Structure, reac: Reaction):
 
 def align(struc1: Structure, struc2: Structure, reac: Reaction, calc: CalculationParameters):
     if not calc.perform_alignment:
-        return None
+        return None 
     struc1.ff = modify_ff(struc1, reac)
-    GeometryOptimization.with_ff_potential_crest(struc1.path, struc1.ff)
 
     struc2.ff = modify_ff(struc2, reac)
-    GeometryOptimization.with_ff_potential_crest(struc2.path, struc2.ff)
 
     return struc1, struc2
 
@@ -89,9 +99,9 @@ def align(struc1: Structure, struc2: Structure, reac: Reaction, calc: Calculatio
 #     pass
 
 
-def main():
+def main(calc_params):
     # TODO ich muss noch fälle festlegen wenn man Sachen nicht berechnen will, dass sie dann immer noch eingelesen werden .
-    calc_params = initialization('/home/guests/dbabushkina/1_ts_search2024/pytsguess/config.json')
+    # calc_params = initialization('/home/guests/dbabushkina/1_ts_search2024/pytsguess/config.json')
 
     struc1_info = generate_data_for_calculation(calc_params.struc1, calc_params)
     struc1_ff = generate_ff(calc_params.struc1, struc1_info)
@@ -102,7 +112,7 @@ def main():
     struc2 = Structure(calc_params.struc2, struc2_ff, struc2_info)
 
     reac = Reaction.with_unique_bonds(struc1, struc2)
-    print(reac)
+    # print(reac)
     
     new_struc1, new_struc2 = align(struc1, struc2, reac, calc_params)
 
@@ -116,6 +126,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    calc_params = initialization('/home/guests/dbabushkina/1_ts_search2024/pytsguess/config.json')
+    # try:
+    main(calc_params)
+    # except Exception as error: 
+        # shutil.copy(Name.original_xyz(calc_params.struc1.xyz_filename), calc_params.struc1.xyz_filename)
+        # shutil.copy(Name.original_xyz(calc_params.struc2.xyz_filename), calc_params.struc2.xyz_filename)
+        # print(error)
     # main_alignment(calc_param)
     # main_ts_search(calc_param)

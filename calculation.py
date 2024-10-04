@@ -5,6 +5,7 @@ from datatype.structure_data import *
 from input_library import *
 from interface.call_crest import *
 import copy
+import shutil
 
 # class Calculation:
 #     def __init__(self, input_xyz: str, calculation_data: CalculationParameters):
@@ -28,9 +29,11 @@ class GeometryOptimization:
         return nat, energy, xyz
 
     @staticmethod
-    def with_ff_potential_crest(input_structure: StructurePath, ff: ForceField):
+    def with_ff_potential_crest(input_structure: StructurePath, ff: ForceField, output_xyz=''):
+        if output_xyz == '':
+            output_xyz = input_structure.xyz_filename
         crest = Crest()
-        new_ff_name = f'{input_structure.ff_filename}_modified'
+        new_ff_name = Name.modified_ff(input_structure.ff_filename)
         ff.write_force_field(new_ff_name)
         inpu_struc = copy.deepcopy(input_structure)
         inpu_struc.ff_filename = new_ff_name
@@ -38,6 +41,7 @@ class GeometryOptimization:
         crest_input_filename = 'input_ff_opt.toml'
         crest.write_input2file(input, crest_input_filename)
         rc = crest.run_input(crest_input_filename, 'ff_fit')
+        shutil.copy('crestopt.xyz', output_xyz)
         print(f'> FF based geometry optimization for {input_structure.xyz_filename} finished.')
         return rc
 
@@ -73,8 +77,8 @@ class FittedFfGeneration:
         crest.write_input2file(input, crest_input_filename)
         rc = crest.run_input(crest_input_filename, 'ff_fit')
         print(f'> FF Fitting for {structure_for_fit.xyz_filename} finished.')
-        print(f'> FF is written to {structure_for_fit.ff_filename}.')
-        return ForceField(nat, structure_for_fit.ff_filename)
+        print(f'> FF is written to {Name.fitted_ff(structure_for_fit.ff_filename)}.')
+        return ForceField(nat, Name.fitted_ff(structure_for_fit.ff_filename))
 
 
         

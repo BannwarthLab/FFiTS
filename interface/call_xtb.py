@@ -3,6 +3,30 @@
 import subprocess
 import os
 
+
+def readin_xyz(xyz_path):
+    with open(xyz_path, 'r') as file:
+        lines = file.readlines()
+    xyz_dict = {}
+    for i in range(2, len(lines)):
+        line = lines[i]
+        if line.strip():  # skip empty lines
+            atom, x, y, z = line.split()
+            coordinate = [float(x), float(y), float(z)]
+            xyz_dict[atom+str(i-1)] = coordinate
+    energy = float(lines[1].split(' ')[2])
+    nat = int(lines[0].strip())
+    return nat, energy, xyz_dict
+def read_wbo_file(wbo_path) -> dict:
+    """Reads WBO data from a file and parses it into a dictionary of bonds and their WBO values."""
+    wbo_dict = {}
+    with open(wbo_path, 'r') as file:
+        for line in file:
+            if line.strip():  # skip empty lines
+                atom1, atom2, wbo = line.split()
+                bond = tuple(sorted((int(atom1), int(atom2))))
+                wbo_dict[bond] = float(wbo)
+    return wbo_dict
 class Xtb:
     def __init__(self, xtb_path='xtb') -> None:
         # maybe define all names here instead of giving them in func
@@ -31,21 +55,6 @@ class Xtb:
                 raise Exception("An Error happend during the xTB geometry optimization, with the return code ", rc)
     
 
-    def readin_xyz(self, xyz_path):
-        with open(xyz_path, 'r') as file:
-            lines = file.readlines()
-        xyz_dict = {}
-        for i in range(2, len(lines)):
-            line = lines[i]
-            if line.strip():  # skip empty lines
-                atom, x, y, z = line.split()
-                coordinate = [float(x), float(y), float(z)]
-                xyz_dict[atom+str(i-1)] = coordinate
-        energy = float(lines[1].split(' ')[2])
-        nat = int(lines[0].strip())
-        return nat, energy, xyz_dict
-    
-
     def geomopt(self, input_xyz: str) -> float:
         #return xtb energy 
         command = self.get_command(input_xyz, '--opt') 
@@ -55,7 +64,7 @@ class Xtb:
             rc = p.returncode
             if rc == 0:
                 os.rename('xtbopt.xyz', input_xyz)
-                return self.readin_xyz(input_xyz)
+                return readin_xyz(input_xyz)
             else:
                 raise Exception("An Error happend during the xTB geometry optimization, with the return code ", rc)
         
@@ -75,16 +84,7 @@ class Xtb:
             else:
                 raise Exception("An Error happend during the xTB Hessian calculation, with the return code ", rc)
     
-    def read_wbo_file(self, wbo_path) -> dict:
-        """Reads WBO data from a file and parses it into a dictionary of bonds and their WBO values."""
-        wbo_dict = {}
-        with open(wbo_path, 'r') as file:
-            for line in file:
-                if line.strip():  # skip empty lines
-                    atom1, atom2, wbo = line.split()
-                    bond = tuple(sorted((int(atom1), int(atom2))))
-                    wbo_dict[bond] = float(wbo)
-        return wbo_dict
+
 
     def wbocalc(self, wbo_filename, input_xyz: str) -> dict:
         # creates wbo file
@@ -100,7 +100,7 @@ class Xtb:
                     raise Exception("No WBO was generated")
             else:
                 raise Exception("An Error happend during the WBO calculation, with the return code ", rc)
-            return self.read_wbo_file(wbo_filename)
+            return read_wbo_file(wbo_filename)
             
     def get_negative_frequencies(self, vibspectrum_filename, input_xyz: str) -> list:
         command = "xtb " + input_xyz + " --hess"

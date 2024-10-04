@@ -77,22 +77,22 @@
  ----------------
   16
  
- C          2.7269288444       -0.4630694412       -0.0689935197
- C          1.5339797767        0.4290392832       -0.1770955846
- C          0.2911547684        0.0285651333       -0.4152445485
- C         -0.1570879256       -1.3871000910       -0.6276672240
- O         -0.7631728245        0.9117859688       -0.4890778621
- H          3.4913597837       -0.1559931574       -0.7827313041
- H          2.4689282047       -1.5000715352       -0.2574362801
- H          3.1602856364       -0.3886063446        0.9287619071
- H         -0.0333173011       -1.9720672919        0.2821606972
- H          0.4161811374       -1.8585472055       -1.4223604301
- H         -1.2068891858       -1.3846403888       -0.9083434728
- H         -0.4495850917        1.8141563631       -0.3553940350
- H          1.7313470808        1.4855444268       -0.0386609521
- H         -2.7617660341       -0.5577776969        1.6445098137
- O         -2.8261824405        0.3823949384        1.4670993958
- H         -2.2124455246        0.5689685771        0.7448877219
+ C          2.6431913440        0.4930994455       -1.1001873803
+ C          1.3584173027        0.9538394626       -0.4942027227
+ C          0.2811267760        0.2148755110       -0.2552598753
+ C          0.1061373816       -1.2458086449       -0.5282083144
+ O         -0.8587654933        0.7693614103        0.2906388930
+ H          2.8318280696        1.0341427588       -2.0275970282
+ H          2.6298969023       -0.5689925346       -1.3208182835
+ H          3.4724717937        0.7009324867       -0.4238215270
+ H          1.0580280888       -1.7656432627       -0.5101829202
+ H         -0.3559280559       -1.3893555035       -1.5043114428
+ H         -0.5519994788       -1.6793899007        0.2206283484
+ H         -0.7296551690        1.7163587804        0.4195484231
+ H          1.3306596520        2.0086743244       -0.2411542667
+ H         -2.1678011027       -0.4418502396        1.0798913506
+ O         -2.7225539216       -1.0243815960        1.6149661070
+ H         -2.9682379432       -0.5240218890        2.3942941048
  
  ----------------
  Calculation info
@@ -130,397 +130,1054 @@
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE    0                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     2.7672491 Eh     change ΔE     0.0000000E+00 Eh
-   gradient norm :     1.6430735 Eh/a0  predicted     0.0000000E+00 (   0.00%)
+ * total energy  :     5.4596105 Eh     change ΔE     0.0000000E+00 Eh
+   gradient norm :     2.3048654 Eh/a0  predicted     0.0000000E+00 (   0.00%)
 
 generating ANC from model Hessian ...
 Using Lindh-Hessian (1995)
- Shifting diagonal of input Hessian by   9.762799004116118E-003
+ Shifting diagonal of input Hessian by   9.900132409687609E-003
  Lowest  eigenvalues of input Hessian
     0.000000    0.000000    0.000000    0.000000    0.000000    0.000000
-    0.010000    0.010058    0.010319    0.011449    0.014018    0.015335
-    0.016752    0.018669    0.020003    0.020518    0.032618    0.044905
+    0.010000    0.010223    0.010535    0.012188    0.013819    0.014330
+    0.016699    0.018227    0.020318    0.020404    0.031532    0.044729
  Highest eigenvalues
-    1.213099    1.251433    1.360164    1.426359    1.696033    2.029418
+    1.215134    1.258370    1.356094    1.426655    1.695638    2.025226
  
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE    1                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     2.7672491 Eh     change ΔE     0.0000000E+00 Eh
-   gradient norm :     1.6430735 Eh/α   predicted     0.0000000E+00 (-100.00%)
-   displ. norm   :     0.9353435 α      lambda       -0.1495088E+01
-   maximum displ.:     0.3756477 α      in ANC's #8, #6, #2, ...
+ * total energy  :     5.4596105 Eh     change ΔE     0.0000000E+00 Eh
+   gradient norm :     2.3048654 Eh/α   predicted     0.0000000E+00 (-100.00%)
+   displ. norm   :     0.9427538 α      lambda       -0.2139007E+01
+   maximum displ.:     0.4253363 α      in ANC's #8, #4, #25, ...
    converged δE/grad :  True / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE    2                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     1.5780232 Eh     change ΔE    -0.1189226E+01 Eh
-   gradient norm :     0.9739337 Eh/α   predicted    -0.1401546E+01 (  17.85%)
-   displ. norm   :     0.8459059 α      lambda       -0.7757816E+00
-   maximum displ.:     0.3719338 α      in ANC's #6, #8, #2, ...
+ * total energy  :     3.6137529 Eh     change ΔE    -0.1845858E+01 Eh
+   gradient norm :     1.6516475 Eh/α   predicted    -0.2020062E+01 (   9.44%)
+   displ. norm   :     0.8570491 α      lambda       -0.1384553E+01
+   maximum displ.:     0.4173991 α      in ANC's #8, #4, #5, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE    3                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.9527959 Eh     change ΔE    -0.6252272E+00 Eh
-   gradient norm :     0.6067581 Eh/α   predicted    -0.6654486E+00 (   6.43%)
-   displ. norm   :     0.8111451 α      lambda       -0.4647861E+00
-   maximum displ.:     0.4508097 α      in ANC's #6, #1, #5, ...
+ * total energy  :     2.4177312 Eh     change ΔE    -0.1196022E+01 Eh
+   gradient norm :     1.1778918 Eh/α   predicted    -0.1200776E+01 (   0.40%)
+   displ. norm   :     0.8715920 α      lambda       -0.9903437E+00
+   maximum displ.:     0.4049682 α      in ANC's #8, #5, #4, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE    4                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.5884502 Eh     change ΔE    -0.3643457E+00 Eh
-   gradient norm :     0.3963881 Eh/α   predicted    -0.3852975E+00 (   5.75%)
-   displ. norm   :     0.8590283 α      lambda       -0.3097396E+00
-   maximum displ.:     0.4541170 α      in ANC's #1, #37, #8, ...
+ * total energy  :     1.5684819 Eh     change ΔE    -0.8492493E+00 Eh
+   gradient norm :     0.8371859 Eh/α   predicted    -0.8713405E+00 (   2.60%)
+   displ. norm   :     0.8495493 α      lambda       -0.6914992E+00
+   maximum displ.:     0.4012619 α      in ANC's #5, #4, #6, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE    5                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.3632693 Eh     change ΔE    -0.2251809E+00 Eh
-   gradient norm :     0.3370566 Eh/α   predicted    -0.2691529E+00 (  19.53%)
-   displ. norm   :     0.8543547 α      lambda       -0.2522577E+00
-   maximum displ.:     0.4426162 α      in ANC's #37, #1, #6, ...
+ * total energy  :     0.9867659 Eh     change ΔE    -0.5817159E+00 Eh
+   gradient norm :     0.5765294 Eh/α   predicted    -0.5952890E+00 (   2.33%)
+   displ. norm   :     0.8758954 α      lambda       -0.4839135E+00
+   maximum displ.:     0.3805322 α      in ANC's #4, #6, #5, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE    6                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.2751963 Eh     change ΔE    -0.8807303E-01 Eh
-   gradient norm :     0.3201117 Eh/α   predicted    -0.2181931E+00 ( 147.74%)
-   displ. norm   :     0.7989327 α      lambda       -0.1815562E+00
-   maximum displ.:     0.4421580 α      in ANC's #1, #2, #8, ...
+ * total energy  :     0.6779705 Eh     change ΔE    -0.3087955E+00 Eh
+   gradient norm :     0.5653212 Eh/α   predicted    -0.4275843E+00 (  38.47%)
+   displ. norm   :     0.8511713 α      lambda       -0.3863332E+00
+   maximum displ.:     0.4491150 α      in ANC's #4, #2, #10, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE    7                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.2242829 Eh     change ΔE    -0.5091336E-01 Eh
-   gradient norm :     0.3409290 Eh/α   predicted    -0.1487212E+00 ( 192.11%)
-   displ. norm   :     0.7317744 α      lambda       -0.1885577E+00
-   maximum displ.:     0.3573986 α      in ANC's #1, #19, #13, ...
+ * total energy  :     0.6324848 Eh     change ΔE    -0.4548563E-01 Eh
+   gradient norm :     1.0377842 Eh/α   predicted    -0.3331142E+00 ( 632.35%)
+   displ. norm   :     0.6372107 α      lambda       -0.4406264E+00
+   maximum displ.:     0.2919004 α      in ANC's #4, #25, #2, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE    8                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.1571332 Eh     change ΔE    -0.6714974E-01 Eh
-   gradient norm :     0.2888970 Eh/α   predicted    -0.1447646E+00 ( 115.58%)
-   displ. norm   :     0.6099816 α      lambda       -0.1173223E+00
-   maximum displ.:     0.3234257 α      in ANC's #37, #1, #4, ...
+ * total energy  :     0.4967793 Eh     change ΔE    -0.1357056E+00 Eh
+   gradient norm :     0.4930572 Eh/α   predicted    -0.3097687E+00 ( 128.27%)
+   displ. norm   :     0.7585125 α      lambda       -0.2565974E+00
+   maximum displ.:     0.3089892 α      in ANC's #8, #6, #4, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE    9                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.1391685 Eh     change ΔE    -0.1796470E-01 Eh
-   gradient norm :     0.2904666 Eh/α   predicted    -0.8048760E-01 ( 348.03%)
-   displ. norm   :     0.6212168 α      lambda       -0.1110142E+00
-   maximum displ.:     0.3439098 α      in ANC's #1, #3, #28, ...
+ * total energy  :     0.4524704 Eh     change ΔE    -0.4430880E-01 Eh
+   gradient norm :     0.4340986 Eh/α   predicted    -0.2021143E+00 ( 356.15%)
+   displ. norm   :     0.7447054 α      lambda       -0.2647409E+00
+   maximum displ.:     0.3841608 α      in ANC's #5, #6, #4, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   10                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0950148 Eh     change ΔE    -0.4415372E-01 Eh
-   gradient norm :     0.1594697 Eh/α   predicted    -0.7692790E-01 (  74.23%)
-   displ. norm   :     0.7174453 α      lambda       -0.6319467E-01
-   maximum displ.:     0.3872571 α      in ANC's #1, #4, #6, ...
+ * total energy  :     0.3842713 Eh     change ΔE    -0.6819912E-01 Eh
+   gradient norm :     0.4521637 Eh/α   predicted    -0.2057812E+00 ( 201.74%)
+   displ. norm   :     0.6116199 α      lambda       -0.1939261E+00
+   maximum displ.:     0.2100427 α      in ANC's #4, #2, #32, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   11                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0951333 Eh     change ΔE     0.1185657E-03 Eh
-   gradient norm :     0.2403108 Eh/α   predicted    -0.4786135E-01 (*******%)
-   displ. norm   :     0.5417201 α      lambda       -0.6701145E-01
-   maximum displ.:     0.4398061 α      in ANC's #1, #11, #2, ...
+ * total energy  :     0.3299892 Eh     change ΔE    -0.5428217E-01 Eh
+   gradient norm :     0.2899234 Eh/α   predicted    -0.1332349E+00 ( 145.45%)
+   displ. norm   :     0.6406692 α      lambda       -0.1058968E+00
+   maximum displ.:     0.3157170 α      in ANC's #1, #12, #19, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   12                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0628707 Eh     change ΔE    -0.3226265E-01 Eh
-   gradient norm :     0.1113467 Eh/α   predicted    -0.4333836E-01 (  34.33%)
-   displ. norm   :     0.6817443 α      lambda       -0.4637213E-01
-   maximum displ.:     0.3460819 α      in ANC's #1, #2, #11, ...
+ * total energy  :     0.3063112 Eh     change ΔE    -0.2367792E-01 Eh
+   gradient norm :     0.2283687 Eh/α   predicted    -0.7468144E-01 ( 215.41%)
+   displ. norm   :     0.6454046 α      lambda       -0.1085808E+00
+   maximum displ.:     0.3178207 α      in ANC's #1, #11, #6, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   13                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0652032 Eh     change ΔE     0.2332498E-02 Eh
-   gradient norm :     0.1908649 Eh/α   predicted    -0.3396234E-01 (*******%)
-   displ. norm   :     0.4445364 α      lambda       -0.4498282E-01
-   maximum displ.:     0.3259162 α      in ANC's #1, #11, #6, ...
+ * total energy  :     0.2798755 Eh     change ΔE    -0.2643579E-01 Eh
+   gradient norm :     0.3314848 Eh/α   predicted    -0.7690491E-01 ( 190.91%)
+   displ. norm   :     0.5621607 α      lambda       -0.8813491E-01
+   maximum displ.:     0.4392036 α      in ANC's #1, #4, #2, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   14                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0394986 Eh     change ΔE    -0.2570456E-01 Eh
-   gradient norm :     0.0572065 Eh/α   predicted    -0.2693600E-01 (   4.79%)
-   displ. norm   :     0.5810846 α      lambda       -0.1887825E-01
-   maximum displ.:     0.4309012 α      in ANC's #1, #16, #2, ...
+ * total energy  :     0.2229936 Eh     change ΔE    -0.5688188E-01 Eh
+   gradient norm :     0.1244893 Eh/α   predicted    -0.5799388E-01 (   1.95%)
+   displ. norm   :     0.8146277 α      lambda       -0.4905983E-01
+   maximum displ.:     0.6843575 α      in ANC's #1, #2, #4, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   15                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0439531 Eh     change ΔE     0.4454468E-02 Eh
-   gradient norm :     0.1657835 Eh/α   predicted    -0.1262634E-01 (-383.45%)
-   displ. norm   :     0.3738528 α      lambda       -0.2868353E-01
-   maximum displ.:     0.3035070 α      in ANC's #1, #37, #26, ...
+ * total energy  :     0.1838991 Eh     change ΔE    -0.3909447E-01 Eh
+   gradient norm :     0.1535934 Eh/α   predicted    -0.4080831E-01 (   4.38%)
+   displ. norm   :     0.7740584 α      lambda       -0.5302834E-01
+   maximum displ.:     0.4994967 α      in ANC's #1, #3, #28, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   16                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0276026 Eh     change ΔE    -0.1635051E-01 Eh
-   gradient norm :     0.0349448 Eh/α   predicted    -0.1634625E-01 (  -0.03%)
-   displ. norm   :     0.5743650 α      lambda       -0.9338732E-02
-   maximum displ.:     0.3257145 α      in ANC's #1, #2, #13, ...
+ * total energy  :     0.1486845 Eh     change ΔE    -0.3521462E-01 Eh
+   gradient norm :     0.1406126 Eh/α   predicted    -0.4240053E-01 (  20.41%)
+   displ. norm   :     0.7771227 α      lambda       -0.5125780E-01
+   maximum displ.:     0.4779060 α      in ANC's #1, #2, #4, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   17                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0341101 Eh     change ΔE     0.6507491E-02 Eh
-   gradient norm :     0.1004958 Eh/α   predicted    -0.6209748E-02 (-195.42%)
-   displ. norm   :     0.3595506 α      lambda       -0.2220717E-01
-   maximum displ.:     0.2575598 α      in ANC's #1, #2, #11, ...
+ * total energy  :     0.1210365 Eh     change ΔE    -0.2764799E-01 Eh
+   gradient norm :     0.1148211 Eh/α   predicted    -0.4110674E-01 (  48.68%)
+   displ. norm   :     0.7665268 α      lambda       -0.5960977E-01
+   maximum displ.:     0.5869039 α      in ANC's #1, #8, #11, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   18                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0224769 Eh     change ΔE    -0.1163314E-01 Eh
-   gradient norm :     0.0269785 Eh/α   predicted    -0.1253902E-01 (   7.79%)
-   displ. norm   :     0.4444552 α      lambda       -0.6648867E-02
-   maximum displ.:     0.2623676 α      in ANC's #10, #1, #8, ...
+ * total energy  :     0.0974802 Eh     change ΔE    -0.2355630E-01 Eh
+   gradient norm :     0.1761795 Eh/α   predicted    -0.4731715E-01 ( 100.87%)
+   displ. norm   :     0.5388155 α      lambda       -0.3730505E-01
+   maximum displ.:     0.3191893 α      in ANC's #1, #2, #6, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   19                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0271533 Eh     change ΔE     0.4676376E-02 Eh
-   gradient norm :     0.0716112 Eh/α   predicted    -0.3981140E-02 (-185.13%)
-   displ. norm   :     0.2905824 α      lambda       -0.1270482E-01
-   maximum displ.:     0.1624757 α      in ANC's #10, #1, #13, ...
+ * total energy  :     0.0747610 Eh     change ΔE    -0.2271924E-01 Eh
+   gradient norm :     0.0882364 Eh/α   predicted    -0.2406776E-01 (   5.94%)
+   displ. norm   :     0.7039824 α      lambda       -0.3638824E-01
+   maximum displ.:     0.3799329 α      in ANC's #1, #11, #28, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   20                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0200629 Eh     change ΔE    -0.7090444E-02 Eh
-   gradient norm :     0.0198811 Eh/α   predicted    -0.6888799E-02 (  -2.84%)
-   displ. norm   :     0.2487908 α      lambda       -0.1244569E-02
-   maximum displ.:     0.1795363 α      in ANC's #1, #7, #2, ...
+ * total energy  :     0.0701051 Eh     change ΔE    -0.4655864E-02 Eh
+   gradient norm :     0.1515983 Eh/α   predicted    -0.2721093E-01 ( 484.44%)
+   displ. norm   :     0.5293398 α      lambda       -0.3898987E-01
+   maximum displ.:     0.3610311 α      in ANC's #2, #1, #13, ...
    converged δE/grad : False / False
- * RMSD in coord.:     1.8468465 α      energy gain  -0.2747186E+01 Eh
+ * RMSD in coord.:     2.1937954 α      energy gain  -0.5389505E+01 Eh
 
 generating ANC from model Hessian ...
 Using Lindh-Hessian (1995)
- Shifting diagonal of input Hessian by   7.816418007308661E-003
+ Shifting diagonal of input Hessian by   1.339041797886184E-002
  Lowest  eigenvalues of input Hessian
-    0.000000    0.000000    0.000000    0.000000    0.000000    0.000000
-    0.010000    0.010382    0.011729    0.012521    0.014294    0.016107
-    0.016950    0.024171    0.024422    0.029431    0.038499    0.041079
+    0.010000    0.000000    0.000000    0.000000    0.000000    0.000000
+    0.000000    0.014429    0.018125    0.019651    0.020403    0.022209
+    0.024006    0.028549    0.036052    0.042107    0.047702    0.051804
  Highest eigenvalues
-    1.169275    1.194090    1.310676    1.454541    1.617310    1.948123
+    1.160134    1.221521    1.313705    1.553968    1.735070    1.979035
  
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   21                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0193077 Eh     change ΔE    -0.7551869E-03 Eh
-   gradient norm :     0.0178428 Eh/α   predicted     0.0000000E+00 (-100.00%)
-   displ. norm   :     0.3824216 α      lambda       -0.4644536E-02
-   maximum displ.:     0.2491609 α      in ANC's #10, #9, #6, ...
+ * total energy  :     0.0529528 Eh     change ΔE    -0.1715233E-01 Eh
+   gradient norm :     0.0897421 Eh/α   predicted     0.0000000E+00 (-100.00%)
+   displ. norm   :     0.6689831 α      lambda       -0.3953086E-01
+   maximum displ.:     0.4565428 α      in ANC's #8, #5, #9, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   22                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0297648 Eh     change ΔE     0.1045714E-01 Eh
-   gradient norm :     0.1147160 Eh/α   predicted    -0.2661882E-02 (-125.46%)
-   displ. norm   :     0.2296410 α      lambda       -0.2194421E-01
-   maximum displ.:     0.1364327 α      in ANC's #10, #9, #12, ...
+ * total energy  :     0.0712282 Eh     change ΔE     0.1827542E-01 Eh
+   gradient norm :     0.2151545 Eh/α   predicted    -0.2861125E-01 (-256.56%)
+   displ. norm   :     0.3639398 α      lambda       -0.6303529E-01
+   maximum displ.:     0.1547170 α      in ANC's #24, #5, #9, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   23                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0192187 Eh     change ΔE    -0.1054616E-01 Eh
-   gradient norm :     0.0322954 Eh/α   predicted    -0.1155071E-01 (   9.53%)
-   displ. norm   :     0.5326511 α      lambda       -0.1111251E-01
-   maximum displ.:     0.3302400 α      in ANC's #6, #4, #9, ...
+ * total energy  :     0.0439372 Eh     change ΔE    -0.2729096E-01 Eh
+   gradient norm :     0.1061167 Eh/α   predicted    -0.3569220E-01 (  30.78%)
+   displ. norm   :     0.6250111 α      lambda       -0.4212632E-01
+   maximum displ.:     0.4051285 α      in ANC's #8, #9, #11, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   24                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0410478 Eh     change ΔE     0.2182911E-01 Eh
-   gradient norm :     0.1732760 Eh/α   predicted    -0.7132646E-02 (-132.67%)
-   displ. norm   :     0.2904540 α      lambda       -0.4166624E-01
-   maximum displ.:     0.1468846 α      in ANC's #9, #12, #23, ...
+ * total energy  :     0.0490203 Eh     change ΔE     0.5083103E-02 Eh
+   gradient norm :     0.1350133 Eh/α   predicted    -0.2929123E-01 (-676.25%)
+   displ. norm   :     0.3803424 α      lambda       -0.3525248E-01
+   maximum displ.:     0.1747859 α      in ANC's #11, #8, #5, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   25                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0216698 Eh     change ΔE    -0.1937802E-01 Eh
-   gradient norm :     0.0542352 Eh/α   predicted    -0.2259067E-01 (  16.58%)
-   displ. norm   :     0.6456151 α      lambda       -0.2254920E-01
-   maximum displ.:     0.4532642 α      in ANC's #6, #9, #12, ...
+ * total energy  :     0.0335078 Eh     change ΔE    -0.1551250E-01 Eh
+   gradient norm :     0.0848226 Eh/α   predicted    -0.2017604E-01 (  30.06%)
+   displ. norm   :     0.5352093 α      lambda       -0.2690417E-01
+   maximum displ.:     0.3770464 α      in ANC's #8, #5, #11, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   26                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0353088 Eh     change ΔE     0.1363908E-01 Eh
-   gradient norm :     0.1180599 Eh/α   predicted    -0.1597412E-01 (-217.12%)
-   displ. norm   :     0.3624945 α      lambda       -0.3174507E-01
-   maximum displ.:     0.1735560 α      in ANC's #8, #9, #6, ...
+ * total energy  :     0.0433767 Eh     change ΔE     0.9868894E-02 Eh
+   gradient norm :     0.1410070 Eh/α   predicted    -0.1730541E-01 (-275.35%)
+   displ. norm   :     0.3132717 α      lambda       -0.3160411E-01
+   maximum displ.:     0.1492691 α      in ANC's #8, #9, #11, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   27                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0197863 Eh     change ΔE    -0.1552258E-01 Eh
-   gradient norm :     0.0385633 Eh/α   predicted    -0.1795823E-01 (  15.69%)
-   displ. norm   :     0.5725436 α      lambda       -0.1549882E-01
-   maximum displ.:     0.3774705 α      in ANC's #6, #4, #8, ...
+ * total energy  :     0.0264241 Eh     change ΔE    -0.1695264E-01 Eh
+   gradient norm :     0.0298793 Eh/α   predicted    -0.1735285E-01 (   2.36%)
+   displ. norm   :     0.3939966 α      lambda       -0.8847849E-02
+   maximum displ.:     0.1557838 α      in ANC's #15, #12, #7, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   28                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0347117 Eh     change ΔE     0.1492540E-01 Eh
-   gradient norm :     0.1392851 Eh/α   predicted    -0.1028973E-01 (-168.94%)
-   displ. norm   :     0.2792798 α      lambda       -0.3117410E-01
-   maximum displ.:     0.1334668 α      in ANC's #6, #27, #15, ...
+ * total energy  :     0.0317923 Eh     change ΔE     0.5368189E-02 Eh
+   gradient norm :     0.0857128 Eh/α   predicted    -0.5110657E-02 (-195.20%)
+   displ. norm   :     0.2517012 α      lambda       -0.1555688E-01
+   maximum displ.:     0.1084206 α      in ANC's #5, #3, #15, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   29                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0201647 Eh     change ΔE    -0.1454699E-01 Eh
-   gradient norm :     0.0483361 Eh/α   predicted    -0.1680280E-01 (  15.51%)
-   displ. norm   :     0.5546959 α      lambda       -0.1602056E-01
-   maximum displ.:     0.3353494 α      in ANC's #6, #8, #5, ...
+ * total energy  :     0.0232034 Eh     change ΔE    -0.8588857E-02 Eh
+   gradient norm :     0.0201177 Eh/α   predicted    -0.8271235E-02 (  -3.70%)
+   displ. norm   :     0.2663525 α      lambda       -0.1907074E-02
+   maximum displ.:     0.1504431 α      in ANC's #3, #5, #7, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   30                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0305225 Eh     change ΔE     0.1035788E-01 Eh
-   gradient norm :     0.1040130 Eh/α   predicted    -0.1047495E-01 (-201.13%)
-   displ. norm   :     0.3211480 α      lambda       -0.2358967E-01
-   maximum displ.:     0.1790565 α      in ANC's #8, #6, #12, ...
+ * total energy  :     0.0221021 Eh     change ΔE    -0.1101321E-02 Eh
+   gradient norm :     0.0180025 Eh/α   predicted    -0.1021185E-02 (  -7.28%)
+   displ. norm   :     0.4275582 α      lambda       -0.2300842E-02
+   maximum displ.:     0.2969213 α      in ANC's #3, #5, #10, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   31                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0177287 Eh     change ΔE    -0.1279387E-01 Eh
-   gradient norm :     0.0094459 Eh/α   predicted    -0.1301129E-01 (   1.70%)
-   displ. norm   :     0.1872227 α      lambda       -0.1151515E-02
-   maximum displ.:     0.1468267 α      in ANC's #5, #6, #9, ...
+ * total energy  :     0.0210135 Eh     change ΔE    -0.1088574E-02 Eh
+   gradient norm :     0.0221908 Eh/α   predicted    -0.1360728E-02 (  25.00%)
+   displ. norm   :     0.2212491 α      lambda       -0.1203687E-02
+   maximum displ.:     0.1477123 α      in ANC's #3, #5, #1, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   32                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0175476 Eh     change ΔE    -0.1810852E-03 Eh
-   gradient norm :     0.0083945 Eh/α   predicted    -0.5959376E-03 ( 229.09%)
-   displ. norm   :     0.1686059 α      lambda       -0.7062622E-03
-   maximum displ.:     0.0842866 α      in ANC's #3, #4, #5, ...
+ * total energy  :     0.0204714 Eh     change ΔE    -0.5421610E-03 Eh
+   gradient norm :     0.0117233 Eh/α   predicted    -0.6313019E-03 (  16.44%)
+   displ. norm   :     0.2059135 α      lambda       -0.8195644E-03
+   maximum displ.:     0.1071084 α      in ANC's #5, #1, #3, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   33                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0172047 Eh     change ΔE    -0.3428708E-03 Eh
-   gradient norm :     0.0048156 Eh/α   predicted    -0.3631687E-03 (   5.92%)
-   displ. norm   :     0.0971370 α      lambda       -0.2090876E-03
-   maximum displ.:     0.0504832 α      in ANC's #2, #3, #4, ...
+ * total energy  :     0.0201131 Eh     change ΔE    -0.3582343E-03 Eh
+   gradient norm :     0.0165325 Eh/α   predicted    -0.4271544E-03 (  19.24%)
+   displ. norm   :     0.0846941 α      lambda       -0.3535472E-03
+   maximum displ.:     0.0435994 α      in ANC's #3, #4, #5, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   34                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0170638 Eh     change ΔE    -0.1409481E-03 Eh
-   gradient norm :     0.0034751 Eh/α   predicted    -0.1055314E-03 ( -25.13%)
-   displ. norm   :     0.2188669 α      lambda       -0.2366420E-03
-   maximum displ.:     0.1101325 α      in ANC's #2, #4, #3, ...
+ * total energy  :     0.0198332 Eh     change ΔE    -0.2798853E-03 Eh
+   gradient norm :     0.0107856 Eh/α   predicted    -0.1780433E-03 ( -36.39%)
+   displ. norm   :     0.3049184 α      lambda       -0.7705188E-03
+   maximum displ.:     0.1860500 α      in ANC's #5, #4, #3, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   35                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0168908 Eh     change ΔE    -0.1730132E-03 Eh
-   gradient norm :     0.0036700 Eh/α   predicted    -0.1239872E-03 ( -28.34%)
-   displ. norm   :     0.3349294 α      lambda       -0.2850954E-03
-   maximum displ.:     0.1833794 α      in ANC's #2, #3, #4, ...
+ * total energy  :     0.0194811 Eh     change ΔE    -0.3521336E-03 Eh
+   gradient norm :     0.0225470 Eh/α   predicted    -0.4210780E-03 (  19.58%)
+   displ. norm   :     0.2080186 α      lambda       -0.1048643E-02
+   maximum displ.:     0.0907935 α      in ANC's #5, #1, #3, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   36                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0168028 Eh     change ΔE    -0.8790380E-04 Eh
-   gradient norm :     0.0085646 Eh/α   predicted    -0.1585402E-03 (  80.36%)
-   displ. norm   :     0.0886913 α      lambda       -0.1949723E-03
-   maximum displ.:     0.0546440 α      in ANC's #4, #3, #5, ...
+ * total energy  :     0.0191719 Eh     change ΔE    -0.3092471E-03 Eh
+   gradient norm :     0.0189305 Eh/α   predicted    -0.5470104E-03 (  76.88%)
+   displ. norm   :     0.2816262 α      lambda       -0.8543105E-03
+   maximum displ.:     0.1539754 α      in ANC's #4, #5, #3, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   37                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0167076 Eh     change ΔE    -0.9525871E-04 Eh
-   gradient norm :     0.0025970 Eh/α   predicted    -0.9825508E-04 (   3.15%)
-   displ. norm   :     0.0479446 α      lambda       -0.4291294E-04
-   maximum displ.:     0.0269312 α      in ANC's #4, #2, #10, ...
+ * total energy  :     0.0187836 Eh     change ΔE    -0.3882622E-03 Eh
+   gradient norm :     0.0174490 Eh/α   predicted    -0.4610336E-03 (  18.74%)
+   displ. norm   :     0.0849378 α      lambda       -0.3834234E-03
+   maximum displ.:     0.0553778 α      in ANC's #5, #3, #2, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   38                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0166903 Eh     change ΔE    -0.1729600E-04 Eh
-   gradient norm :     0.0027756 Eh/α   predicted    -0.2150680E-04 (  24.35%)
-   displ. norm   :     0.0704651 α      lambda       -0.2401887E-04
-   maximum displ.:     0.0390930 α      in ANC's #3, #2, #9, ...
+ * total energy  :     0.0185573 Eh     change ΔE    -0.2263367E-03 Eh
+   gradient norm :     0.0094235 Eh/α   predicted    -0.1930934E-03 ( -14.69%)
+   displ. norm   :     0.1605728 α      lambda       -0.2207076E-03
+   maximum displ.:     0.1141611 α      in ANC's #5, #3, #4, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   39                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0166758 Eh     change ΔE    -0.1446469E-04 Eh
-   gradient norm :     0.0015057 Eh/α   predicted    -0.1206798E-04 ( -16.57%)
-   displ. norm   :     0.0751972 α      lambda       -0.7573001E-05
-   maximum displ.:     0.0391203 α      in ANC's #4, #2, #3, ...
+ * total energy  :     0.0183931 Eh     change ΔE    -0.1641549E-03 Eh
+   gradient norm :     0.0093151 Eh/α   predicted    -0.1132017E-03 ( -31.04%)
+   displ. norm   :     0.2177201 α      lambda       -0.3288662E-03
+   maximum displ.:     0.1333284 α      in ANC's #5, #4, #3, ...
    converged δE/grad : False / False
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                 CYCLE   40                                 │
 └────────────────────────────────────────────────────────────────────────────┘
- * total energy  :     0.0166719 Eh     change ΔE    -0.3920879E-05 Eh
-   gradient norm :     0.0008522 Eh/α   predicted    -0.3796993E-05 (  -3.16%)
-   displ. norm   :     0.0321508 α      lambda       -0.5614403E-05
-   maximum displ.:     0.0219415 α      in ANC's #7, #1, #4, ...
+ * total energy  :     0.0181872 Eh     change ΔE    -0.2058789E-03 Eh
+   gradient norm :     0.0070476 Eh/α   predicted    -0.1722286E-03 ( -16.34%)
+   displ. norm   :     0.5068533 α      lambda       -0.4692397E-03
+   maximum displ.:     0.3024843 α      in ANC's #5, #4, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   41                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0187866 Eh     change ΔE     0.5993900E-03 Eh
+   gradient norm :     0.0378578 Eh/α   predicted    -0.2949003E-03 (-149.20%)
+   displ. norm   :     0.2622124 α      lambda       -0.2124144E-02
+   maximum displ.:     0.1544331 α      in ANC's #5, #4, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   42                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0179580 Eh     change ΔE    -0.8286225E-03 Eh
+   gradient norm :     0.0049631 Eh/α   predicted    -0.1135095E-02 (  36.99%)
+   displ. norm   :     0.0667756 α      lambda       -0.1013503E-03
+   maximum displ.:     0.0413164 α      in ANC's #4, #5, #36, ...
+   converged δE/grad : False / False
+ * RMSD in coord.:     0.9283019 α      energy gain  -0.5214709E-01 Eh
+
+generating ANC from model Hessian ...
+Using Lindh-Hessian (1995)
+ Shifting diagonal of input Hessian by   8.290480673148040E-003
+ Lowest  eigenvalues of input Hessian
+    0.000000    0.000000    0.000000    0.000000    0.000000    0.000000
+    0.010000    0.011239    0.012287    0.013355    0.014689    0.015783
+    0.017578    0.018895    0.026410    0.034115    0.039196    0.041348
+ Highest eigenvalues
+    1.156366    1.197326    1.311803    1.421354    1.629533    1.961017
+ 
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   43                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0178760 Eh     change ΔE    -0.8203806E-04 Eh
+   gradient norm :     0.0028568 Eh/α   predicted     0.0000000E+00 (-100.00%)
+   displ. norm   :     0.1118839 α      lambda       -0.1752085E-03
+   maximum displ.:     0.0676226 α      in ANC's #4, #3, #2, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   44                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0178113 Eh     change ΔE    -0.6465500E-04 Eh
+   gradient norm :     0.0096830 Eh/α   predicted    -0.8869979E-04 (  37.19%)
+   displ. norm   :     0.4258589 α      lambda       -0.7089548E-03
+   maximum displ.:     0.2293754 α      in ANC's #4, #2, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   45                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0184807 Eh     change ΔE     0.6693509E-03 Eh
+   gradient norm :     0.0394149 Eh/α   predicted    -0.4187675E-03 (-162.56%)
+   displ. norm   :     0.2650327 α      lambda       -0.2606762E-02
+   maximum displ.:     0.1480372 α      in ANC's #4, #3, #2, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   46                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0178110 Eh     change ΔE    -0.6696651E-03 Eh
+   gradient norm :     0.0188389 Eh/α   predicted    -0.1394932E-02 ( 108.30%)
+   displ. norm   :     0.3233487 α      lambda       -0.2198266E-02
+   maximum displ.:     0.1497821 α      in ANC's #3, #9, #1, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   47                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0222226 Eh     change ΔE     0.4411603E-02 Eh
+   gradient norm :     0.0808723 Eh/α   predicted    -0.1214056E-02 (-127.52%)
+   displ. norm   :     0.2078185 α      lambda       -0.8635056E-02
+   maximum displ.:     0.1201180 α      in ANC's #9, #4, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   48                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0179364 Eh     change ΔE    -0.4286220E-02 Eh
+   gradient norm :     0.0122062 Eh/α   predicted    -0.4503991E-02 (   5.08%)
+   displ. norm   :     0.3579617 α      lambda       -0.3061013E-02
+   maximum displ.:     0.1534633 α      in ANC's #3, #8, #1, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   49                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0233455 Eh     change ΔE     0.5409163E-02 Eh
+   gradient norm :     0.0632915 Eh/α   predicted    -0.1726624E-02 (-131.92%)
+   displ. norm   :     0.2091386 α      lambda       -0.1113387E-01
+   maximum displ.:     0.1033825 α      in ANC's #10, #12, #15, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   50                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0178469 Eh     change ΔE    -0.5498604E-02 Eh
+   gradient norm :     0.0148891 Eh/α   predicted    -0.5810433E-02 (   5.67%)
+   displ. norm   :     0.3112494 α      lambda       -0.2618400E-02
+   maximum displ.:     0.1641301 α      in ANC's #8, #3, #7, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   51                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0212446 Eh     change ΔE     0.3397664E-02 Eh
+   gradient norm :     0.0544925 Eh/α   predicted    -0.1436032E-02 (-142.27%)
+   displ. norm   :     0.2038074 α      lambda       -0.7209689E-02
+   maximum displ.:     0.0945894 α      in ANC's #9, #8, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   52                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0178749 Eh     change ΔE    -0.3369683E-02 Eh
+   gradient norm :     0.0194295 Eh/α   predicted    -0.3754583E-02 (  11.42%)
+   displ. norm   :     0.3171695 α      lambda       -0.2936512E-02
+   maximum displ.:     0.1579530 α      in ANC's #3, #5, #6, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   53                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0211283 Eh     change ΔE     0.3253390E-02 Eh
+   gradient norm :     0.0585066 Eh/α   predicted    -0.1615957E-02 (-149.67%)
+   displ. norm   :     0.2100943 α      lambda       -0.6918845E-02
+   maximum displ.:     0.0907777 α      in ANC's #8, #7, #6, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   54                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0175193 Eh     change ΔE    -0.3608956E-02 Eh
+   gradient norm :     0.0041221 Eh/α   predicted    -0.3612121E-02 (   0.09%)
+   displ. norm   :     0.1020732 α      lambda       -0.2073926E-03
+   maximum displ.:     0.0750130 α      in ANC's #2, #5, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   55                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0175402 Eh     change ΔE     0.2087595E-04 Eh
+   gradient norm :     0.0095419 Eh/α   predicted    -0.1047762E-03 (-601.90%)
+   displ. norm   :     0.0503715 α      lambda       -0.1880425E-03
+   maximum displ.:     0.0338521 α      in ANC's #5, #3, #4, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   56                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0174440 Eh     change ΔE    -0.9624595E-04 Eh
+   gradient norm :     0.0046176 Eh/α   predicted    -0.9425770E-04 (  -2.07%)
+   displ. norm   :     0.0541211 α      lambda       -0.6594738E-04
+   maximum displ.:     0.0487021 α      in ANC's #3, #2, #4, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   57                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0174274 Eh     change ΔE    -0.1657497E-04 Eh
+   gradient norm :     0.0028137 Eh/α   predicted    -0.3307067E-04 (  99.52%)
+   displ. norm   :     0.0615979 α      lambda       -0.5808315E-04
+   maximum displ.:     0.0506892 α      in ANC's #2, #1, #4, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   58                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0173800 Eh     change ΔE    -0.4744883E-04 Eh
+   gradient norm :     0.0035509 Eh/α   predicted    -0.2915173E-04 ( -38.56%)
+   displ. norm   :     0.2123046 α      lambda       -0.1427841E-03
+   maximum displ.:     0.1808370 α      in ANC's #2, #1, #4, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   59                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0173240 Eh     change ΔE    -0.5599520E-04 Eh
+   gradient norm :     0.0102716 Eh/α   predicted    -0.7460716E-04 (  33.24%)
+   displ. norm   :     0.0452160 α      lambda       -0.1264606E-03
+   maximum displ.:     0.0300361 α      in ANC's #2, #4, #6, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   60                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0172712 Eh     change ΔE    -0.5272672E-04 Eh
+   gradient norm :     0.0032697 Eh/α   predicted    -0.6335858E-04 (  20.16%)
+   displ. norm   :     0.0909483 α      lambda       -0.7284078E-04
+   maximum displ.:     0.0722137 α      in ANC's #2, #3, #1, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   61                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0172096 Eh     change ΔE    -0.6159823E-04 Eh
+   gradient norm :     0.0028154 Eh/α   predicted    -0.3672149E-04 ( -40.39%)
+   displ. norm   :     0.3148655 α      lambda       -0.1667209E-03
+   maximum displ.:     0.2640030 α      in ANC's #2, #3, #1, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   62                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0172003 Eh     change ΔE    -0.9340170E-05 Eh
+   gradient norm :     0.0137921 Eh/α   predicted    -0.9162574E-04 ( 880.99%)
+   displ. norm   :     0.1208575 α      lambda       -0.2755882E-03
+   maximum displ.:     0.0978427 α      in ANC's #2, #1, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   63                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0171750 Eh     change ΔE    -0.2526856E-04 Eh
+   gradient norm :     0.0058805 Eh/α   predicted    -0.1398055E-03 ( 453.28%)
+   displ. norm   :     0.0589379 α      lambda       -0.1641833E-03
+   maximum displ.:     0.0376865 α      in ANC's #5, #6, #14, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   64                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0171274 Eh     change ΔE    -0.4762133E-04 Eh
+   gradient norm :     0.0033773 Eh/α   predicted    -0.8237633E-04 (  72.98%)
+   displ. norm   :     0.1187044 α      lambda       -0.7683823E-04
+   maximum displ.:     0.1014107 α      in ANC's #2, #5, #1, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   65                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0170814 Eh     change ΔE    -0.4599022E-04 Eh
+   gradient norm :     0.0041539 Eh/α   predicted    -0.3895945E-04 ( -15.29%)
+   displ. norm   :     0.0834355 α      lambda       -0.2932546E-04
+   maximum displ.:     0.0693196 α      in ANC's #2, #3, #37, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   66                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0170583 Eh     change ΔE    -0.2309824E-04 Eh
+   gradient norm :     0.0044871 Eh/α   predicted    -0.1476658E-04 ( -36.07%)
+   displ. norm   :     0.1534987 α      lambda       -0.6426638E-04
+   maximum displ.:     0.1296472 α      in ANC's #2, #37, #3, ...
+   converged δE/grad : False / False
+ * RMSD in coord.:     0.3378567 α      energy gain  -0.8996838E-03 Eh
+
+generating ANC from model Hessian ...
+Using Lindh-Hessian (1995)
+ Shifting diagonal of input Hessian by   8.475576471207898E-003
+ Lowest  eigenvalues of input Hessian
+    0.000000    0.000000    0.000000    0.000000    0.000000    0.000000
+    0.010000    0.010114    0.012044    0.012613    0.014587    0.015241
+    0.017378    0.018539    0.022944    0.031605    0.036658    0.039627
+ Highest eigenvalues
+    1.149373    1.199449    1.312027    1.414966    1.631653    1.962378
+ 
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   67                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0170104 Eh     change ΔE    -0.4794430E-04 Eh
+   gradient norm :     0.0034107 Eh/α   predicted     0.0000000E+00 (-100.00%)
+   displ. norm   :     0.0575365 α      lambda       -0.6358434E-04
+   maximum displ.:     0.0258053 α      in ANC's #6, #1, #4, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   68                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0170243 Eh     change ΔE     0.1389193E-04 Eh
+   gradient norm :     0.0048054 Eh/α   predicted    -0.3189565E-04 (-329.60%)
+   displ. norm   :     0.0716676 α      lambda       -0.1325791E-03
+   maximum displ.:     0.0414712 α      in ANC's #1, #3, #9, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   69                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0170821 Eh     change ΔE     0.5779714E-04 Eh
+   gradient norm :     0.0113219 Eh/α   predicted    -0.6662935E-04 (-215.28%)
+   displ. norm   :     0.0756607 α      lambda       -0.3215885E-03
+   maximum displ.:     0.0528319 α      in ANC's #6, #11, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   70                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0170578 Eh     change ΔE    -0.2423349E-04 Eh
+   gradient norm :     0.0118524 Eh/α   predicted    -0.1617149E-03 ( 567.32%)
+   displ. norm   :     0.1098368 α      lambda       -0.5825926E-03
+   maximum displ.:     0.0611084 α      in ANC's #6, #10, #11, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   71                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0182720 Eh     change ΔE     0.1214165E-02 Eh
+   gradient norm :     0.0444309 Eh/α   predicted    -0.2948094E-03 (-124.28%)
+   displ. norm   :     0.1202551 α      lambda       -0.2705099E-02
+   maximum displ.:     0.0817041 α      in ANC's #6, #11, #10, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   72                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0169835 Eh     change ΔE    -0.1288465E-02 Eh
+   gradient norm :     0.0059841 Eh/α   predicted    -0.1372110E-02 (   6.49%)
+   displ. norm   :     0.1115856 α      lambda       -0.4076111E-03
+   maximum displ.:     0.0638378 α      in ANC's #11, #1, #5, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   73                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0175174 Eh     change ΔE     0.5338234E-03 Eh
+   gradient norm :     0.0255383 Eh/α   predicted    -0.2063448E-03 (-138.65%)
+   displ. norm   :     0.0744403 α      lambda       -0.1208392E-02
+   maximum displ.:     0.0405747 α      in ANC's #11, #7, #8, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   74                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0169549 Eh     change ΔE    -0.5624599E-03 Eh
+   gradient norm :     0.0056365 Eh/α   predicted    -0.6075429E-03 (   8.02%)
+   displ. norm   :     0.1055566 α      lambda       -0.2588409E-03
+   maximum displ.:     0.0809945 α      in ANC's #5, #3, #6, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   75                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0171548 Eh     change ΔE     0.1999532E-03 Eh
+   gradient norm :     0.0111292 Eh/α   predicted    -0.1308634E-03 (-165.45%)
+   displ. norm   :     0.0804599 α      lambda       -0.4949846E-03
+   maximum displ.:     0.0634898 α      in ANC's #5, #6, #1, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   76                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0169267 Eh     change ΔE    -0.2281011E-03 Eh
+   gradient norm :     0.0050259 Eh/α   predicted    -0.2490966E-03 (   9.20%)
+   displ. norm   :     0.0917182 α      lambda       -0.2439927E-03
+   maximum displ.:     0.0383235 α      in ANC's #9, #6, #10, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   77                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0174279 Eh     change ΔE     0.5011919E-03 Eh
+   gradient norm :     0.0237469 Eh/α   predicted    -0.1230205E-03 (-124.55%)
+   displ. norm   :     0.0743964 α      lambda       -0.1049449E-02
+   maximum displ.:     0.0333976 α      in ANC's #9, #5, #6, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   78                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0169015 Eh     change ΔE    -0.5264841E-03 Eh
+   gradient norm :     0.0022149 Eh/α   predicted    -0.5276279E-03 (   0.22%)
+   displ. norm   :     0.0413368 α      lambda       -0.3943040E-04
+   maximum displ.:     0.0242325 α      in ANC's #7, #4, #8, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   79                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0169349 Eh     change ΔE     0.3348435E-04 Eh
+   gradient norm :     0.0058883 Eh/α   predicted    -0.1974756E-04 (-158.98%)
+   displ. norm   :     0.0292480 α      lambda       -0.8555548E-04
+   maximum displ.:     0.0147858 α      in ANC's #7, #8, #4, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   80                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0168887 Eh     change ΔE    -0.4621952E-04 Eh
+   gradient norm :     0.0015634 Eh/α   predicted    -0.4281538E-04 (  -7.37%)
+   displ. norm   :     0.0421817 α      lambda       -0.7924995E-05
+   maximum displ.:     0.0343672 α      in ANC's #1, #2, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   81                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0168787 Eh     change ΔE    -0.1000718E-04 Eh
+   gradient norm :     0.0017588 Eh/α   predicted    -0.3966054E-05 ( -60.37%)
+   displ. norm   :     0.2427299 α      lambda       -0.4437137E-04
+   maximum displ.:     0.1991215 α      in ANC's #1, #2, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   82                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0168625 Eh     change ΔE    -0.1616691E-04 Eh
+   gradient norm :     0.0070531 Eh/α   predicted    -0.2276802E-04 (  40.83%)
+   displ. norm   :     0.0560980 α      lambda       -0.8904688E-04
+   maximum displ.:     0.0398634 α      in ANC's #1, #5, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   83                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0168258 Eh     change ΔE    -0.3678299E-04 Eh
+   gradient norm :     0.0031288 Eh/α   predicted    -0.4466545E-04 (  21.43%)
+   displ. norm   :     0.0918509 α      lambda       -0.3069213E-04
+   maximum displ.:     0.0789133 α      in ANC's #1, #2, #7, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   84                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0168064 Eh     change ΔE    -0.1940032E-04 Eh
+   gradient norm :     0.0019293 Eh/α   predicted    -0.1547333E-04 ( -20.24%)
+   displ. norm   :     0.1317900 α      lambda       -0.2013592E-04
+   maximum displ.:     0.1099997 α      in ANC's #1, #2, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   85                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0168009 Eh     change ΔE    -0.5431339E-05 Eh
+   gradient norm :     0.0054600 Eh/α   predicted    -0.1014674E-04 (  86.82%)
+   displ. norm   :     0.0369755 α      lambda       -0.3124026E-04
+   maximum displ.:     0.0271443 α      in ANC's #1, #2, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   86                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167897 Eh     change ΔE    -0.1125324E-04 Eh
+   gradient norm :     0.0019310 Eh/α   predicted    -0.1564335E-04 (  39.01%)
+   displ. norm   :     0.0685490 α      lambda       -0.1773033E-04
+   maximum displ.:     0.0574627 α      in ANC's #1, #5, #6, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   87                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167830 Eh     change ΔE    -0.6698875E-05 Eh
+   gradient norm :     0.0018804 Eh/α   predicted    -0.8884161E-05 (  32.62%)
+   displ. norm   :     0.0511886 α      lambda       -0.1144032E-04
+   maximum displ.:     0.0409359 α      in ANC's #1, #3, #4, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   88                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167725 Eh     change ΔE    -0.1044068E-04 Eh
+   gradient norm :     0.0013055 Eh/α   predicted    -0.5728214E-05 ( -45.14%)
+   displ. norm   :     0.0763390 α      lambda       -0.8641277E-05
+   maximum displ.:     0.0660551 α      in ANC's #1, #28, #37, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   89                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167649 Eh     change ΔE    -0.7660121E-05 Eh
+   gradient norm :     0.0021362 Eh/α   predicted    -0.4330122E-05 ( -43.47%)
+   displ. norm   :     0.0642448 α      lambda       -0.9070121E-05
+   maximum displ.:     0.0540813 α      in ANC's #1, #37, #7, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   90                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167584 Eh     change ΔE    -0.6522615E-05 Eh
+   gradient norm :     0.0013479 Eh/α   predicted    -0.4554453E-05 ( -30.17%)
+   displ. norm   :     0.1539153 α      lambda       -0.1201851E-04
+   maximum displ.:     0.1307819 α      in ANC's #1, #37, #28, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   91                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167473 Eh     change ΔE    -0.1105557E-04 Eh
+   gradient norm :     0.0020939 Eh/α   predicted    -0.6071167E-05 ( -45.09%)
+   displ. norm   :     0.1032090 α      lambda       -0.2610335E-04
+   maximum displ.:     0.0725174 α      in ANC's #1, #2, #28, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   92                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167454 Eh     change ΔE    -0.1893467E-05 Eh
+   gradient norm :     0.0033840 Eh/α   predicted    -0.1318974E-04 ( 596.59%)
+   displ. norm   :     0.1676356 α      lambda       -0.2810151E-04
+   maximum displ.:     0.1385584 α      in ANC's #1, #28, #37, ...
+   converged δE/grad :  True / False
+ * RMSD in coord.:     0.3493102 α      energy gain  -0.3129140E-03 Eh
+
+generating ANC from model Hessian ...
+Using Lindh-Hessian (1995)
+ Shifting diagonal of input Hessian by   8.867427057817344E-003
+ Lowest  eigenvalues of input Hessian
+    0.000000    0.000000    0.000000    0.000000    0.000000    0.000000
+    0.010000    0.010749    0.012136    0.012956    0.015018    0.015633
+    0.016985    0.018512    0.021676    0.031199    0.034727    0.039940
+ Highest eigenvalues
+    1.149779    1.199634    1.312456    1.415939    1.631985    1.962103
+ 
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   93                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167377 Eh     change ΔE    -0.7662697E-05 Eh
+   gradient norm :     0.0034587 Eh/α   predicted     0.0000000E+00 (-100.00%)
+   displ. norm   :     0.0203660 α      lambda       -0.2250237E-04
+   maximum displ.:     0.0096844 α      in ANC's #9, #5, #6, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   94                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167447 Eh     change ΔE     0.6963389E-05 Eh
+   gradient norm :     0.0044697 Eh/α   predicted    -0.1125504E-04 (-261.63%)
+   displ. norm   :     0.0238971 α      lambda       -0.4649781E-04
+   maximum displ.:     0.0129291 α      in ANC's #3, #9, #2, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   95                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167506 Eh     change ΔE     0.5890036E-05 Eh
+   gradient norm :     0.0049499 Eh/α   predicted    -0.2326318E-04 (-494.96%)
+   displ. norm   :     0.0406732 α      lambda       -0.7568191E-04
+   maximum displ.:     0.0186811 α      in ANC's #5, #11, #6, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   96                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167771 Eh     change ΔE     0.2652059E-04 Eh
+   gradient norm :     0.0067210 Eh/α   predicted    -0.3790378E-04 (-242.92%)
+   displ. norm   :     0.0335669 α      lambda       -0.1285267E-03
+   maximum displ.:     0.0249535 α      in ANC's #10, #3, #9, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   97                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167976 Eh     change ΔE     0.2050363E-04 Eh
+   gradient norm :     0.0095445 Eh/α   predicted    -0.6433729E-04 (-413.78%)
+   displ. norm   :     0.0862391 α      lambda       -0.3066106E-03
+   maximum displ.:     0.0477579 α      in ANC's #11, #7, #5, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   98                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0171864 Eh     change ΔE     0.3887406E-03 Eh
+   gradient norm :     0.0205727 Eh/α   predicted    -0.1544443E-03 (-139.73%)
+   displ. norm   :     0.0764528 α      lambda       -0.1009224E-02
+   maximum displ.:     0.0336072 α      in ANC's #9, #13, #3, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE   99                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0168855 Eh     change ΔE    -0.3008275E-03 Eh
+   gradient norm :     0.0131380 Eh/α   predicted    -0.5075637E-03 (  68.72%)
+   displ. norm   :     0.1718187 α      lambda       -0.9667334E-03
+   maximum displ.:     0.1038663 α      in ANC's #9, #5, #11, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE  100                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0179486 Eh     change ΔE     0.1063063E-02 Eh
+   gradient norm :     0.0281270 Eh/α   predicted    -0.4976341E-03 (-146.81%)
+   displ. norm   :     0.1213400 α      lambda       -0.2474838E-02
+   maximum displ.:     0.0630047 α      in ANC's #11, #9, #15, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE  101                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0168672 Eh     change ΔE    -0.1081435E-02 Eh
+   gradient norm :     0.0123445 Eh/α   predicted    -0.1255638E-02 (  16.11%)
+   displ. norm   :     0.2136292 α      lambda       -0.1193011E-02
+   maximum displ.:     0.1377748 α      in ANC's #5, #7, #9, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE  102                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0185072 Eh     change ΔE     0.1640017E-02 Eh
+   gradient norm :     0.0380986 Eh/α   predicted    -0.6237342E-03 (-138.03%)
+   displ. norm   :     0.1705547 α      lambda       -0.3484644E-02
+   maximum displ.:     0.1055184 α      in ANC's #5, #7, #9, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE  103                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167450 Eh     change ΔE    -0.1762164E-02 Eh
+   gradient norm :     0.0032946 Eh/α   predicted    -0.1793002E-02 (   1.75%)
+   displ. norm   :     0.0776684 α      lambda       -0.1375812E-03
+   maximum displ.:     0.0583952 α      in ANC's #4, #11, #7, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE  104                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0168559 Eh     change ΔE     0.1108784E-03 Eh
+   gradient norm :     0.0093286 Eh/α   predicted    -0.6920510E-04 (-162.42%)
+   displ. norm   :     0.0514414 α      lambda       -0.2632813E-03
+   maximum displ.:     0.0340101 α      in ANC's #4, #7, #11, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE  105                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167254 Eh     change ΔE    -0.1304453E-03 Eh
+   gradient norm :     0.0005290 Eh/α   predicted    -0.1319886E-03 (   1.18%)
+   displ. norm   :     0.0346113 α      lambda       -0.4264434E-05
+   maximum displ.:     0.0227000 α      in ANC's #4, #3, #6, ...
+   converged δE/grad : False / True
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE  106                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167354 Eh     change ΔE     0.9997964E-05 Eh
+   gradient norm :     0.0016772 Eh/α   predicted    -0.2132017E-05 (-121.32%)
+   displ. norm   :     0.0191007 α      lambda       -0.1133880E-04
+   maximum displ.:     0.0145601 α      in ANC's #4, #6, #7, ...
+   converged δE/grad : False / False
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE  107                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167248 Eh     change ΔE    -0.1067837E-04 Eh
+   gradient norm :     0.0005308 Eh/α   predicted    -0.5671590E-05 ( -46.89%)
+   displ. norm   :     0.0174231 α      lambda       -0.1830692E-05
+   maximum displ.:     0.0107442 α      in ANC's #4, #5, #1, ...
+   converged δE/grad : False / True
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE  108                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167257 Eh     change ΔE     0.9310791E-06 Eh
+   gradient norm :     0.0008490 Eh/α   predicted    -0.9176463E-06 (-198.56%)
+   displ. norm   :     0.0122623 α      lambda       -0.2840464E-05
+   maximum displ.:     0.0071717 α      in ANC's #5, #6, #2, ...
    converged δE/grad :  True / True
 
-   *** GEOMETRY OPTIMIZATION CONVERGED AFTER 40 ITERATIONS ***
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                 CYCLE  109                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+ * total energy  :     0.0167238 Eh     change ΔE    -0.1857031E-05 Eh
+   gradient norm :     0.0004621 Eh/α   predicted    -0.1418332E-05 ( -23.62%)
+   displ. norm   :     0.0093523 α      lambda       -0.1018935E-05
+   maximum displ.:     0.0046752 α      in ANC's #4, #3, #2, ...
+   converged δE/grad :  True / True
+
+   *** GEOMETRY OPTIMIZATION CONVERGED AFTER 109 ITERATIONS ***
 
 ------------------------------------------------------------------------
- total energy gain   :        -2.7505772 Eh    -1726.0133 kcal/mol
- total RMSD          :         2.1553124 a0        1.1405 Å
+ total energy gain   :        -5.4428867 Eh    -3415.4630 kcal/mol
+ total RMSD          :         2.9664588 a0        1.5698 Å
 ------------------------------------------------------------------------
  SUCCESS!
  geometry successfully optimized!
@@ -532,23 +1189,23 @@ Using Lindh-Hessian (1995)
  
 > Final molecular gradient ( Eh/a0 ):
              ∂E/∂x             ∂E/∂y             ∂E/∂z
-        0.00014599        0.00002103       -0.00020434
-       -0.00001381        0.00009813        0.00011853
-        0.00021012       -0.00014156       -0.00047076
-       -0.00013435        0.00004270        0.00009633
-        0.00000143       -0.00004803       -0.00003624
-       -0.00000391        0.00001319       -0.00001896
-       -0.00001295        0.00001600        0.00009469
-        0.00002067        0.00005002        0.00001848
-       -0.00004646        0.00000785        0.00001452
-        0.00005230       -0.00006263       -0.00001268
-       -0.00002084        0.00003729       -0.00011960
-        0.00003711        0.00002298       -0.00001832
-        0.00003718        0.00002533       -0.00003289
-        0.00003516        0.00000300        0.00003452
-       -0.00018032       -0.00021875        0.00036047
-       -0.00012731        0.00013345        0.00017623
-> Gradient norm:        0.00085306 Eh/a0
+       -0.00001973       -0.00003564        0.00010612
+        0.00001992        0.00004902       -0.00013387
+       -0.00005326       -0.00009342        0.00023919
+        0.00002973        0.00007527       -0.00023700
+        0.00000628        0.00003090       -0.00006615
+       -0.00002057       -0.00005571       -0.00006787
+       -0.00001053       -0.00002487        0.00007076
+        0.00002902        0.00008758       -0.00000580
+        0.00000510        0.00000468        0.00000451
+       -0.00000862       -0.00000049        0.00000921
+        0.00000329       -0.00000030        0.00001763
+       -0.00000520       -0.00001454        0.00001414
+        0.00000049        0.00000468       -0.00000625
+        0.00005677       -0.00006598        0.00004329
+        0.00002721        0.00006603       -0.00001162
+       -0.00005990       -0.00002720        0.00002374
+> Gradient norm:        0.00046211 Eh/a0
  
 > Writing crest.engrad ... done.
  
@@ -559,42 +1216,42 @@ Using Lindh-Hessian (1995)
  -----------------
     16
  
- C         2.07515202       -0.42849261        0.47216566
- C         0.98766012        0.45347037       -0.09672817
- C        -0.06650582        0.03760429       -0.79764804
- C        -0.38729253       -1.39958986       -1.17304939
- O        -1.02384210        0.92849141       -1.27082719
- H         3.05627657       -0.10295740        0.10278607
- H         1.92778519       -1.47615207        0.20107675
- H         2.09288530       -0.35204344        1.56751959
- H        -0.61702279       -1.99133239       -0.27985415
- H         0.45792419       -1.86465375       -1.69016881
- H        -1.25441162       -1.41047017       -1.83971181
- H        -0.81983720        1.84768506       -1.03845783
- H         1.10748894        1.51619682        0.10945949
- H        -0.76637840       -0.11489598        2.54126282
- O        -0.37323874        0.23156450        1.72944394
- H        -0.98692422        0.07815676        0.98714540
+ C         2.13335933        0.20644226       -0.26355830
+ C         0.74207902        0.79541263       -0.25625660
+ C        -0.38463484        0.20229370       -0.65146974
+ C        -0.54361859       -1.20448970       -1.19255366
+ O        -1.59902968        0.88558788       -0.60957889
+ H         2.78857496        0.80083426       -0.91375385
+ H         2.13932620       -0.82536986       -0.62040464
+ H         2.56017117        0.23091996        0.74751719
+ H         0.23883807       -1.86544816       -0.81485044
+ H        -0.49811846       -1.19233949       -2.28857253
+ H        -1.52011869       -1.60386156       -0.90070189
+ H        -1.49198849        1.79798656       -0.29941174
+ H         0.69541123        1.82178332        0.11008335
+ H         0.49013465       -0.60751057        2.43537721
+ O         0.15651629        0.08835002        1.83997040
+ H        -0.55008602       -0.27875064        1.29238759
  
 > Optimized geometry written to crestopt.xyz
  
 ==========================================
- TOTAL ENERGY           0.0166719078 Eh
- GRADIENT NORM          0.0008530575 Eh/a0
+ TOTAL ENERGY           0.0167238374 Eh
+ GRADIENT NORM          0.0004621130 Eh/a0
 ==========================================
  
  -----------------
  Wall Time Summary
  -----------------
- CREST runtime (total)               0 d,  0 h,  0 min,  1.595 sec
+ CREST runtime (total)               0 d,  0 h,  0 min,  0.316 sec
  ------------------------------------------------------------------
- Geometry optimization      ...        0 min,  0.658 sec ( 41.283%)
- I/O and setup              ...        0 min,  0.936 sec ( 58.717%)
+ Geometry optimization      ...        0 min,  0.144 sec ( 45.613%)
+ I/O and setup              ...        0 min,  0.172 sec ( 54.387%)
  ------------------------------------------------------------------
- * wall-time:     0 d,  0 h,  0 min,  1.595 sec
- *  cpu-time:     0 d,  0 h,  0 min,  1.274 sec
- * ratio c/w:     0.799 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.316 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.603 sec
+ * ratio c/w:     1.908 speedup
  ------------------------------------------------------------------
- * Total number of energy+grad calls: 41
+ * Total number of energy+grad calls: 110
  
  CREST terminated normally.

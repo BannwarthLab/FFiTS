@@ -6,6 +6,26 @@ import networkx as nx
 import numpy as np
 import json
 
+
+@dataclass
+class Name:
+    @staticmethod
+    def modified_ff(input_str: str):
+        return f'{input_str}'
+    @staticmethod
+    def fitted_ff(input_str: str):
+        return f'{input_str}'
+    @staticmethod
+    def optimized_xyz(input_str: str):
+        return f'opt_{input_str}'
+    @staticmethod
+    def aligned_xyz(input_str: str):
+        return f'aligned_{input_str}'
+    @staticmethod
+    def original_xyz(input_str: str):
+        return f'original_{input_str}'
+    
+
 @dataclass
 class StructurePath:
     """

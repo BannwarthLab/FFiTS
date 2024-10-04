@@ -34,7 +34,6 @@ def get_ffatom_pair(reaction: Reaction, struc: Structure, forbidden_pair=[[-1,-1
     at1 = 0
     at2 = 0
     
-    print(reaction)
     for val in reaction.unique_bonds:
         G_temp = copy.deepcopy(struc.info.complete_graph)
         G_temp.add_edge(val[0], val[1])
