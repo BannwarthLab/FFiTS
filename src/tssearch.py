@@ -19,7 +19,7 @@ def search_ts(struc1: Structure, struc2: Structure, calc: CalculationParameters)
                ts_ff = ForceField(nat, calc.ts.ff_filename)
                os.rename('crestopt.log', 'crestopt2.log')
           except ConvergenceError:
-               p = subprocess.Popen('tail crestopt.log -n '+ str(struc1.info.nat+2) + ' > ts.xyz', shell=True) #NAME
+               p = subprocess.Popen(f'tail crestopt.log -n {str(struc1.info.nat+2)} > {calc.ts.ff_filename}', shell=True) #NAME
                p.wait()
                print(f'!!> CREST run did not converge. Last structure of crestopt.log is used.')
                return ForceField(nat, calc.ts.ff_filename)

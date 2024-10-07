@@ -46,6 +46,6 @@ class Crest:
             if rc == 0:
                 return rc
             else:
-                raise Exception("An Error happend during the CREST calculation with rc ", rc)
+                raise Exception(f"An Error happend during the CREST calculation with rc {rc}.\n For further information look in {output_name}_err.out.")
 
         

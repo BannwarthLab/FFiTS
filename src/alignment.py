@@ -7,6 +7,7 @@ import os
 from src.datatype.structure_data import Structure, ForceField
 from src.datatype.calculation_data import Reaction, CalculationParameters
 from src.calculation import GeometryOptimization
+from src.interface.exceptions import ConvergenceError
 
 
 def get_ffatom_pair(reaction: Reaction, struc: Structure, forbidden_pair=[[-1,-1]]):
@@ -70,7 +71,10 @@ def modify_ff(struc: Structure, reac: Reaction):
 
     struc.ff.write_force_field(struc.path.ff_filename)
     print(f'> FF for alignment written to {struc.path.ff_filename}')
-    GeometryOptimization.with_ff_potential_crest(struc.path, struc.ff)
+    try:
+        GeometryOptimization.with_ff_potential_crest(struc.path, struc.ff)
+    except ConvergenceError:
+        pass
     return struc.ff
 
 

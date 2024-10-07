@@ -6,6 +6,7 @@ from src.interface.crest import *
 import copy
 import shutil
 from src.interface.exceptions import ConvergenceError
+import subprocess
 
 # @dataclass
 class GeometryOptimization:
@@ -36,6 +37,9 @@ class GeometryOptimization:
             shutil.copy('crestopt.xyz', output_xyz)
             print(f'> FF based geometry optimization for {input_structure.xyz_filename} finished.')
             return rc
+        print(f'!!> ERROR FF based geometry optimization for {input_structure.xyz_filename} did not converge. Last structure of crestopt.log is used.')
+        p = subprocess.Popen(f'tail crestopt.log -n {str(ff.nat+2)} > {input_structure.xyz_filename}', shell=True) #NAME
+        p.wait()
         raise ConvergenceError('Not converged')
 
 

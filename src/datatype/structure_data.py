@@ -53,6 +53,7 @@ class ForceField:
     and corresponging atom combinations (between which two atoms is the bond). 
     """
     def __init__(self, nat, ff_filename, readff=True):
+        self.nat = nat
         self.ff_filename = ff_filename
         self.c_bond = np.zeros((nat,nat))
         self.c_angle = np.zeros((nat,nat,nat))
@@ -108,24 +109,32 @@ class ForceField:
                 for (atom1, atom2), bondlength in zip(self.bond_list, self.bondlengths):
                     param = self.c_bond[atom1-1, atom2-1]
                     file.write(f"{atom1}, {atom2}, {param}, {bondlength}\n")
+            else:
+                file.write(f"$bonds, {len(self.bond_list)}\n")
 
             if len(self.angle_list) > 0:
                 file.write(f"$angles, {len(self.angle_list)}\n")
                 for (atom1, atom2, atom3), angle in zip(self.angle_list, self.angles):
                     param = self.c_angle[atom1-1, atom2-1, atom3-1]
                     file.write(f"{atom1}, {atom2}, {atom3}, {param}, {angle}\n")
+            else:
+                file.write(f"$angles, {len(self.angle_list)}\n")
 
             if len(self.dihedral_list) > 0:
                 file.write(f"$dihedrals, {len(self.dihedral_list)}\n")
                 for (atom1, atom2, atom3, atom4), dihedral_angle in zip(self.dihedral_list, self.dihedrals):
                     param = self.c_dihedral[atom1-1, atom2-1, atom3-1, atom4-1]
                     file.write(f"{atom1}, {atom2}, {atom3}, {atom4}, {param}, {dihedral_angle}\n")
+            else:
+                file.write(f"$dihedrals, {len(self.dihedral_list)}\n")
 
             if len(self.lj_list) > 0:
                 file.write(f"$lj-terms, {len(self.lj_list)}\n")
                 for (atom1, atom2), sigma in zip(self.lj_list, self.sigmas):
                     param = self.c_lj[atom1-1, atom2-1]
                     file.write(f"{atom1}, {atom2}, {param}, {sigma}\n")
+            else:
+                file.write(f"$lj-terms, {len(self.lj_list)}\n")
 
 
 
