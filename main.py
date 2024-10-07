@@ -36,9 +36,9 @@ def main(calc_params):
 
 if __name__ == "__main__":
     calc_params = initialization('/home/guests/dbabushkina/1_ts_search2024/pytsguess/config.json')
-    # try:
-    main(calc_params)
-    # except Exception as error: 
-        # shutil.copy(Name.original_xyz(calc_params.struc1.xyz_filename), calc_params.struc1.xyz_filename)
-        # shutil.copy(Name.original_xyz(calc_params.struc2.xyz_filename), calc_params.struc2.xyz_filename)
-        # print(error)
+    try:
+        main(calc_params)
+    except Exception as error: 
+        shutil.copy(Name.original_xyz(calc_params.struc1.xyz_filename), calc_params.struc1.xyz_filename)
+        shutil.copy(Name.original_xyz(calc_params.struc2.xyz_filename), calc_params.struc2.xyz_filename)
+        print(error)

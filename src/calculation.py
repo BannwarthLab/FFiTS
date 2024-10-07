@@ -9,7 +9,10 @@ from src.interface.exceptions import ConvergenceError
 import subprocess
 
 # @dataclass
-class GeometryOptimization:
+class GeometryOptimization: 
+    ''' 
+    performs a geometry optimization with the specified method. 
+    '''
         # TODO add a wbo calc and check to check whether topology changes and issue a warning
     @staticmethod
     def with_xtb(input_structure: StructurePath, xtb_path='xtb'):
@@ -46,6 +49,10 @@ class GeometryOptimization:
 
 
 class HessianCalculation:
+    ''' 
+    performs a Hessian calculation with the specified method. 
+    Output is in the xtb type format.
+    '''
     @staticmethod
     def with_xtb(input_structure: StructurePath, xtb_path='xtb'):
         input_xyz = input_structure.xyz_filename
@@ -56,6 +63,10 @@ class HessianCalculation:
 
 
 class WboCalculation:
+    ''' 
+    performs a WBO calculation with the specified method. 
+    Output is in the xtb type format.
+    '''
     @staticmethod
     def with_xtb(input_structure: StructurePath, xtb_path='xtb'):
         input_xyz = input_structure.xyz_filename
@@ -66,6 +77,9 @@ class WboCalculation:
         return wbo_dict
 
 class FittedFfGeneration:
+    '''
+    generates a force field file, containing information on the fitted FF
+    '''
     @staticmethod
     def with_crest(nat, start_structure: str, structure_for_fit: StructurePath):
         crest = Crest()
@@ -79,6 +93,9 @@ class FittedFfGeneration:
 
 
 class TsGuessCalculation:
+    '''
+    performs TS guess calculation with specified method.
+    '''
     @staticmethod
     def with_crest(start_struc: str, calc: CalculationParameters):
         crest = Crest()

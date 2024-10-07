@@ -7,21 +7,30 @@ import os
 
     
 class Crest:
+    '''
+    CREST caller and CREST specific operations.
+    '''
     def __init__(self, crest_path="/home/guests/dbabushkina//1_ts_search2024/crest/_build/crest") -> None:
         self.crest_path = crest_path
     
 
-    def check_convergence(self, filepath: str):
+    def check_convergence(self, filepath: str, keyword="geometry successfully optimized"):
+        '''
+        checks convergence by finding keyword in output saved in 'filepath'
+        '''
         with open(filepath, 'r') as f:
             lines = f.readlines()
         for line in reversed(lines):
-            if "geometry successfully optimized" in line:
+            if keyword in line:
                 return True
         return False
 
     def get_rmsd(self, xyz1: str, xyz2: str) -> float:
+        '''
+        runs an RMSD calculation and returns the RMSD between structure in paths 'xyz1' and 'xyz2'
+        '''
         print('rmsd calc')
-        command = "crest --rmsd " + xyz1 + " " + xyz2 
+        command = f"{self.crest_path} --rmsd {xyz1} {xyz2}"
         with open('rmsd.out', 'w') as stdout_file, open('rmsd_err.out', 'w') as stderr_file:
             p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
             p.wait()
@@ -34,10 +43,16 @@ class Crest:
                 raise Exception("An Error happend during the RMSD calculation, with the return code ", rc)
 
     def write_input2file(self, input: str, filename):
+        '''
+        writes input string 'input' to 'filename'.
+        '''
         with open(filename, 'w') as file:
             file.write(input)
 
     def run_input(self, input_file: str, output_name: str):
+        '''
+        runs CREST input from 'input_file' and saves resulting output of the calculation in 'output_name'.out and 'output_name'_err.out
+        '''
         command = f"{self.crest_path} -i {input_file}"
         with open(f'{output_name}.out', 'w') as stdout_file, open(f'{output_name}_err.out', 'w') as stderr_file:
             p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)

@@ -79,7 +79,10 @@ def format_line(att, value):
     else:
         return f'{att} = "{value}"\n'
     
-def generate_input(header: HeaderBlock, calculation: CalcBlock, ssff1: SsffBlock, ssff2: SsffBlock = '', tsff: TsffBlock = '') :
+def generate_input(header: HeaderBlock, calculation: CalcBlock, ssff1: SsffBlock, ssff2: SsffBlock = '', tsff: TsffBlock = ''):
+    '''
+    generates formatted input for CREST run from given information.
+    '''
     return f"{header} \n{calculation} \n{ssff1} \n{ssff2} \n{tsff} \n "
 
 # block1 = HeaderBlock(input='struc2.xyz', runtype='ancopt', threads=4)

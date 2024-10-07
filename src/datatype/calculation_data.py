@@ -10,6 +10,9 @@ import json
 
 @dataclass
 class Reaction:
+    '''
+    Complete information about a given Reaction.
+    '''
     structure1: Structure 
     structure2: Structure
     # transition_structure: Structure
@@ -17,8 +20,10 @@ class Reaction:
     
     @staticmethod
     def with_unique_bonds(struc1: Structure, struc2: Structure, threshold=0.8):
-        """Compares two WBO data files and returns unique atom indices, 
-        including those with significant WBO differences."""
+        """
+        Compares two WBO data files and returns Reaction with unique atom indices, 
+        including those with significant WBO differences (larger then threshold).
+        """
         wbo_dict1 = struc1.info.wbo 
         wbo_dict2 = struc2.info.wbo 
         all_bonds = set(wbo_dict1.keys()).union(set(wbo_dict2.keys()))
@@ -40,9 +45,24 @@ class Reaction:
         sorted_unique_atoms = sorted(unique_atoms)
         return Reaction(structure1=struc1, structure2=struc2, unique_bonds=unique_bonds)
 
-
+# TODO random idea: Make a big big factory class which generates the complete calculation procedure and order.
 @dataclass
-class CalculationParameters:
+class CalculationParameters:  
+    """
+    All Calculation parameters read in from user input.
+        perform_geometryoptimization: if True perform geometry optimization 
+            before alignment and/or TS calculation
+        perform_hesscalculation: if True calculate Hessian before 
+            alignment and/or TS calculation 
+        perform_wbocalculation: if True calculate WBO before alignment  
+            and/or TS calculation 
+        perform_alignment: if True perform alignment before TS calculation 
+        perform_ts_search: if True perform TS search 
+        struc1: paths for Structure 1 files (f.ex. reactant)
+        struc2: paths for Structure 2 files (f.ex. product)
+        ts: paths for transition structure files
+        working_dir: current directory (filled automatically)
+    """
     perform_geometryoptimization: bool 
     perform_hesscalculation: bool 
     perform_wbocalculation: bool
@@ -55,6 +75,9 @@ class CalculationParameters:
 
     @staticmethod
     def from_json(config):
+        """
+        returns CalculationParameters, read from a json type object/string
+        """
         return CalculationParameters(perform_geometryoptimization=config["calculation_details"]["perform_geometryoptimization"],
                                      perform_hesscalculation=config["calculation_details"]["perform_hesscalculation"],
                                      perform_wbocalculation=config["calculation_details"]["perform_wbocalculation"],

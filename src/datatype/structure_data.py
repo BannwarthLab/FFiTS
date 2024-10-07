@@ -9,6 +9,9 @@ import json
 
 @dataclass
 class Name:
+    """
+    Class, defining path names of data, generated during the calculation.
+    """
     @staticmethod
     def modified_ff(input_str: str):
         return f'{input_str}'
@@ -29,7 +32,7 @@ class Name:
 @dataclass
 class StructurePath:
     """
-    Paths/Filenames and ID for a structure
+    Paths/Filenames and ID for a given structure.
     """
     id: int
     xyz_filename: str 
@@ -39,6 +42,9 @@ class StructurePath:
 
     @staticmethod
     def from_json(id: int, str):
+        """ 
+        returns StructurePath filled with values from json file part 'str'.
+        """
         return StructurePath(id=id,
                              xyz_filename = str["xyz"],
                              wbo_filename = str["wbo"],
@@ -48,9 +54,7 @@ class StructurePath:
 
 class ForceField:
     """ 
-    The force field (FF) is defined through FF parameters (matrices starting with c_) as well 
-    as the reference values (bondlengths, angles, dihedral angles and repulsion references) 
-    and corresponging atom combinations (between which two atoms is the bond). 
+    FF definition through FF parameters (np arrays starting with c_), reference values (bondlenghts, angles, etc) and corresponding atom numbers, which construct the bond / angle / dihedral angle / lj term. 
     """
     def __init__(self, nat, ff_filename, readff=True):
         self.nat = nat
@@ -72,6 +76,21 @@ class ForceField:
 
         
     def readin_forcefield(self, ff_filename: str):
+        """ 
+        reads force field definition from path 'ff_filename'. Works only for specific file structure:
+            $bonds, 'number_of_bonds'
+            atom1, atom2, ff_parameter_for_bond, bondlength
+            ...
+            $angles, 'number_of_angles'
+            atom1, atom2, atom3, ff_parameter_for_angle, angle
+            ...
+            $dihedrals, 'number_of_dihedral_angles'
+            atom1, atom2, atom3, atom4, ff_parameter_for_dihedral_angle, dihedral_angle
+            ...
+            $lj-terms, 'number_of_lj_terms'
+            atom1, atom3, ff_parameter_for_lj_term, sigma
+            ...
+        """
         with open(ff_filename, 'r') as file:
             section = None
             for line in file:
@@ -103,6 +122,21 @@ class ForceField:
 
 
     def write_force_field(self, filename):
+        """ 
+        writes force field definition to path 'ff_filename'. Works only for specific file structure:
+            $bonds, 'number_of_bonds'
+            atom1, atom2, ff_parameter_for_bond, bondlength
+            ...
+            $angles, 'number_of_angles'
+            atom1, atom2, atom3, ff_parameter_for_angle, angle
+            ...
+            $dihedrals, 'number_of_dihedral_angles'
+            atom1, atom2, atom3, atom4, ff_parameter_for_dihedral_angle, dihedral_angle
+            ...
+            $lj-terms, 'number_of_lj_terms'
+            atom1, atom3, ff_parameter_for_lj_term, sigma
+            ...
+        """
         with open(filename, 'w') as file:
             if len(self.bond_list) > 0: 
                 file.write(f"$bonds, {len(self.bond_list)}\n")
@@ -139,6 +173,15 @@ class ForceField:
 
 
 class StructuralInformation:
+    """ 
+    Information on the given structure.
+        nat: number of atoms
+        energy: energy calculated by unspecified method
+        wbo: Wilberg Bond Order as directory of bond pairs and corresponding WBO values
+        complete_graph: networkx Graph object with atoms as nodes and bond order larger then 0 as edges.
+        seperate_molecule_list: List of subgraphs not connectred by edges in complete_graph.
+        molecule_count: number of seperate molecules in structure.
+    """
     def __init__(self, nat, energy, xyz, wbo_list):
         self.nat = nat 
         self.energy = energy 
@@ -149,6 +192,9 @@ class StructuralInformation:
         self.molecule_count = len(self.seperate_molecule_list)
 
     def create_graph_from_wbo(self) -> nx.Graph:
+        """ 
+        creates networkx Graph object with atoms as nodes and bond order values larger then 0 as edges.
+        """
         G = nx.Graph()
         for node1, node2 in self.wbo:
             bo = self.wbo[(node1, node2)]
@@ -161,6 +207,9 @@ class StructuralInformation:
         return G
     
     def split_in_subgraphs(self):
+        """ 
+        creates list of seperate networkx Graph objects, which correspond to subgraphs of self.complete_graph, meaning not connected by edges, thus seperate molecules in a structure.
+        """
         G = self.complete_graph
         S = [G.subgraph(c).copy() for c in nx.connected_components(G)]
         for graph in S:
@@ -173,6 +222,12 @@ class StructuralInformation:
 
 @dataclass
 class Structure:
+    '''
+    Complete information about a given Structure.
+    path: Path strings to all related files.
+    ff: Force field data
+    info: structural information like connectivities, atom count or geometrical structure.
+    '''
     path: StructurePath 
     ff: ForceField
     info: StructuralInformation

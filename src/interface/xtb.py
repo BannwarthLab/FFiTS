@@ -5,6 +5,9 @@ import os
 from src.interface.reader import read_wbo_file, readin_xyz
 
 class Xtb:
+    '''
+    xtb program caller and xtb specific operations.
+    '''
     def __init__(self, xtb_path='xtb') -> None:
         # maybe define all names here instead of giving them in func
         self.xtb_path = xtb_path
