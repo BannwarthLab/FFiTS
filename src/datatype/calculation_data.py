@@ -19,7 +19,7 @@ class Reaction:
     unique_bonds: List[int]
     
     @staticmethod
-    def with_unique_bonds(struc1: Structure, struc2: Structure, threshold=0.8):
+    def with_unique_bonds(struc1: Structure, struc2: Structure, threshold=0.99):
         """
         Compares two WBO data files and returns Reaction with unique atom indices, 
         including those with significant WBO differences (larger then threshold).
@@ -33,9 +33,9 @@ class Reaction:
             # print(bond)
             wbo1 = wbo_dict1.get(bond, 0)
             wbo2 = wbo_dict2.get(bond, 0)
-            if bond not in wbo_dict1 or bond not in wbo_dict2 or abs(wbo1 - wbo2) > threshold:
+            if bond not in wbo_dict1 or bond not in wbo_dict2: # or abs(wbo1 - wbo2) > threshold:
                 unique_bonds.add(bond)
-        print('')
+        print('Unique bonds for the reaction are:')
         print(unique_bonds)
         # return list(unique_bonds)
         unique_atoms = set()

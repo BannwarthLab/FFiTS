@@ -198,7 +198,7 @@ class StructuralInformation:
         G = nx.Graph()
         for node1, node2 in self.wbo:
             bo = self.wbo[(node1, node2)]
-            if bo < 0.2:
+            if bo < 0.1:
                 continue
             G.add_node(node1)
             G.add_node(node2)

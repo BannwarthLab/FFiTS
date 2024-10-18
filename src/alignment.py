@@ -72,6 +72,8 @@ def modify_ff(struc: Structure, reac: Reaction, value=2):
         if at1 == 0 and at2 == 0:
             atompairs_left = False
             break 
+        if [at1, at2] in struc.ff.bond_list:
+            break
         add_atompair_to_bondlist(struc.ff, at1, at2)
     np.multiply(struc.ff.c_bond, value)
     np.multiply(struc.ff.c_angle, value)

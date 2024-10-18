@@ -14,7 +14,7 @@ This python wrapper serves several purposes (wip):
 
 ## How does TS guess calculation in CREST work?
 The generation of the TS guess in CREST can be seperated into three steps: The force field (FF) parameterization of reactant and product structures, the generation of the TS FF and the optimization.
-The employed FF is reused from [MolBar](https://git.rwth-aachen.de/bannwarthlab/molbar.git) with different repulsive interactions. Firstly, two system-specific FFs (ssFF) are parameterized through fitting to a QM Hessian so that the ssFFs represent the electronic landscape at the minima. These two FFs are then averaged bond-, angle-, and dihedral angle-wise to generate the new TS FF. The TS FF can then be used as the potential for an optimization through [CRESTs ancopt routine](https://crest-lab.github.io/crest-docs/page/documentation/inputfiles.html) to get the TS guess.
+The employed FF is reused from [MolBar](https://git.rwth-aachen.de/bannwarthlab/molbar.git) with different repulsive interactions. Firstly, two system-specific FFs (ssFF) are parameterized through fitting to a QM Hessian so that the ssFFs represent the electronic landscape at the minima. These two FFs are then averaged bond-, angle-, and dihedral angle-wise to generate the new TS FF. The TS FF can then be used as the potential for an optimization through [CRESTs ancopt routine](https://crest-lab.github.io/crest-docs/page/documentation/inputfiles.html) to get the TS guess. Additionally, this code adds a seperate alignment routine to improve the result of the TS guess calculation.
 
 
 ## CREST Installation
