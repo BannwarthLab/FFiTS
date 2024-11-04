@@ -31,3 +31,5 @@ ninja -j 10
 # Modules
 
 for more information on modules, there is documentation in the code. 
+
+maxit, stepsize, threshold, constant_repulsion, rep_start
