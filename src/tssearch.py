@@ -5,6 +5,7 @@ from src.calculation import TsGuessCalculation, GeometryOptimization, HessianCal
 from src.datatype.calculation_data import CalculationParameters
 from src.datatype.structure_data import Structure, ForceField
 from src.interface.exceptions import ConvergenceError
+from src.interface.reader import readin_xyz
 
 
 
@@ -19,9 +20,11 @@ def search_ts(struc1: Structure, struc2: Structure, calc: CalculationParameters)
                ts_ff = ForceField(nat, calc.ts.ff_filename)
                os.rename('crestopt.log', 'crestopt2.log')
           except ConvergenceError:
-               p = subprocess.Popen(f'tail crestopt.log -n {str(struc1.info.nat+2)} > {calc.ts.ff_filename}', shell=True) #NAME
+               p = subprocess.Popen(f'tail crestopt.log -n {str(struc1.info.nat+2)} > ts.xyz', shell=True) #NAME
                p.wait()
-               print(f'!!> CREST run did not converge. Last structure of crestopt.log is used.')
+               nat, energy, xyz = readin_xyz('ts.xyz', False)
+               os.rename('ts.xyz', calc.ts.xyz_filename)
+               print(f'!!> CREST run did not converge. Last structure of crestopt.log is used for final.xyz.')
                return ForceField(nat, calc.ts.ff_filename)
 
      os.rename('ts.xyz', calc.ts.xyz_filename)

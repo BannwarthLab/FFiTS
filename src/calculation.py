@@ -5,6 +5,7 @@ from src.input_library import *
 from src.interface.crest import *
 import copy
 import shutil
+import os
 from src.interface.exceptions import ConvergenceError
 import subprocess
 
@@ -21,6 +22,8 @@ class GeometryOptimization:
         nat, energy, xyz = xtb.geomopt(input_xyz)
         print(f'> xTB geometry optimization of {input_xyz} finished with a final energy of {round(energy, 5)}.')
         print(f'> New xTB geometry is written to {input_xyz}.')
+        if os.path.exists('xtbrestart'):
+            os.remove('xtbrestart')
         return nat, energy, xyz
 
     @staticmethod
@@ -109,4 +112,5 @@ class TsGuessCalculation:
             return readin_xyz('ts.xyz', False)
         else: 
             raise ConvergenceError('Not converged') 
+            return 
             

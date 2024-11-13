@@ -54,10 +54,20 @@ class Crest:
         runs CREST input from 'input_file' and saves resulting output of the calculation in 'output_name'.out and 'output_name'_err.out
         '''
         command = f"{self.crest_path} -i {input_file}"
-        with open(f'{output_name}.out', 'w') as stdout_file, open(f'{output_name}_err.out', 'w') as stderr_file:
+        with open(f'{output_name}.out', 'w') as stdout_file, open(f'{output_name}_err.out', 'w') as stderr_file:           
+            if os.path.exists('.UHF'):
+                os.rename('.UHF', 'tuhf')
+            if os.path.exists('.CHRG'):
+                os.rename('.CHRG', 'tchrg')
+
             p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
             p.wait()
-            rc = p.returncode
+            rc = p.returncode  
+                 
+            if os.path.exists('tuhf'):
+                os.rename('tuhf','.UHF')
+            if os.path.exists('tchrg'):
+                os.rename( 'tchrg','.CHRG')
             if rc == 0:
                 return rc
             else:

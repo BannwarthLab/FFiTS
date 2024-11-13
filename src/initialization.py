@@ -6,6 +6,7 @@ from src.datatype.structure_data import StructurePath, Name, StructuralInformati
 from src.datatype.calculation_data import CalculationParameters
 from src.interface.reader import readin_config
 from src.calculation import GeometryOptimization, WboCalculation, HessianCalculation, FittedFfGeneration
+from src.interface.reader import readin_xyz, read_wbo_file
 
 def copy_original_structure(temp_name: str):
     '''
@@ -47,12 +48,12 @@ def generate_data_for_calculation(input_structure: StructurePath, calc_params: C
     if calc_params.perform_geometryoptimization:
         nat, energy, xyz = GeometryOptimization.with_xtb(input_structure)
     else:
-        nat, energy, xyz = readin_xyz(input_structure.xyz_filename)
+        nat, energy, xyz = readin_xyz(input_structure.xyz_filename, rdenergy=False)
     if calc_params.perform_hesscalculation:
         HessianCalculation.with_xtb(input_structure)
     if calc_params.perform_wbocalculation:
         wbo = WboCalculation.with_xtb(input_structure)
-    else:   
+    else:
         wbo = read_wbo_file(input_structure.wbo_filename)
     return StructuralInformation(nat, energy, xyz, wbo)
     

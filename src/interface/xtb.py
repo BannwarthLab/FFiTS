@@ -11,9 +11,28 @@ class Xtb:
     def __init__(self, xtb_path='xtb') -> None:
         # maybe define all names here instead of giving them in func
         self.xtb_path = xtb_path
+        a = 0
+        if os.path.exists('.UHF'):
+            with open('.UHF', 'r') as f:
+                x = f.readlines()
+                a = x[0].strip()
+            f.close()
+        elif not os.path.exists('.UHF'):
+            a = 1
+        self.mult = a
+        if os.path.exists('.CHRG'):
+            with open('.CHRG', 'r') as f:
+                x = f.readlines()
+                a = x[0].strip()
+            f.close()
+        elif not os.path.exists('.CHRG'):
+            a = 0
+        self.chrg = a
+        print(f'> xTB will be run with mult {self.mult} and chrg {self.chrg}.')
+            
 
     def get_command(self, input, keyword: str) -> str:
-        return f"{self.xtb_path} {input} {keyword}"
+        return f"{self.xtb_path} {input} --uhf {self.mult} --chrg {self.chrg} {keyword}"
     
     def find_energy_in_output(self, output_filename: str) -> float:
         with open(output_filename, 'r') as f:
@@ -30,6 +49,8 @@ class Xtb:
             p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
             p.wait()
             rc = p.returncode
+            if os.path.exists('xtbrestart'):
+                os.remove('xtbrestart')
             return self.find_energy_in_output("xtb_single.out")
             if rc != 0:
                 raise Exception("An Error happend during the xTB geometry optimization, with the return code ", rc)
@@ -44,6 +65,8 @@ class Xtb:
             rc = p.returncode
             if rc == 0:
                 os.rename('xtbopt.xyz', input_xyz)
+                if os.path.exists('xtbrestart'):
+                    os.remove('xtbrestart')
                 return readin_xyz(input_xyz)
             else:
                 raise Exception("An Error happend during the xTB geometry optimization, with the return code ", rc)
@@ -58,6 +81,8 @@ class Xtb:
             if rc == 0:
                 if os.path.isfile("hessian"):
                     os.rename('hessian', hess_filename)   
+                    if os.path.exists('xtbrestart'):
+                        os.remove('xtbrestart')
                     # print("Hessian for calculation of", input_xyz, "was generated to file", hess_filename)
                 else:
                     raise Exception("No Hessian was generated")
@@ -80,6 +105,8 @@ class Xtb:
                     raise Exception("No WBO was generated")
             else:
                 raise Exception("An Error happend during the WBO calculation, with the return code ", rc)
+            if os.path.exists('xtbrestart'):
+                os.remove('xtbrestart')
             return read_wbo_file(wbo_filename)
             
     def get_negative_frequencies(self, vibspectrum_filename, input_xyz: str) -> list:
