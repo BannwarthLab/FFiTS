@@ -1,12 +1,20 @@
 #!/bin/python
 
-import src.datatype.structure_data 
+
 
 def print_box(name: str, width=80):
     print('┏' +    "━"*width       + "┓")
     print('┃' + name.center(width) + '┃')
     print('┗' +    "━"*width       + "┛")
 
+
+def generate_xtb_fix_input(atoms_to_fix: set) -> str:
+    string = ''
+    for val in list(atoms_to_fix):
+        string += (str(val)+ ', ' )
+    return (f"$fix\n"
+            f"   atoms: {string[:-2]}\n"
+            f"end\n")
 
 
 def write_all_molecules_to_file(seperate_molecule_list, new_filename_prefix):
@@ -25,3 +33,6 @@ def write_all_molecules_to_file(seperate_molecule_list, new_filename_prefix):
         subgraph_to_xyz(graph, new_filename_prefix + str(id) + '.xyz')
         print("Subgraph", graph, "printed to", new_filename_prefix + str(id) + '.xyz')
 
+def write_string2file(string, filename):
+    with open(filename, "w") as text_file:
+        text_file.write(string)

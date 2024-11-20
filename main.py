@@ -1,5 +1,5 @@
 #!/bin/python
-import os
+import time
 import shutil
 import copy
 from src.datatype.structure_data import *
@@ -9,9 +9,7 @@ from src.calculation import *
 from src.alignment import align
 from src.interface.reader import *
 from src.interface.xtb import *
-from src.tssearch import search_ts
-
-
+from src.tssearch import search_ts, constrained_optimization
 
 
 def main(calc_params):
@@ -29,8 +27,13 @@ def main(calc_params):
     reac = Reaction.with_unique_bonds(struc1, struc2)
     
     struc1, struc2 = align(struc1, struc2, reac, calc_params)
-
+    
+    tic = time.time()
     ts_ff = search_ts(struc1, struc2, calc_params)
+    tac = time.time()
+    print(f'TS Guess calculation took {tac - tic}')
+
+    constrained_optimization(reac)
 
     
 
@@ -42,3 +45,4 @@ if __name__ == "__main__":
         shutil.copy(Name.original_xyz(calc_params.struc1.xyz_filename), calc_params.struc1.xyz_filename)
         shutil.copy(Name.original_xyz(calc_params.struc2.xyz_filename), calc_params.struc2.xyz_filename)
         print(error)
+        

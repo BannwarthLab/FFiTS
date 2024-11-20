@@ -17,6 +17,7 @@ class Reaction:
     structure2: Structure
     # transition_structure: Structure
     unique_bonds: List[int]
+    unique_atoms: List[int]
     
     @staticmethod
     def with_unique_bonds(struc1: Structure, struc2: Structure, threshold=0.99):
@@ -43,7 +44,8 @@ class Reaction:
             unique_atoms.update(bond)
 
         sorted_unique_atoms = sorted(unique_atoms)
-        return Reaction(structure1=struc1, structure2=struc2, unique_bonds=unique_bonds)
+        print('Unique atoms', unique_atoms, type(unique_atoms))
+        return Reaction(structure1=struc1, structure2=struc2, unique_bonds=unique_bonds, unique_atoms=unique_atoms)
 
 # TODO random idea: Make a big big factory class which generates the complete calculation procedure and order.
 @dataclass

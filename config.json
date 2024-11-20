@@ -21,11 +21,11 @@
     },
 
     "calculation_details": {
-        "perform_geometryoptimization": false , 
+        "perform_geometryoptimization": true , 
         "perform_hesscalculation": true , 
         "perform_wbocalculation": true, 
         "perform_alignment": false,
-        "perform_ts_search": false
+        "perform_ts_search": true
     }
 
 }

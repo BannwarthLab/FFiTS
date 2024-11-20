@@ -10,6 +10,7 @@ This python wrapper serves several purposes (wip):
 - automated generation of toml-style CREST input files for the necessary calculations
 - an alignment procedure of multiple molecules in one xyz file to improve the TS guess calculation
 - straight forward way to generate and change FF values, generated through the FF generation of the tsff method in CREST 
+- error catching (e.g. non-converged TS guess calculations, where last structure of log is used)
 
 
 ## How does TS guess calculation in CREST work?

@@ -48,7 +48,15 @@ class GeometryOptimization:
         p.wait()
         raise ConvergenceError('Not converged')
 
-
+    @staticmethod
+    def constrained_with_xtb(input_filename,  xtb_path='xtb'):
+        xtb = Xtb(xtb_path=xtb_path)
+        nat, energy, xyz = xtb.geomopt(f'--input xtb.inp {input_filename}')
+        print(f'> Constrained xTB geometry optimization of {input_filename}  with constrained atoms  finished with a final energy of {round(energy, 5)}.')
+        print(f'> New xTB geometry is written to {input_filename}.')
+        if os.path.exists('xtbrestart'):
+            os.remove('xtbrestart')
+        return nat, energy, xyz
 
 
 class HessianCalculation:
