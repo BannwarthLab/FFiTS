@@ -10,7 +10,9 @@ from src.interface.reader import readin_xyz
 from src.interface.printer import generate_xtb_fix_input, write_string2file
 
 
-def constrained_optimization(reac: Reaction):
+def constrained_optimization(reac: Reaction, calc: CalculationParameters):
+     if not calc.perform_relaxation:
+          return None
      write_string2file(string=generate_xtb_fix_input(reac.unique_atoms), filename='xtb.inp')
      shutil.copy('final.xyz', 'tsff_final.xyz')
      GeometryOptimization.constrained_with_xtb('final.xyz')

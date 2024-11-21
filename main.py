@@ -33,7 +33,7 @@ def main(calc_params):
     tac = time.time()
     print(f'TS Guess calculation took {tac - tic}')
 
-    constrained_optimization(reac)
+    constrained_optimization(reac, calc_params)
 
     
 
