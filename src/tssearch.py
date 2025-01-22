@@ -24,23 +24,28 @@ def search_ts(struc1: Structure, struc2: Structure, calc: CalculationParameters)
           ts_ff = ForceField(nat, calc.ts.ff_filename)
           os.rename('crestopt.log', 'crestopt1.log')
      except ConvergenceError: #NAME
+          os.rename('crestopt.log', 'crestopt1.log')
+          os.rename('tssearch.out', 'tssearch1.out')
+          os.rename('tssearch_err.out', 'tssearch_err1.out')
           try: 
                nat, energy, xyz = TsGuessCalculation.with_crest(struc2.path.xyz_filename, calc)
                ts_ff = ForceField(nat, calc.ts.ff_filename)
                os.rename('crestopt.log', 'crestopt2.log')
           except ConvergenceError:
-               p = subprocess.Popen(f'tail crestopt.log -n {str(struc1.info.nat+2)} > ts.xyz', shell=True) #NAME
+               os.rename('crestopt.log', 'crestopt2.log')
+               p = subprocess.Popen(f'tail crestopt1.log -n {str(struc1.info.nat+2)} > ts.xyz', shell=True) #NAME
                p.wait()
                nat, energy, xyz = readin_xyz('ts.xyz', False)
                os.rename('ts.xyz', calc.ts.xyz_filename)
-               print(f'!!> CREST run did not converge. Last structure of crestopt.log is used for final.xyz.')
-               return ForceField(nat, calc.ts.ff_filename)
+               print(f'!!> Both CREST runs did not converge. Last structure of crestopt1.log is used for crestopt.xyz.') 
+               ts_ff = ForceField(nat, calc.ts.ff_filename)
 
+     print(f"> TS Guess is optimized a final time with TS FF potential in {calc.ts.ff_filename}.")
      os.rename('ts.xyz', calc.ts.xyz_filename)
      HessianCalculation.with_xtb(calc.ts)
      WboCalculation.with_xtb(calc.ts)
+     GeometryOptimization.with_ff_potential_crest(calc.ts, ts_ff)
 
-     GeometryOptimization.with_ff_potential_crest(calc.ts, ts_ff)     
      
 
      return ts_ff

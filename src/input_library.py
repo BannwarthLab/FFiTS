@@ -14,7 +14,7 @@ from src.datatype.structure_data import *
 In this file I am using crest-input_generator to construct the necessary inputs for separate usecases 
 """
 def input_ts_search(starting_struc: str, c: CalculationParameters):
-    return generate_input(header=HeaderBlock(input=starting_struc, 
+    return generate_input(header=HeaderBlock(input=starting_struc,
                                         runtype='ancopt', 
                                         threads=4),
                         calculation=CalcBlock(id=3, 
@@ -24,13 +24,13 @@ def input_ts_search(starting_struc: str, c: CalculationParameters):
                                         refhessian=c.struc1.hess_filename, 
                                         refwbo=c.struc1.wbo_filename, 
                                         refff=c.struc1.ff_filename, 
-                                        useff=False),
+                                        useff=True),
                         ssff2=SsffBlock(method='ssff', 
                                         refgeo=c.struc2.xyz_filename, 
                                         refhessian=c.struc2.hess_filename, 
                                         refwbo=c.struc2.wbo_filename, 
                                         refff=c.struc2.ff_filename, 
-                                        useff=False),
+                                        useff=True),
                         tsff=TsffBlock(method='tsff', 
                                         refff=c.ts.ff_filename, 
                                         id1=c.struc1.id, 

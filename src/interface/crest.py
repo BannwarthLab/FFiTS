@@ -10,7 +10,7 @@ class Crest:
     '''
     CREST caller and CREST specific operations.
     '''
-    def __init__(self, crest_path="/home/guests/dbabushkina//1_ts_search2024/crest/_build/crest") -> None:
+    def __init__(self, crest_path="/home/dbabushkina/1_ts_search2024/crest/_build/crest") -> None:
         self.crest_path = crest_path
     
 

@@ -52,6 +52,7 @@ class GeometryOptimization:
     def constrained_with_xtb(input_filename,  xtb_path='xtb'):
         xtb = Xtb(xtb_path=xtb_path)
         nat, energy, xyz = xtb.geomopt(f'--input xtb.inp {input_filename}')
+        os.rename(f'--input xtb.inp {input_filename}',input_filename)
         print(f'> Constrained xTB geometry optimization of {input_filename}  with constrained atoms  finished with a final energy of {round(energy, 5)}.')
         print(f'> New xTB geometry is written to {input_filename}.')
         if os.path.exists('xtbrestart'):
@@ -94,6 +95,7 @@ class FittedFfGeneration:
     @staticmethod
     def with_crest(nat, start_structure: str, structure_for_fit: StructurePath):
         crest = Crest()
+        print(f'> FF Fitting for {structure_for_fit.xyz_filename} starts ...')
         input = input_ff_optimization(starting_struc=start_structure, useff=False,struc=structure_for_fit)
         crest_input_filename = 'input_ff_fit.toml'
         crest.write_input2file(input, crest_input_filename)
@@ -112,13 +114,15 @@ class TsGuessCalculation:
         crest = Crest()
         input = input_ts_search(start_struc, calc)
         crest_input_filename = 'input_tssearch.toml'
+        print(f'> TS guess Calculation from {start_struc} starts.')
         crest.write_input2file(input, crest_input_filename)
         rc = crest.run_input(crest_input_filename, 'tssearch')  # NAME
         converged = crest.check_convergence('tssearch.out') 
         if converged: 
+            print(f'> TS guess Calculation from {start_struc} converged.')
             shutil.copy('crestopt.xyz', 'ts.xyz')  # NAME
-            return readin_xyz('ts.xyz', False)
+            return readin_xyz('ts.xyz', rdenergy=False)
         else: 
+            print(f'!!> Run did not converge.') 
             raise ConvergenceError('Not converged') 
-            return 
             

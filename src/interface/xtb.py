@@ -65,6 +65,7 @@ class Xtb:
             rc = p.returncode
             if rc == 0:
                 os.rename('xtbopt.xyz', input_xyz)
+                print(input_xyz)
                 if os.path.exists('xtbrestart'):
                     os.remove('xtbrestart')
                 return readin_xyz(input_xyz)

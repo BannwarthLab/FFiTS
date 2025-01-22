@@ -33,4 +33,20 @@ ninja -j 10
 
 for more information on modules, there is documentation in the code. 
 
+
+# psssht, tis a secret
+add file "optvals" with following values to influence the ff fitting:
 maxit, stepsize, threshold, constant_repulsion, rep_start
+the standard is:
+```
+    maxit = 10000000                # maximal iterations of newton raphson for ff fitting
+    stepsize = 0.05_wp              # stepsize to influence the update step
+    threshold = 0.001_wp            # val_before - val_now lt threshold ends calculation
+    constant_repulsion = .true.     # repulsion is not fitted but kept constant
+    rep_start = 0.01                # the starting ff param for all repulsive interactions
+```
+a working file (with the name 'optvals') would be:
+```
+10000000, 0.05, 0.001, True, 0.01
+```
+ATTENTION! Every value needs to be defined for it to work. So you CAN NOT write sth like `1000, 0.05, 0.001, 0.01` in optvals.

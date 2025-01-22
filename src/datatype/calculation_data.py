@@ -93,7 +93,7 @@ class CalculationParameters:
 
 
 ## test
-# with open('/home/guests/dbabushkina/1_ts_search2024/pytsguess/config.json', 'r') as f:
+# with open('/home/dbabushkina/1_ts_search2024/pytsguess/config.json', 'r') as f:
 #     conf = json.load(f)
 # a = CalculationParameters.from_json(conf)
 # print(a.ts.xyz_filename)
