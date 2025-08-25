@@ -101,8 +101,8 @@ def align(struc1: Structure, struc2: Structure, reac: Reaction, calc: Calculatio
         return struc1, struc2 
 
     struc1.ff = modify_ff(struc1, reac)
-    HessianCalculation.with_xtb(struc1.path)
+    # HessianCalculation.with_xtb(struc1.path)
     struc2.ff = modify_ff(struc2, reac)
-    HessianCalculation.with_xtb(struc2.path)
+    # HessianCalculation.with_xtb(struc2.path)
 
     return struc1, struc2

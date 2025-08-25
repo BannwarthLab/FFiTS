@@ -8,7 +8,6 @@ from typing import List
 import json
 
 
-@dataclass
 class Reaction:
     '''
     Complete information about a given Reaction.
@@ -19,8 +18,7 @@ class Reaction:
     unique_bonds: List[int]
     unique_atoms: List[int]
     
-    @staticmethod
-    def with_unique_bonds(struc1: Structure, struc2: Structure, threshold=0.99):
+    def __init__(self, struc1: Structure, struc2: Structure, threshold=0.99):
         """
         Compares two WBO data files and returns Reaction with unique atom indices, 
         including those with significant WBO differences (larger then threshold).
@@ -45,7 +43,10 @@ class Reaction:
 
         sorted_unique_atoms = sorted(unique_atoms)
         print('Unique atoms', unique_atoms, type(unique_atoms))
-        return Reaction(structure1=struc1, structure2=struc2, unique_bonds=unique_bonds, unique_atoms=unique_atoms)
+        self.structure1= struc1
+        self.structure2 = struc2
+        self.unique_atoms = unique_atoms
+        self.unique_bonds = unique_bonds
 
 # TODO random idea: Make a big big factory class which generates the complete calculation procedure and order.
 @dataclass

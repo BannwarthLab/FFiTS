@@ -24,9 +24,9 @@ def main(calc_params):
     struc2_ff = generate_ff(calc_params.struc2, struc2_info)
     struc2 = Structure(calc_params.struc2, struc2_ff, struc2_info)
 
-    reac = Reaction.with_unique_bonds(struc1, struc2)
+    reac = Reaction(struc1, struc2)
     
-    struc1, struc2 = align(struc1, struc2, reac, calc_params)
+    #struc1, struc2 = align(struc1, struc2, reac, calc_params)
     
     tic = time.time()
     ts_ff = search_ts(struc1, struc2, calc_params)

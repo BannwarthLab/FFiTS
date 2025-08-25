@@ -1,2 +1,4 @@
 test/
 venv/
+src/__pycache__/
+interface/__pycache__/
