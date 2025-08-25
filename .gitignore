@@ -1,4 +1,5 @@
 test/
 venv/
 src/__pycache__/
-interface/__pycache__/
+src/interface/__pycache__/
+*.mod
