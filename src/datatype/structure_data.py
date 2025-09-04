@@ -187,9 +187,20 @@ class StructuralInformation:
         self.energy = energy 
         self.wbo = wbo_list
         self.xyz = xyz
+        self.fortran_xyz = self.convert_xyz_to_fortranstyle()
         self.complete_graph = self.create_graph_from_wbo()
         self.seperate_molecule_list = self.split_in_subgraphs()
         self.molecule_count = len(self.seperate_molecule_list)
+
+    def convert_xyz_to_fortranstyle(self) -> np.array:
+        x = []
+        y = []
+        z = []
+        for i in range(self.nat):
+            x.append(self.xyz[i][0])
+            y.append(self.xyz[i][1])
+            z.append(self.xyz[i][2])
+        return np.array([x,y,z],order='F')
 
     def create_graph_from_wbo(self) -> nx.Graph:
         """ 
