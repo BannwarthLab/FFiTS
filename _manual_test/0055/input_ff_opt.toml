@@ -1,0 +1,20 @@
+#This is a CREST input file
+input = "final.xyz"
+runtype = "ancopt"
+threads = 4
+ 
+[calculation]
+id = 1
+maxcycle = 219
+ 
+[[calculation.level]]
+method = "ssff"
+refgeo = "final.xyz"
+refhessian = "hess_ts"
+refwbo = "wbo_ts"
+refff = "tsff"
+useff = true
+ 
+ 
+ 
+ 

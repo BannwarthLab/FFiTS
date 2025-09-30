@@ -187,7 +187,7 @@ class StructuralInformation:
         self.energy = energy 
         self.wbo = wbo_list
         self.xyz = xyz
-        self.fortran_xyz = self.convert_xyz_to_fortranstyle()
+        self.fortran_xyz = self.angstrom2bohr(self.convert_xyz_to_fortranstyle())
         self.complete_graph = self.create_graph_from_wbo()
         self.seperate_molecule_list = self.split_in_subgraphs()
         self.molecule_count = len(self.seperate_molecule_list)
@@ -201,6 +201,12 @@ class StructuralInformation:
             y.append(self.xyz[i][1])
             z.append(self.xyz[i][2])
         return np.array([x,y,z],order='F')
+    
+    def angstrom2bohr(self, val):
+        if type(val) == np.array:
+            return np.divide(val, 1/1.8897259)
+        return val/(1/1.8897259)
+
 
     def create_graph_from_wbo(self) -> nx.Graph:
         """ 
