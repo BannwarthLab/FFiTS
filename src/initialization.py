@@ -45,20 +45,19 @@ def generate_data_for_calculation(input_structure: StructurePath, calc_params: C
     '''
     Calculates starting data, decided by the CalculationParameters 'calc_params'
     '''
+    nat, energy, xyz, atom_types = readin_xyz(input_structure.xyz_filename, rdenergy=False)
     if calc_params.perform_geometryoptimization:
         nat, energy, xyz = GeometryOptimization.with_xtb(input_structure)
-    else:
-        nat, energy, xyz = readin_xyz(input_structure.xyz_filename, rdenergy=False)
     if calc_params.perform_hesscalculation:
         HessianCalculation.with_xtb(input_structure)
     if calc_params.perform_wbocalculation:
         wbo = WboCalculation.with_xtb(input_structure)
     else:
         wbo = read_wbo_file(input_structure.wbo_filename)
-    return StructuralInformation(nat, energy, xyz, wbo)
+    return StructuralInformation(nat, energy, xyz, wbo, atom_types)
     
 
-def generate_ff(struc_path: StructurePath, struc_info: StructuralInformation):
+def generate_ff(struc_path: StructurePath, struc_info: StructuralInformation): # TODO hier ersetzen durch setup und parameterizierung erst danach für mögliche zukünftige Änderungen 
     '''
     Generates fitted FF from CREST call to ssFF method.
     '''

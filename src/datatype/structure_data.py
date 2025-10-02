@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List
 import networkx as nx
 import numpy as np
-import json
+import os
 
 
 @dataclass
@@ -56,13 +56,13 @@ class ForceField:
     """ 
     FF definition through FF parameters (np arrays starting with c_), reference values (bondlenghts, angles, etc) and corresponding atom numbers, which construct the bond / angle / dihedral angle / lj term. 
     """
-    def __init__(self, nat, ff_filename, readff=True):
+    def __init__(self, nat: int, ff_filename: str, readff: bool = True):
         self.nat = nat
         self.ff_filename = ff_filename
-        self.c_bond = np.zeros((nat,nat))
-        self.c_angle = np.zeros((nat,nat,nat))
-        self.c_dihedral = np.zeros((nat,nat,nat,nat))
-        self.c_lj = np.zeros((nat,nat))
+        self.c_bond = {} 
+        self.c_angle = {} 
+        self.c_dihedral = {}  # matrix can get to large with N^4, so instead a dict will be used 
+        self.c_lj = {} 
         self.bond_list = []
         self.angle_list = []
         self.dihedral_list = []
@@ -73,8 +73,9 @@ class ForceField:
         self.sigmas = []
         if readff:
             self.readin_forcefield(ff_filename)
+            # if not self.correct_dimensions():
+            #     raise Exception('Dimensions of reference values and given dimensions do not fit.')
 
-        
     def readin_forcefield(self, ff_filename: str):
         """ 
         reads force field definition from path 'ff_filename'. Works only for specific file structure:
@@ -91,6 +92,8 @@ class ForceField:
             atom1, atom3, ff_parameter_for_lj_term, sigma
             ...
         """
+        if not os.path.exists(ff_filename):
+            raise Exception(FileNotFoundError(ff_filename))
         with open(ff_filename, 'r') as file:
             section = None
             for line in file:
@@ -182,11 +185,13 @@ class StructuralInformation:
         seperate_molecule_list: List of subgraphs not connectred by edges in complete_graph.
         molecule_count: number of seperate molecules in structure.
     """
-    def __init__(self, nat, energy, xyz, wbo_list):
+    def __init__(self, nat: int, xyz: np.array, wbo_dict: dict, atom_types: np.array, energy: float = np.NaN):
         self.nat = nat 
         self.energy = energy 
-        self.wbo = wbo_list
+        self.wbo = wbo_dict
         self.xyz = xyz
+        self.atom_types = atom_types
+        self.bo_matrix = self.create_bomatrix_from_wbo()
         self.fortran_xyz = self.angstrom2bohr(self.convert_xyz_to_fortranstyle())
         self.complete_graph = self.create_graph_from_wbo()
         self.seperate_molecule_list = self.split_in_subgraphs()
@@ -207,6 +212,16 @@ class StructuralInformation:
             return np.divide(val, 1/1.8897259)
         return val/(1/1.8897259)
 
+    def create_bomatrix_from_wbo(self) -> np.array:
+        bo_matrix = np.zeros((self.nat,self.nat))
+        for atoms, val in self.wbo.items(): 
+            i = atoms[0] 
+            j = atoms[1]
+            if bo_matrix[i-1,j-1] != 0:
+                raise Exception('Dobule entry is present in wbo file.')
+            bo_matrix[i-1,j-1] = val 
+            bo_matrix[j-1,i-1] = val 
+        return bo_matrix
 
     def create_graph_from_wbo(self) -> nx.Graph:
         """ 

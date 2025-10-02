@@ -1,3 +1,8 @@
 {
-    "cmake.sourceDirectory": "/home/dbabushkina/1_ts_search2024/pytsguess"
+    "cmake.sourceDirectory": "/home/dbabushkina/1_ts_search2024/pytsguess",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
