@@ -15,8 +15,9 @@ def bondlength(geometry: np.array, atom1: int, atom2: int):
     -------
     float
         Bond length.
-    """
-    return np.linalg.norm(geometry[atom1] - geometry[atom2])
+    """    
+    vector_12 = geometry[:, atom1] - geometry[:, atom2]
+    return np.linalg.norm(vector_12)
 
 
 def angle(geometry: np.array, atom1: int, atom2: int, atom3: int):

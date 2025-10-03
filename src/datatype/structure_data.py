@@ -50,7 +50,7 @@ def atom_symbol_to_number(symbol: str) -> int:
     except KeyError:
         raise ValueError(f"Unknown atom symbol: {symbol}")
     
-def get_vander_matrix(nat, at, vander_values=VANDER_VALUES, factor=1.0):
+def get_vander_matrix(nat, at, vander_values=VANDER_VALUES, factor=1.8897259):
     """
     Build van der Waals interaction matrix.
 
@@ -69,10 +69,13 @@ def get_vander_matrix(nat, at, vander_values=VANDER_VALUES, factor=1.0):
     vander_matrix : np.ndarray (nat x nat)
     """
     # Convert atomic numbers to 0-based indices
-    atom_numbers = [PERIODIC_TABLE[s] for s in at]
-    radii = vander_values[np.array(atom_numbers) - 1] * factor
-    # Broadcasting sum of pairwise radii
-    return radii[:, None] + radii[None, :]
+    vander_matrix = np.zeros((nat, nat), dtype=float)
+    for i in range(nat):
+        for j in range(nat):
+            # If Fortran `at` is 1-based atomic numbers, subtract 1 for Python indexing
+            vander_matrix[i, j] = vander_values[atom_symbol_to_number(at[i])-1] * factor + vander_values[atom_symbol_to_number(at[j])-1] * factor
+
+    return vander_matrix
 
 @dataclass
 class Name:

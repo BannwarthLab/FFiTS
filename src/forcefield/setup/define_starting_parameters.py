@@ -12,7 +12,7 @@ def get_c_tables(ff: ForceField, info: StructuralInformation, repulsive_start_ex
         atom1, atom2 = ff.bond_list[i, :]
         atom1 = atom1 - 1
         atom2 = atom2 - 1
-        bl = bondlength(info.xyz, atom1, atom2)
+        bl = bondlength(info.fortran_xyz, atom1, atom2)
         if info.bo_matrix[atom1, atom2] * bl == 0:
             raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2}.'))
         ff.c_bond[(atom1+1, atom2+1)] = info.bo_matrix[atom1, atom2] / bl
@@ -23,8 +23,8 @@ def get_c_tables(ff: ForceField, info: StructuralInformation, repulsive_start_ex
         atom1 = atom1 - 1
         atom2 = atom2 - 1
         atom3 = atom3 - 1
-        bl1 = bondlength(info.xyz, atom1, atom2)
-        bl2 = bondlength(info.xyz, atom2, atom3)
+        bl1 = bondlength(info.fortran_xyz, atom1, atom2)
+        bl2 = bondlength(info.fortran_xyz, atom2, atom3)
         product = info.bo_matrix[atom1, atom2] * info.bo_matrix[atom2, atom3]
         if bl1 * bl2 * product == 0:
             raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2, atom3}.'))
@@ -37,9 +37,9 @@ def get_c_tables(ff: ForceField, info: StructuralInformation, repulsive_start_ex
         atom2 = atom2 - 1
         atom3 = atom3 - 1
         atom4 = atom4 - 1
-        bl1 = bondlength(info.xyz, atom1, atom2)
-        bl2 = bondlength(info.xyz, atom2, atom3)
-        bl3 = bondlength(info.xyz, atom3, atom4)
+        bl1 = bondlength(info.fortran_xyz, atom1, atom2)
+        bl2 = bondlength(info.fortran_xyz, atom2, atom3)
+        bl3 = bondlength(info.fortran_xyz, atom3, atom4)
         product = (info.bo_matrix[atom1, atom2] *
                    info.bo_matrix[atom2, atom3] *
                    info.bo_matrix[atom3, atom4])
@@ -117,31 +117,34 @@ def define_relevant_bonds(ff: ForceField, info: StructuralInformation, bo_thresh
     ff.lj_list = lj[np.lexsort((lj[:,1], lj[:,0]))]
 
 def get_ff_reference_values(ff: ForceField, info: StructuralInformation):
+    # Bonds
     for a in range(len(ff.bond_list)):
-        i = ff.bond_list[0, a] - 1  
-        j = ff.bond_list[1, a] - 1
-        ff.bondlengths.append(bondlength(info.xyz, i, j))
+        i = ff.bond_list[a, 0] - 1  
+        j = ff.bond_list[a, 1] - 1
+        ff.bondlengths.append(bondlength(info.fortran_xyz, i, j))
 
     # Angles
     for a in range(len(ff.angle_list)):
-        i = ff.angle_list[0, a] - 1
-        j = ff.angle_list[1, a] - 1
-        l = ff.angle_list[2, a] - 1
-        ff.angles.append(angle(info.xyz, i, j, l))
+        i = ff.angle_list[a, 0] - 1
+        j = ff.angle_list[a, 1] - 1
+        l = ff.angle_list[a, 2] - 1
+        ff.angles.append(angle(info.fortran_xyz, i, j, l))
     
     # Dihedrals
     for a in range(len(ff.dihedral_list)):
-        i = ff.dihedral_list[0, a] - 1
-        j = ff.dihedral_list[1, a] - 1
-        l = ff.dihedral_list[2, a] - 1
-        m = ff.dihedral_list[3, a] - 1
-        ff.dihedrals.append(dihedral_angle(info.xyz, i, j, l, m))
+        i = ff.dihedral_list[a, 0] - 1
+        j = ff.dihedral_list[a, 1] - 1
+        l = ff.dihedral_list[a, 2] - 1
+        m = ff.dihedral_list[a, 3] - 1
+        ff.dihedrals.append(dihedral_angle(info.fortran_xyz, i, j, l, m))
 
     # Lennard-Jones terms
     for a in range(len(ff.lj_list)):
-        i = ff.lj_list[0, a] - 1
-        j = ff.lj_list[1, a] - 1
+        i = ff.lj_list[a, 0] - 1
+        j = ff.lj_list[a, 1] - 1
         ff.sigmas.append(info.vander_matrix[i, j] / (2**(1/6)))
+        # TODO This does not give the right results
+        # TODO I need to decide on giving data in angström or in bohr and be continous with it. 
 
 def check_correct_ff_initialization(ff: ForceField):
     assert all(ff.c_bond.values())
