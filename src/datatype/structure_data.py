@@ -103,22 +103,22 @@ class ForceField:
                 elif section == "bonds":
                     atom1, atom2, param, bondlength = map(float, line.split(','))
                     self.bond_list.append([int(atom1), int(atom2)])
-                    self.c_bond[int(atom1)-1, int(atom2)-1] = param
+                    self.c_bond[(int(atom1), int(atom2))] = param
                     self.bondlengths.append(bondlength)
                 elif section == "angles":
                     atom1, atom2, atom3, param, angle = map(float, line.split(','))
                     self.angle_list.append([int(atom1), int(atom2), int(atom3)])
-                    self.c_angle[int(atom1)-1, int(atom2)-1, int(atom3)-1] = param
+                    self.c_angle[(int(atom1), int(atom2), int(atom3))] = param
                     self.angles.append(angle)
                 elif section == "dihedrals":
                     atom1, atom2, atom3, atom4, param, dihedral_angle = map(float, line.split(','))
                     self.dihedral_list.append([int(atom1), int(atom2), int(atom3), int(atom4)])
-                    self.c_dihedral[int(atom1)-1, int(atom2)-1, int(atom3)-1, int(atom4)-1] = param
+                    self.c_dihedral[(int(atom1), int(atom2), int(atom3), int(atom4))] = param
                     self.dihedrals.append(dihedral_angle)
                 elif section == "lj-terms":
                     atom1, atom2, param, sigma = map(float, line.split(','))
                     self.lj_list.append([int(atom1), int(atom2)])
-                    self.c_lj[int(atom1)-1, int(atom2)-1] = param
+                    self.c_lj[(int(atom1), int(atom2))] = param
                     self.sigmas.append(sigma)
         if section == None:
             raise Exception('File seems to be empty or not contain the section markers.')
@@ -191,9 +191,9 @@ class StructuralInformation:
         self.wbo = wbo_dict
         self.xyz = xyz
         self.atom_types = atom_types
-        self.bo_matrix = self.create_bomatrix_from_wbo()
-        self.fortran_xyz = self.angstrom2bohr(self.convert_xyz_to_fortranstyle())
-        self.complete_graph = self.create_graph_from_wbo()
+        self.bo_matrix: np.array = self.create_bomatrix_from_wbo()
+        self.fortran_xyz: np.array = self.angstrom2bohr(self.convert_xyz_to_fortranstyle())
+        self.complete_graph: nx.Graph = self.create_graph_from_wbo()
         self.seperate_molecule_list = self.split_in_subgraphs()
         self.molecule_count = len(self.seperate_molecule_list)
 
@@ -218,7 +218,7 @@ class StructuralInformation:
             i = atoms[0] 
             j = atoms[1]
             if bo_matrix[i-1,j-1] != 0:
-                raise Exception('Dobule entry is present in wbo file.')
+                raise Exception('Double entry is present in wbo file.')
             bo_matrix[i-1,j-1] = val 
             bo_matrix[j-1,i-1] = val 
         return bo_matrix

@@ -72,34 +72,44 @@ def get_bondlength(xyz, atom1, atom2):
     """Compute Euclidean bond length between two atoms."""
     return np.linalg.norm(xyz[atom1] - xyz[atom2])
 
-def get_c_tables(ff: ForceField, repulsive_start_ex=None):
+def get_c_tables(ff: ForceField, info: StructuralInformation, repulsive_start_ex=None):
     """
     Compute c_bond, c_angle, c_dihedral, and c_lj tables for ForceField object.
     """
-    for atom1, atom2 in ff.bond_list[:, :ff.count_bond].T:
-        bondlength = get_bondlength(ff.xyz0, atom1, atom2)
-        ff.c_bond[(atom1, atom2)] = ff.wbo[atom1, atom2] / bondlength
+    for i in range(len(ff.bond_list)):
+        atom1, atom2 = ff.bond_list[i, :]
+        bl = get_bondlength(info.xyz, atom1-1, atom2-1)
+        if info.bo_matrix[atom1-1, atom2-1] * bl == 0:
+            raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2}.'))
+        ff.c_bond[(atom1, atom2)] = info.bo_matrix[atom1-1, atom2-1] / bl
 
     # --- Angles ---
-    for atom1, atom2, atom3 in ff.angle_list[:, :ff.count_angle].T:
-        bl1 = get_bondlength(ff.xyz0, atom1, atom2)
-        bl2 = get_bondlength(ff.xyz0, atom2, atom3)
-        product = ff.wbo[atom1, atom2] * ff.wbo[atom2, atom3]
+    for i in range(len(ff.angle_list)):
+        atom1, atom2, atom3 = ff.angle_list[i, :]
+        bl1 = get_bondlength(info.xyz, atom1-1, atom2-1)
+        bl2 = get_bondlength(info.xyz, atom2-1, atom3-1)
+        product = info.bo_matrix[atom1-1, atom2-1] * info.bo_matrix[atom2-1, atom3-1]
+        if bl1 * bl2 * product == 0:
+            raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2, atom3}.'))
         ff.c_angle[(atom1, atom2, atom3)] = (product / (bl1 * bl2)) ** 0.5
 
     # --- Dihedrals ---
-    for atom1, atom2, atom3, atom4 in ff.dihedral_list[:, :ff.count_dihedral].T:
-        bl1 = get_bondlength(ff.xyz0, atom1, atom2)
-        bl2 = get_bondlength(ff.xyz0, atom2, atom3)
-        bl3 = get_bondlength(ff.xyz0, atom3, atom4)
-        product = (ff.wbo[atom1-1, atom2-1] *
-                   ff.wbo[atom2-1, atom3-1] *
-                   ff.wbo[atom3-1, atom4-1])
+    for i in range(len(ff.dihedral_list)):
+        atom1, atom2, atom3, atom4 = ff.dihedral_list[i, :]
+        bl1 = get_bondlength(info.xyz, atom1-1, atom2-1)
+        bl2 = get_bondlength(info.xyz, atom2-1, atom3-1)
+        bl3 = get_bondlength(info.xyz, atom3-1, atom4-1)
+        product = (info.bo_matrix[atom1-1, atom2-1] *
+                   info.bo_matrix[atom2-1, atom3-1] *
+                   info.bo_matrix[atom3-1, atom4-1])
+        if bl1 * bl2 * bl3 * product == 0:
+            raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2, atom3, atom4}.'))
         ff.c_dihedral[(atom1, atom2, atom3, atom4)] = (product / (bl1 * bl2 * bl3)) ** (1/3)
 
     # --- Lennard-Jones terms ---
     repulsive_start = 0.01 if repulsive_start_ex is None else repulsive_start_ex
-    for atom1, atom2 in ff.lj_list[:, :len(ff.bond_list)].T:
+    for i in range(len(ff.lj_list)):
+        atom1, atom2 = ff.lj_list[i, :]
         ff.c_lj[(atom1, atom2)] = repulsive_start
 
 
@@ -165,45 +175,14 @@ def define_relevant_bonds(ff: ForceField, info: StructuralInformation, bo_thresh
     lj = np.stack([all_i[mask_nonbond] + 1, all_j[mask_nonbond] + 1], axis=1)
     ff.lj_list = lj[np.lexsort((lj[:,1], lj[:,0]))]
 
-# def count_bonds_angles_dihedrals(ff, bo_threshold=0.0):
-#     """
-#     Count bonds, angles, dihedrals, and LJ pairs in the ff object.
+def check_correct_ff_initialization(ff: ForceField):
+    assert all(ff.c_bond.values())
+    assert all(ff.c_angle.values())
+    assert all(ff.c_dihedral.values())
+    assert all(ff.c_lj.values())
 
-#     ff should expose:
-#     - nat: int (number of atoms)
-#     - wbo: np.ndarray (bond order matrix)
-#     - vander_matrix: np.ndarray (optional, used for diagnostics)
-#     - count_bond, count_angle, count_dihedral, count_lj: int (set in-place)
-#     """
-#     n_atom = ff.nat
+def setup_unparameterized_forcefield(info: StructuralInformation, ff_filename: str, readff: bool = False) -> ForceField:
+    ff = ForceField(info.nat, ff_filename, readff=readff)
+    define_relevant_bonds(ff, info)
+    get_c_tables(ff, info)
 
-#     count_bond = 0
-#     count_angle = 0
-#     count_dihedral = 0
-
-#     for i in range(n_atom):
-#         for j in range(n_atom):
-#             if i == j:
-#                 continue
-#             if ff.wbo[i, j] > bo_threshold:
-#                 count_bond += 1
-#             for l in range(n_atom):
-#                 if l in (i, j):
-#                     continue
-#                 if ff.wbo[i, j] * ff.wbo[j, l] > bo_threshold:
-#                     count_angle += 1
-#                 for m in range(n_atom):
-#                     if m in (i, j, l):
-#                         continue
-#                     if ff.wbo[i, j] * ff.wbo[j, l] * ff.wbo[l, m] > bo_threshold:
-#                         count_dihedral += 1
-
-#     # Symmetry corrections
-#     ff.count_bond = count_bond // 2
-#     ff.count_angle = count_angle // 2
-#     ff.count_dihedral = count_dihedral // 2
-
-#     # LJ count = all pairs - bonds
-#     ff.count_lj = n_atom * (n_atom - 1) - ff.count_bond
-#     if ff.count_lj < 0:
-#         ff.count_lj = 0

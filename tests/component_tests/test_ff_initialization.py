@@ -4,7 +4,7 @@ import numpy as np
 import os
 from static_data import WBO, XYZ, ATOM_TYPES, NAT
 import tempfile
-from src.forcefield.setup.define_starting_parameters import define_relevant_bonds, get_vander_matrix
+from src.forcefield.setup.define_starting_parameters import define_relevant_bonds, get_vander_matrix, get_c_tables
 # to not rely on other functions, data is given statically
 
 
@@ -16,9 +16,10 @@ def test_construct_ff_object_from_file():
     ff = ForceField(7, path2ff)
     # some random checks on the force field 
     assert ff.bond_list[3] == [1, 7]
-    assert round(ff.c_dihedral[3][0][1][5],6) == round(0.19815370,6)
+    assert round(ff.c_dihedral[(4, 1, 2, 6)],6) == round(0.19815370,6)
+    # assert round(ff.c_dihedral[3],6) == round(0.19815370,6)
     assert round(ff.angles[4],6) == round(1.92842546,6)
-    assert np.shape(ff.c_angle) == (ff.nat, ff.nat, ff.nat)
+    assert len(ff.c_angle) == len(ff.angle_list)
     assert len(ff.angles) == 9
 
 def test_get_structural_information():
@@ -107,4 +108,31 @@ def test_get_vander_matrix():
     vander_matrix = get_vander_matrix(NAT, ATOM_TYPES)
     np.testing.assert_allclose(vander_matrix, expected_vander_matrix, rtol=1e-3)
 
-def test_
+def test_get_c_tables():
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        path = os.path.join(tmpdirname, 'ff')
+        ff = ForceField(NAT, path, readff=False)
+        define_relevant_bonds(ff, info)
+        get_c_tables(ff, info)
+        assert len(ff.c_bond) == len(ff.bond_list) 
+        assert len(ff.c_angle) == len(ff.angle_list) 
+        assert len(ff.c_dihedral) == len(ff.dihedral_list) 
+        assert len(ff.c_lj) == len(ff.lj_list)
+        # check for False-like values
+        assert all(ff.c_bond.values())
+        assert all(ff.c_angle.values())
+        assert all(ff.c_dihedral.values())
+        assert all(ff.c_lj.values())
+        # check specific values, may need to be changed with different first guesses
+        assert round(ff.c_angle[(4,1,5)], 7) == round(0.19145774, 7)
+        
+def test_get_c_tables_DivisionByZero():
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        path = os.path.join(tmpdirname, 'ff')
+        ff = ForceField(NAT, path, readff=False)
+        define_relevant_bonds(ff, info)
+        info.bo_matrix[1,0] = 0
+        with pytest.raises(Exception):
+            get_c_tables(ff, info)
