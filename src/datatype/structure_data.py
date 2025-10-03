@@ -7,6 +7,73 @@ import numpy as np
 import os
 
 
+VANDER_VALUES = np.array([
+0.91, 0.92, # H, He
+0.75, 1.28, 1.35, 1.32, 1.27, 1.22, 1.17, 1.13, # Li-Ne
+1.04, 1.24, 1.49, 1.56, 1.55, 1.53, 1.49, 1.45, # Na-Ar
+1.35, 1.34, # K, Ca
+1.42, 1.42, 1.42, 1.42, 1.42, # Sc-Zn
+1.42, 1.42, 1.42, 1.42, 1.42,
+1.50, 1.57, 1.60, 1.61, 1.59, 1.57, # Ga-Kr
+1.48, 1.46, # Rb, Sr
+1.49, 1.49, 1.49, 1.49, 1.49, # Y-Cd
+1.49, 1.49, 1.49, 1.49, 1.49,
+1.52, 1.64, 1.71, 1.72, 1.72, 1.71, # In-Xe
+2.00, 2.00,
+2.00, 2.00, 2.00, 2.00, 2.00, 2.00, 2.00, # La-Yb
+2.00, 2.00, 2.00, 2.00, 2.00, 2.00, 2.00,
+2.00, 2.00, 2.00, 2.00, 2.00, # Lu-Hg
+2.00, 2.00, 2.00, 2.00, 2.00,
+2.00, 2.00, 2.00, 2.00, 2.00, 2.00 # Tl-Rn
+])
+
+PERIODIC_TABLE = {
+    "H": 1,  "He": 2,
+    "Li": 3, "Be": 4, "B": 5,  "C": 6,  "N": 7,  "O": 8,  "F": 9,  "Ne": 10,
+    "Na": 11, "Mg": 12, "Al": 13, "Si": 14, "P": 15, "S": 16, "Cl": 17, "Ar": 18,
+    "K": 19, "Ca": 20, "Sc": 21, "Ti": 22, "V": 23, "Cr": 24, "Mn": 25, "Fe": 26,
+    "Co": 27, "Ni": 28, "Cu": 29, "Zn": 30, "Ga": 31, "Ge": 32, "As": 33, "Se": 34,
+    "Br": 35, "Kr": 36,
+    "Rb": 37, "Sr": 38, "Y": 39, "Zr": 40, "Nb": 41, "Mo": 42, "Tc": 43, "Ru": 44,
+    "Rh": 45, "Pd": 46, "Ag": 47, "Cd": 48, "In": 49, "Sn": 50, "Sb": 51, "Te": 52,
+    "I": 53, "Xe": 54,
+    "Cs": 55, "Ba": 56, "La": 57, "Ce": 58, "Pr": 59, "Nd": 60, "Pm": 61, "Sm": 62,
+    "Eu": 63, "Gd": 64, "Tb": 65, "Dy": 66, "Ho": 67, "Er": 68, "Tm": 69, "Yb": 70,
+    "Lu": 71, "Hf": 72, "Ta": 73, "W": 74, "Re": 75, "Os": 76, "Ir": 77, "Pt": 78,
+    "Au": 79, "Hg": 80, "Tl": 81, "Pb": 82, "Bi": 83, "Po": 84, "At": 85, "Rn": 86
+}
+
+def atom_symbol_to_number(symbol: str) -> int:
+    """Convert an element symbol (e.g. 'C') to its atomic number (e.g. 6)."""
+    try:
+        return PERIODIC_TABLE[symbol.capitalize()]
+    except KeyError:
+        raise ValueError(f"Unknown atom symbol: {symbol}")
+    
+def get_vander_matrix(nat, at, vander_values=VANDER_VALUES, factor=1.0):
+    """
+    Build van der Waals interaction matrix.
+
+    Parameters
+    ----------
+    nat : int
+        Number of atoms.
+    at : array-like of str
+    vander_values : np.ndarray
+        Reference van der Waals radii (length 86).
+    factor : float
+        Scaling factor.
+
+    Returns
+    -------
+    vander_matrix : np.ndarray (nat x nat)
+    """
+    # Convert atomic numbers to 0-based indices
+    atom_numbers = [PERIODIC_TABLE[s] for s in at]
+    radii = vander_values[np.array(atom_numbers) - 1] * factor
+    # Broadcasting sum of pairwise radii
+    return radii[:, None] + radii[None, :]
+
 @dataclass
 class Name:
     """
@@ -196,6 +263,7 @@ class StructuralInformation:
         self.complete_graph: nx.Graph = self.create_graph_from_wbo()
         self.seperate_molecule_list = self.split_in_subgraphs()
         self.molecule_count = len(self.seperate_molecule_list)
+        self.vander_matrix: np.array = get_vander_matrix(self.nat, self.atom_types)
 
     def convert_xyz_to_fortranstyle(self) -> np.array:
         x = []

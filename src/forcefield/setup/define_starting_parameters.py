@@ -1,76 +1,8 @@
 import numpy as np
 from src.datatype.structure_data import StructuralInformation, ForceField
+from src.forcefield.fortran_energy.geometry_calc import angle, bondlength, dihedral_angle
 
-VANDER_VALUES = np.array([
-0.91, 0.92, # H, He
-0.75, 1.28, 1.35, 1.32, 1.27, 1.22, 1.17, 1.13, # Li-Ne
-1.04, 1.24, 1.49, 1.56, 1.55, 1.53, 1.49, 1.45, # Na-Ar
-1.35, 1.34, # K, Ca
-1.42, 1.42, 1.42, 1.42, 1.42, # Sc-Zn
-1.42, 1.42, 1.42, 1.42, 1.42,
-1.50, 1.57, 1.60, 1.61, 1.59, 1.57, # Ga-Kr
-1.48, 1.46, # Rb, Sr
-1.49, 1.49, 1.49, 1.49, 1.49, # Y-Cd
-1.49, 1.49, 1.49, 1.49, 1.49,
-1.52, 1.64, 1.71, 1.72, 1.72, 1.71, # In-Xe
-2.00, 2.00,
-2.00, 2.00, 2.00, 2.00, 2.00, 2.00, 2.00, # La-Yb
-2.00, 2.00, 2.00, 2.00, 2.00, 2.00, 2.00,
-2.00, 2.00, 2.00, 2.00, 2.00, # Lu-Hg
-2.00, 2.00, 2.00, 2.00, 2.00,
-2.00, 2.00, 2.00, 2.00, 2.00, 2.00 # Tl-Rn
-])
 
-PERIODIC_TABLE = {
-    "H": 1,  "He": 2,
-    "Li": 3, "Be": 4, "B": 5,  "C": 6,  "N": 7,  "O": 8,  "F": 9,  "Ne": 10,
-    "Na": 11, "Mg": 12, "Al": 13, "Si": 14, "P": 15, "S": 16, "Cl": 17, "Ar": 18,
-    "K": 19, "Ca": 20, "Sc": 21, "Ti": 22, "V": 23, "Cr": 24, "Mn": 25, "Fe": 26,
-    "Co": 27, "Ni": 28, "Cu": 29, "Zn": 30, "Ga": 31, "Ge": 32, "As": 33, "Se": 34,
-    "Br": 35, "Kr": 36,
-    "Rb": 37, "Sr": 38, "Y": 39, "Zr": 40, "Nb": 41, "Mo": 42, "Tc": 43, "Ru": 44,
-    "Rh": 45, "Pd": 46, "Ag": 47, "Cd": 48, "In": 49, "Sn": 50, "Sb": 51, "Te": 52,
-    "I": 53, "Xe": 54,
-    "Cs": 55, "Ba": 56, "La": 57, "Ce": 58, "Pr": 59, "Nd": 60, "Pm": 61, "Sm": 62,
-    "Eu": 63, "Gd": 64, "Tb": 65, "Dy": 66, "Ho": 67, "Er": 68, "Tm": 69, "Yb": 70,
-    "Lu": 71, "Hf": 72, "Ta": 73, "W": 74, "Re": 75, "Os": 76, "Ir": 77, "Pt": 78,
-    "Au": 79, "Hg": 80, "Tl": 81, "Pb": 82, "Bi": 83, "Po": 84, "At": 85, "Rn": 86
-}
-
-def atom_symbol_to_number(symbol: str) -> int:
-    """Convert an element symbol (e.g. 'C') to its atomic number (e.g. 6)."""
-    try:
-        return PERIODIC_TABLE[symbol.capitalize()]
-    except KeyError:
-        raise ValueError(f"Unknown atom symbol: {symbol}")
-    
-def get_vander_matrix(nat, at, vander_values=VANDER_VALUES, factor=1.0):
-    """
-    Build van der Waals interaction matrix.
-
-    Parameters
-    ----------
-    nat : int
-        Number of atoms.
-    at : array-like of str
-    vander_values : np.ndarray
-        Reference van der Waals radii (length 86).
-    factor : float
-        Scaling factor.
-
-    Returns
-    -------
-    vander_matrix : np.ndarray (nat x nat)
-    """
-    # Convert atomic numbers to 0-based indices
-    atom_numbers = [PERIODIC_TABLE[s] for s in at]
-    radii = vander_values[np.array(atom_numbers) - 1] * factor
-    # Broadcasting sum of pairwise radii
-    return radii[:, None] + radii[None, :]
-
-def get_bondlength(xyz, atom1, atom2):
-    """Compute Euclidean bond length between two atoms."""
-    return np.linalg.norm(xyz[atom1] - xyz[atom2])
 
 def get_c_tables(ff: ForceField, info: StructuralInformation, repulsive_start_ex=None):
     """
@@ -78,33 +10,42 @@ def get_c_tables(ff: ForceField, info: StructuralInformation, repulsive_start_ex
     """
     for i in range(len(ff.bond_list)):
         atom1, atom2 = ff.bond_list[i, :]
-        bl = get_bondlength(info.xyz, atom1-1, atom2-1)
-        if info.bo_matrix[atom1-1, atom2-1] * bl == 0:
+        atom1 = atom1 - 1
+        atom2 = atom2 - 1
+        bl = bondlength(info.xyz, atom1, atom2)
+        if info.bo_matrix[atom1, atom2] * bl == 0:
             raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2}.'))
-        ff.c_bond[(atom1, atom2)] = info.bo_matrix[atom1-1, atom2-1] / bl
+        ff.c_bond[(atom1+1, atom2+1)] = info.bo_matrix[atom1, atom2] / bl
 
     # --- Angles ---
     for i in range(len(ff.angle_list)):
         atom1, atom2, atom3 = ff.angle_list[i, :]
-        bl1 = get_bondlength(info.xyz, atom1-1, atom2-1)
-        bl2 = get_bondlength(info.xyz, atom2-1, atom3-1)
-        product = info.bo_matrix[atom1-1, atom2-1] * info.bo_matrix[atom2-1, atom3-1]
+        atom1 = atom1 - 1
+        atom2 = atom2 - 1
+        atom3 = atom3 - 1
+        bl1 = bondlength(info.xyz, atom1, atom2)
+        bl2 = bondlength(info.xyz, atom2, atom3)
+        product = info.bo_matrix[atom1, atom2] * info.bo_matrix[atom2, atom3]
         if bl1 * bl2 * product == 0:
             raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2, atom3}.'))
-        ff.c_angle[(atom1, atom2, atom3)] = (product / (bl1 * bl2)) ** 0.5
+        ff.c_angle[(atom1+1, atom2+1, atom3+1)] = (product / (bl1 * bl2)) ** 0.5
 
     # --- Dihedrals ---
     for i in range(len(ff.dihedral_list)):
         atom1, atom2, atom3, atom4 = ff.dihedral_list[i, :]
-        bl1 = get_bondlength(info.xyz, atom1-1, atom2-1)
-        bl2 = get_bondlength(info.xyz, atom2-1, atom3-1)
-        bl3 = get_bondlength(info.xyz, atom3-1, atom4-1)
-        product = (info.bo_matrix[atom1-1, atom2-1] *
-                   info.bo_matrix[atom2-1, atom3-1] *
-                   info.bo_matrix[atom3-1, atom4-1])
+        atom1 = atom1 - 1
+        atom2 = atom2 - 1
+        atom3 = atom3 - 1
+        atom4 = atom4 - 1
+        bl1 = bondlength(info.xyz, atom1, atom2)
+        bl2 = bondlength(info.xyz, atom2, atom3)
+        bl3 = bondlength(info.xyz, atom3, atom4)
+        product = (info.bo_matrix[atom1, atom2] *
+                   info.bo_matrix[atom2, atom3] *
+                   info.bo_matrix[atom3, atom4])
         if bl1 * bl2 * bl3 * product == 0:
             raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2, atom3, atom4}.'))
-        ff.c_dihedral[(atom1, atom2, atom3, atom4)] = (product / (bl1 * bl2 * bl3)) ** (1/3)
+        ff.c_dihedral[(atom1+1, atom2+1, atom3+1, atom4+1)] = (product / (bl1 * bl2 * bl3)) ** (1/3)
 
     # --- Lennard-Jones terms ---
     repulsive_start = 0.01 if repulsive_start_ex is None else repulsive_start_ex
@@ -175,6 +116,33 @@ def define_relevant_bonds(ff: ForceField, info: StructuralInformation, bo_thresh
     lj = np.stack([all_i[mask_nonbond] + 1, all_j[mask_nonbond] + 1], axis=1)
     ff.lj_list = lj[np.lexsort((lj[:,1], lj[:,0]))]
 
+def get_ff_reference_values(ff: ForceField, info: StructuralInformation):
+    for a in range(len(ff.bond_list)):
+        i = ff.bond_list[0, a] - 1  
+        j = ff.bond_list[1, a] - 1
+        ff.bondlengths.append(bondlength(info.xyz, i, j))
+
+    # Angles
+    for a in range(len(ff.angle_list)):
+        i = ff.angle_list[0, a] - 1
+        j = ff.angle_list[1, a] - 1
+        l = ff.angle_list[2, a] - 1
+        ff.angles.append(angle(info.xyz, i, j, l))
+    
+    # Dihedrals
+    for a in range(len(ff.dihedral_list)):
+        i = ff.dihedral_list[0, a] - 1
+        j = ff.dihedral_list[1, a] - 1
+        l = ff.dihedral_list[2, a] - 1
+        m = ff.dihedral_list[3, a] - 1
+        ff.dihedrals.append(dihedral_angle(info.xyz, i, j, l, m))
+
+    # Lennard-Jones terms
+    for a in range(len(ff.lj_list)):
+        i = ff.lj_list[0, a] - 1
+        j = ff.lj_list[1, a] - 1
+        ff.sigmas.append(info.vander_matrix[i, j] / (2**(1/6)))
+
 def check_correct_ff_initialization(ff: ForceField):
     assert all(ff.c_bond.values())
     assert all(ff.c_angle.values())
@@ -185,4 +153,4 @@ def setup_unparameterized_forcefield(info: StructuralInformation, ff_filename: s
     ff = ForceField(info.nat, ff_filename, readff=readff)
     define_relevant_bonds(ff, info)
     get_c_tables(ff, info)
-
+    return ff

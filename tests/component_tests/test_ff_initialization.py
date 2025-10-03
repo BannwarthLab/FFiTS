@@ -1,10 +1,11 @@
-from src.datatype.structure_data import ForceField, StructuralInformation
+from src.datatype.structure_data import ForceField, StructuralInformation, get_vander_matrix
 import pytest
 import numpy as np
 import os
 from static_data import WBO, XYZ, ATOM_TYPES, NAT
 import tempfile
-from src.forcefield.setup.define_starting_parameters import define_relevant_bonds, get_vander_matrix, get_c_tables
+from src.forcefield.setup.define_starting_parameters import define_relevant_bonds, get_c_tables, get_ff_reference_values
+from src.forcefield.fortran_energy.geometry_calc import angle, bondlength, dihedral_angle
 # to not rely on other functions, data is given statically
 
 
@@ -125,6 +126,7 @@ def test_get_c_tables():
         assert all(ff.c_dihedral.values())
         assert all(ff.c_lj.values())
         # check specific values, may need to be changed with different first guesses
+        print(ff.c_angle)
         assert round(ff.c_angle[(4,1,5)], 7) == round(0.19145774, 7)
         
 def test_get_c_tables_DivisionByZero():
@@ -136,3 +138,73 @@ def test_get_c_tables_DivisionByZero():
         info.bo_matrix[1,0] = 0
         with pytest.raises(Exception):
             get_c_tables(ff, info)
+
+def test_get_ff_reference_values():
+    expected_bonds = np.array([
+        2.84821353,
+        2.07306194,
+        2.07289233,
+        2.06217920,
+        2.28782128,
+        2.10590956
+    ])
+    expected_angles = np.array([
+        2.17528567,
+        2.00315781,
+        1.91550051,
+        1.91559648,
+        1.92842546,
+        2.10474182,
+        1.86118849,
+        1.92084246,
+        1.92116183
+    ])
+    expected_dihedral_angles = np.array([
+        2.11933159,
+        -2.12383049,
+        -0.00201816,
+        -1.02233516,
+        1.01768806,
+        3.13950040
+    ])
+    expected_sigmas = np.array([
+        4.79990391,
+        4.21408887,
+        4.21408887,
+        4.21408887,
+        4.21408887,
+        4.02511627,
+        4.02511627,
+        4.02511627,
+        4.02511627,
+        3.43930123,
+        3.43930123,
+        3.43930123,
+        3.43930123,
+        3.43930123,
+        3.43930123
+    ])
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        path = os.path.join(tmpdirname, 'ff')
+        ff = ForceField(NAT, path, readff=False)
+        define_relevant_bonds(ff, info)
+        get_c_tables(ff, info)
+        get_ff_reference_values(ff, info)
+        np.testing.assert_allclose(ff.bondlengths, expected_bonds, rtol=1e-7)
+        np.testing.assert_allclose(ff.angles, expected_angles, rtol=1e-7)
+        np.testing.assert_allclose(ff.dihedrals, expected_dihedral_angles, rtol=1e-7)
+        np.testing.assert_allclose(ff.sigmas, expected_sigmas, rtol=1e-7)
+        
+
+# def test_bondlengths():
+#     assert np.isclose(get_bondlength(geometry, 0, 1), expected_bonds["1-2"], rtol=1e-6)
+#     assert np.isclose(get_bondlength(geometry, 1, 2), expected_bonds["2-3"], rtol=1e-6)
+#     assert np.isclose(get_bondlength(geometry, 2, 3), expected_bonds["3-4"], rtol=1e-6)
+
+# def test_angles():
+#     assert np.isclose(get_angle(geometry, 0, 1, 2), expected_angles["1-2-3"], rtol=1e-6)
+#     assert np.isclose(get_angle(geometry, 1, 2, 3), expected_angles["2-3-4"], rtol=1e-6)
+
+# def test_dihedral():
+#     assert np.isclose(get_dihedral_angle(geometry, 0, 1, 2, 3), expected_dihedral, rtol=1e-6)

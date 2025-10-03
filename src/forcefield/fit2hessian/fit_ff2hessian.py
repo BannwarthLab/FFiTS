@@ -77,7 +77,7 @@ def fit_ff_to_hessian(hopot: ForceField,
     hessian_ff = np.zeros((ndof, ndof), dtype=np.float64)
 
     # default parameters
-    maxit = 10_000_000 if maxit_ex is None else int(maxit_ex)
+    maxit = 1000 if maxit_ex is None else int(maxit_ex)
     stepsize = 0.05 if stepsize_ex is None else float(stepsize_ex)
     threshold = 0.001 if threshold_ex is None else float(threshold_ex)
     constant_repulsion = True if constant_repulsion_ex is None else bool(constant_repulsion_ex)
