@@ -5,6 +5,7 @@ from typing import List
 import networkx as nx
 import numpy as np
 import os
+import pandas as pd
 
 
 VANDER_VALUES = np.array([
@@ -121,7 +122,6 @@ class StructurePath:
                              hess_filename = str["hessian"],
                              ff_filename = str["forcefield"])   
 
-
 class ForceField:
     """ 
     FF definition through FF parameters (np arrays starting with c_), reference values (bondlenghts, angles, etc) and corresponding atom numbers, which construct the bond / angle / dihedral angle / lj term. 
@@ -129,119 +129,42 @@ class ForceField:
     def __init__(self, nat: int, ff_filename: str, readff: bool = True):
         self.nat = nat
         self.ff_filename = ff_filename
-        self.c_bond = {} 
-        self.c_angle = {} 
-        self.c_dihedral = {}  # matrix can get to large with N^4, so instead a dict will be used 
-        self.c_lj = {} 
-        self.bond_list = []
-        self.angle_list = []
-        self.dihedral_list = []
-        self.lj_list = []
-        self.bondlengths = []
-        self.angles = []
-        self.dihedrals = []
-        self.sigmas = []
+        self.columns = ['type', 'atoms', 'parameter', 'reference_value']
+        self.bonds: pd.Datatframe     = pd.DataFrame(columns=self.columns)
+        self.angles: pd.Datatframe    = pd.DataFrame(columns=self.columns)
+        self.dihedrals: pd.Datatframe = pd.DataFrame(columns=self.columns)
+        self.repulsive: pd.Datatframe = pd.DataFrame(columns=self.columns)
         if readff:
             self.readin_forcefield(ff_filename)
             # if not self.correct_dimensions():
             #     raise Exception('Dimensions of reference values and given dimensions do not fit.')
 
-    def readin_forcefield(self, ff_filename: str):
-        """ 
-        reads force field definition from path 'ff_filename'. Works only for specific file structure:
-            $bonds, 'number_of_bonds'
-            atom1, atom2, ff_parameter_for_bond, bondlength
-            ...
-            $angles, 'number_of_angles'
-            atom1, atom2, atom3, ff_parameter_for_angle, angle
-            ...
-            $dihedrals, 'number_of_dihedral_angles'
-            atom1, atom2, atom3, atom4, ff_parameter_for_dihedral_angle, dihedral_angle
-            ...
-            $lj-terms, 'number_of_lj_terms'
-            atom1, atom3, ff_parameter_for_lj_term, sigma
-            ...
-        """
-        if not os.path.exists(ff_filename):
-            raise Exception(FileNotFoundError(ff_filename))
-        with open(ff_filename, 'r') as file:
-            section = None
-            for line in file:
-                line = line.strip()
-                if line.startswith("$"):
-                    section = line.split(',')[0].strip(',')[1:]
-                elif section == "bonds":
-                    atom1, atom2, param, bondlength = map(float, line.split(','))
-                    self.bond_list.append([int(atom1), int(atom2)])
-                    self.c_bond[(int(atom1), int(atom2))] = param
-                    self.bondlengths.append(bondlength)
-                elif section == "angles":
-                    atom1, atom2, atom3, param, angle = map(float, line.split(','))
-                    self.angle_list.append([int(atom1), int(atom2), int(atom3)])
-                    self.c_angle[(int(atom1), int(atom2), int(atom3))] = param
-                    self.angles.append(angle)
-                elif section == "dihedrals":
-                    atom1, atom2, atom3, atom4, param, dihedral_angle = map(float, line.split(','))
-                    self.dihedral_list.append([int(atom1), int(atom2), int(atom3), int(atom4)])
-                    self.c_dihedral[(int(atom1), int(atom2), int(atom3), int(atom4))] = param
-                    self.dihedrals.append(dihedral_angle)
-                elif section == "lj-terms":
-                    atom1, atom2, param, sigma = map(float, line.split(','))
-                    self.lj_list.append([int(atom1), int(atom2)])
-                    self.c_lj[(int(atom1), int(atom2))] = param
-                    self.sigmas.append(sigma)
-        if section == None:
-            raise Exception('File seems to be empty or not contain the section markers.')
+    def write(self):
+        """Combine all parameter DataFrames and write to CSV."""
+        df_combined = pd.concat([self.bonds, self.angles, self.dihedrals, self.repulsive], ignore_index=True)
+        df_combined.to_csv(self.ff_filename)
 
+    def readin(self, filename: str):
+        """Read in a force field CSV file and populate the corresponding DataFrames."""
+        try:
+            df = pd.read_csv(filename)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Force field file '{filename}' not found.")
+        except pd.errors.EmptyDataError:
+            raise ValueError(f"Force field file '{filename}' is empty or malformed.")
 
-    def write_force_field(self, filename):
-        """ 
-        writes force field definition to path 'ff_filename'. Works only for specific file structure:
-            $bonds, 'number_of_bonds'
-            atom1, atom2, ff_parameter_for_bond, bondlength
-            ...
-            $angles, 'number_of_angles'
-            atom1, atom2, atom3, ff_parameter_for_angle, angle
-            ...
-            $dihedrals, 'number_of_dihedral_angles'
-            atom1, atom2, atom3, atom4, ff_parameter_for_dihedral_angle, dihedral_angle
-            ...
-            $lj-terms, 'number_of_lj_terms'
-            atom1, atom3, ff_parameter_for_lj_term, sigma
-            ...
-        """
-        with open(filename, 'w') as file:
-            if len(self.bond_list) > 0: 
-                file.write(f"$bonds, {len(self.bond_list)}\n")
-                for (atom1, atom2), bondlength in zip(self.bond_list, self.bondlengths):
-                    param = self.c_bond[atom1-1, atom2-1]
-                    file.write(f"{atom1}, {atom2}, {param}, {bondlength}\n")
-            else:
-                file.write(f"$bonds, {len(self.bond_list)}\n")
+        missing = self.columns - set(df.columns)
+        if missing:
+            raise ValueError(f"Missing required columns in {filename}: {', '.join(missing)}")
 
-            if len(self.angle_list) > 0:
-                file.write(f"$angles, {len(self.angle_list)}\n")
-                for (atom1, atom2, atom3), angle in zip(self.angle_list, self.angles):
-                    param = self.c_angle[atom1-1, atom2-1, atom3-1]
-                    file.write(f"{atom1}, {atom2}, {atom3}, {param}, {angle}\n")
-            else:
-                file.write(f"$angles, {len(self.angle_list)}\n")
+        self.bonds     = df[df['type'] == 'bonds'].copy()
+        self.angles    = df[df['type'] == 'angles'].copy()
+        self.dihedrals = df[df['type'] == 'dihedrals'].copy()
+        self.repulsive = df[df['type'] == 'repulsive'].copy()
 
-            if len(self.dihedral_list) > 0:
-                file.write(f"$dihedrals, {len(self.dihedral_list)}\n")
-                for (atom1, atom2, atom3, atom4), dihedral_angle in zip(self.dihedral_list, self.dihedrals):
-                    param = self.c_dihedral[atom1-1, atom2-1, atom3-1, atom4-1]
-                    file.write(f"{atom1}, {atom2}, {atom3}, {atom4}, {param}, {dihedral_angle}\n")
-            else:
-                file.write(f"$dihedrals, {len(self.dihedral_list)}\n")
-
-            if len(self.lj_list) > 0:
-                file.write(f"$lj-terms, {len(self.lj_list)}\n")
-                for (atom1, atom2), sigma in zip(self.lj_list, self.sigmas):
-                    param = self.c_lj[atom1-1, atom2-1]
-                    file.write(f"{atom1}, {atom2}, {param}, {sigma}\n")
-            else:
-                file.write(f"$lj-terms, {len(self.lj_list)}\n")
+        # Reset indices (may have been messed up through the copy)
+        for attr in self.columns:
+            setattr(self, attr, getattr(self, attr).reset_index(drop=True))
 
 
 

@@ -30,7 +30,7 @@ def energy_ff(geometry_displ, ff: ForceField):
     energy = 0.0
     
     # Bonds
-    for a in range(len(ff.bond_list)):
+    for a in range(len(ff.c_bond)):
         i = ff.bond_list[0, a] - 1  
         j = ff.bond_list[1, a] - 1
         bondlength_displ = bondlength(geometry_displ, i, j)

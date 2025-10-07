@@ -1,57 +1,8 @@
 import numpy as np
+import pandas as pd
 from src.datatype.structure_data import StructuralInformation, ForceField
 from src.forcefield.fortran_energy.geometry_calc import angle, bondlength, dihedral_angle
 
-
-
-def get_c_tables(ff: ForceField, info: StructuralInformation, repulsive_start_ex=None):
-    """
-    Compute c_bond, c_angle, c_dihedral, and c_lj tables for ForceField object.
-    """
-    for i in range(len(ff.bond_list)):
-        atom1, atom2 = ff.bond_list[i, :]
-        atom1 = atom1 - 1
-        atom2 = atom2 - 1
-        bl = bondlength(info.fortran_xyz, atom1, atom2)
-        if info.bo_matrix[atom1, atom2] * bl == 0:
-            raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2}.'))
-        ff.c_bond[(atom1+1, atom2+1)] = info.bo_matrix[atom1, atom2] / bl
-
-    # --- Angles ---
-    for i in range(len(ff.angle_list)):
-        atom1, atom2, atom3 = ff.angle_list[i, :]
-        atom1 = atom1 - 1
-        atom2 = atom2 - 1
-        atom3 = atom3 - 1
-        bl1 = bondlength(info.fortran_xyz, atom1, atom2)
-        bl2 = bondlength(info.fortran_xyz, atom2, atom3)
-        product = info.bo_matrix[atom1, atom2] * info.bo_matrix[atom2, atom3]
-        if bl1 * bl2 * product == 0:
-            raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2, atom3}.'))
-        ff.c_angle[(atom1+1, atom2+1, atom3+1)] = (product / (bl1 * bl2)) ** 0.5
-
-    # --- Dihedrals ---
-    for i in range(len(ff.dihedral_list)):
-        atom1, atom2, atom3, atom4 = ff.dihedral_list[i, :]
-        atom1 = atom1 - 1
-        atom2 = atom2 - 1
-        atom3 = atom3 - 1
-        atom4 = atom4 - 1
-        bl1 = bondlength(info.fortran_xyz, atom1, atom2)
-        bl2 = bondlength(info.fortran_xyz, atom2, atom3)
-        bl3 = bondlength(info.fortran_xyz, atom3, atom4)
-        product = (info.bo_matrix[atom1, atom2] *
-                   info.bo_matrix[atom2, atom3] *
-                   info.bo_matrix[atom3, atom4])
-        if bl1 * bl2 * bl3 * product == 0:
-            raise Exception(ZeroDivisionError(f'Division by zero attempted for atoms {atom1, atom2, atom3, atom4}.'))
-        ff.c_dihedral[(atom1+1, atom2+1, atom3+1, atom4+1)] = (product / (bl1 * bl2 * bl3)) ** (1/3)
-
-    # --- Lennard-Jones terms ---
-    repulsive_start = 0.01 if repulsive_start_ex is None else repulsive_start_ex
-    for i in range(len(ff.lj_list)):
-        atom1, atom2 = ff.lj_list[i, :]
-        ff.c_lj[(atom1, atom2)] = repulsive_start
 
 
 def canonical_dihedral(i, j, l, m):
@@ -64,13 +15,28 @@ def canonical_dihedral(i, j, l, m):
     return min(forward, reverse)
 
 
-def define_relevant_bonds(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0.0):
-    """
-    build bond, angle, dihedral, and LJ lists from a bond-order matrix
-    """
-    n = ff.nat
-    wbo = info.bo_matrix
+# def check_noNaN_ff_initialization(ff: ForceField):
+#     assert all(ff.c_bond.values())
+#     assert all(ff.c_angle.values())
+#     assert all(ff.c_dihedral.values())
+#     assert all(ff.c_lj.values())
 
+# def setup_unparameterized_forcefield(info: StructuralInformation, ff_filename: str, readff: bool = False) -> ForceField:
+#     ff = ForceField(info.nat, ff_filename, readff=readff)
+#     define_relevant_bonds(ff, info)
+#     get_c_tables(ff, info)
+#     return ff
+
+def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0.0, repulsive_start_ex: float = None):
+    """
+    Build and fill ForceField DataFrames (bonds, angles, dihedrals, repulsive)
+    with 0-based atom indices, reference values, and parameters.
+
+    Uses imported geometry functions:
+        bondlength(), angle(), dihedral_angle()
+    """
+
+    repulsive_start = 0.01 if repulsive_start_ex is None else repulsive_start_ex
     n = ff.nat
     wbo = info.bo_matrix
 
@@ -78,82 +44,129 @@ def define_relevant_bonds(ff: ForceField, info: StructuralInformation, bo_thresh
     A = (wbo > bo_threshold).astype(int)
     np.fill_diagonal(A, 0)
 
-    # --- Step 2: Bonds (edges) ---
-    bond_i, bond_j = np.where(np.triu(A, 1))
-    bonds = np.stack([bond_i + 1, bond_j + 1], axis=1)
-    ff.bond_list = bonds[np.lexsort((bonds[:,1], bonds[:,0]))]  # sort by col0, then col1
+    # ============================================================
+    # Subfunctions
+    # ============================================================
 
-    # --- Step 3: Angles ---
-    angles = []
-    for j in range(n):
-        neighbors = np.where(A[j])[0]
-        for i in neighbors:
-            for l in neighbors:
-                if i < l:
-                    angles.append((i + 1, j + 1, l + 1))
-    angles = np.array(angles, dtype=int)
-    ff.angle_list = angles[np.lexsort((angles[:,2], angles[:,1], angles[:,0]))]
+    # ---- Atom generation ----
+    def get_bond_atoms(A):
+        i, j = np.where(np.triu(A, 1))
+        bonds = np.stack([i, j], axis=1)
+        bonds = bonds[np.lexsort((bonds[:, 1], bonds[:, 0]))]
+        return [np.array([a, b], dtype=int) for a, b in bonds]
 
-    # --- Step 4: Dihedrals ---
-    dihedrals = []
-    for j in range(n):
-        for l in np.where(A[j])[0]:
-            for i in np.where(A[j])[0]:
-                if i == l:
-                    continue
-                for m in np.where(A[l])[0]:
-                    if m in (i, j, l):
+    def get_angle_atoms(A):
+        angles = []
+        for j in range(n):
+            neighbors = np.where(A[j])[0]
+            for i in neighbors:
+                for k in neighbors:
+                    if i < k:
+                        angles.append((i, j, k))
+        if len(angles) == 0:
+            return []
+        angles = np.array(angles)[np.lexsort((np.array(angles)[:, 2],
+                                              np.array(angles)[:, 1],
+                                              np.array(angles)[:, 0]))]
+        return [np.array([i, j, k], dtype=int) for i, j, k in angles]
+
+    def get_dihedral_atoms(A):
+        dihedrals = []
+        for j in range(n):
+            for l in np.where(A[j])[0]:
+                for i in np.where(A[j])[0]:
+                    if i == l:
                         continue
-                    dih = canonical_dihedral(i+1, j+1, l+1, m+1)
-                    dihedrals.append(dih)
+                    for m in np.where(A[l])[0]:
+                        if m in (i, j, l):
+                            continue
+                        dihedrals.append(canonical_dihedral(i, j, l, m))
+        dihedrals = sorted(set(dihedrals))
+        return [np.array([i, j, k, l], dtype=int) for i, j, k, l in dihedrals]
 
-    # Remove duplicates and sort
-    ff.dihedral_list = np.array(sorted(set(dihedrals)), dtype=int)
+    def get_repulsive_atoms(A):
+        all_i, all_j = np.triu_indices(n, 1)
+        mask = (A[all_i, all_j] == 0)
+        pairs = np.stack([all_i[mask], all_j[mask]], axis=1)
+        pairs = pairs[np.lexsort((pairs[:, 1], pairs[:, 0]))]
+        return [np.array([i, j], dtype=int) for i, j in pairs]
 
-    # --- Step 5: LJ pairs ---
-    all_i, all_j = np.triu_indices(n, 1)
-    mask_nonbond = (A[all_i, all_j] == 0)
-    lj = np.stack([all_i[mask_nonbond] + 1, all_j[mask_nonbond] + 1], axis=1)
-    ff.lj_list = lj[np.lexsort((lj[:,1], lj[:,0]))]
+    # ---- Reference calculations ----
+    def ref_bond(atoms):
+        i, j = atoms
+        return bondlength(info.fortran_xyz, i, j)
 
-def get_ff_reference_values(ff: ForceField, info: StructuralInformation):
-    # Bonds
-    for a in range(len(ff.bond_list)):
-        i = ff.bond_list[a, 0] - 1  
-        j = ff.bond_list[a, 1] - 1
-        ff.bondlengths.append(bondlength(info.fortran_xyz, i, j))
+    def ref_angle(atoms):
+        i, j, k = atoms
+        return angle(info.fortran_xyz, i, j, k)
 
-    # Angles
-    for a in range(len(ff.angle_list)):
-        i = ff.angle_list[a, 0] - 1
-        j = ff.angle_list[a, 1] - 1
-        l = ff.angle_list[a, 2] - 1
-        ff.angles.append(angle(info.fortran_xyz, i, j, l))
-    
-    # Dihedrals
-    for a in range(len(ff.dihedral_list)):
-        i = ff.dihedral_list[a, 0] - 1
-        j = ff.dihedral_list[a, 1] - 1
-        l = ff.dihedral_list[a, 2] - 1
-        m = ff.dihedral_list[a, 3] - 1
-        ff.dihedrals.append(dihedral_angle(info.fortran_xyz, i, j, l, m))
+    def ref_dihedral(atoms):
+        i, j, k, l = atoms
+        return dihedral_angle(info.fortran_xyz, i, j, k, l)
 
-    # Lennard-Jones terms
-    for a in range(len(ff.lj_list)):
-        i = ff.lj_list[a, 0] - 1
-        j = ff.lj_list[a, 1] - 1
-        ff.sigmas.append(info.vander_matrix[i, j] / (2**(1/6)))
-        # TODO This does not give the right results
-        # TODO I need to decide on giving data in angström or in bohr and be continous with it. 
+    def ref_repulsive(atoms):
+        i, j = atoms
+        return info.vander_matrix[i, j] / (2 ** (1 / 6))
 
-def check_noNaN_ff_initialization(ff: ForceField):
-    assert all(ff.c_bond.values())
-    assert all(ff.c_angle.values())
-    assert all(ff.c_dihedral.values())
-    assert all(ff.c_lj.values())
+    # ---- Parameter calculations ----
+    def param_bond(atoms):
+        i, j = atoms
+        bl = bondlength(info.fortran_xyz, i, j)
+        bo = info.bo_matrix[i, j]
+        if bo * bl == 0:
+            raise ZeroDivisionError(f"Division by zero for bond {atoms.tolist()}.")
+        return bo / bl
 
-def setup_unparameterized_forcefield(info: StructuralInformation, ff_filename: str, readff: bool = False) -> ForceField:
-    ff = ForceField(info.nat, ff_filename, readff=readff)
-    define_relevant_bonds(ff, info)
-    get_c_tables(ff, info)
-    return ff
+    def param_angle(atoms):
+        i, j, k = atoms
+        bl1 = bondlength(info.fortran_xyz, i, j)
+        bl2 = bondlength(info.fortran_xyz, j, k)
+        prod = info.bo_matrix[i, j] * info.bo_matrix[j, k]
+        if bl1 * bl2 * prod == 0:
+            raise ZeroDivisionError(f"Division by zero for angle {atoms.tolist()}.")
+        return (prod / (bl1 * bl2)) ** 0.5
+
+    def param_dihedral(atoms):
+        i, j, k, l = atoms
+        bl1 = bondlength(info.fortran_xyz, i, j)
+        bl2 = bondlength(info.fortran_xyz, j, k)
+        bl3 = bondlength(info.fortran_xyz, k, l)
+        prod = info.bo_matrix[i, j] * info.bo_matrix[j, k] * info.bo_matrix[k, l]
+        if bl1 * bl2 * bl3 * prod == 0:
+            raise ZeroDivisionError(f"Division by zero for dihedral {atoms.tolist()}.")
+        return (prod / (bl1 * bl2 * bl3)) ** (1 / 3)
+
+    def param_repulsive(_atoms):
+        return repulsive_start
+
+    # ============================================================
+    # Assemble ForceField DataFrames
+    # ============================================================
+
+    ff.bonds = pd.DataFrame({
+        "type": "bonds",
+        "atoms": get_bond_atoms(A)
+    })
+    ff.bonds["reference_value"] = ff.bonds["atoms"].apply(ref_bond)
+    ff.bonds["parameter"] = ff.bonds["atoms"].apply(param_bond)
+
+    ff.angles = pd.DataFrame({
+        "type": "angles",
+        "atoms": get_angle_atoms(A)
+    })
+    ff.angles["reference_value"] = ff.angles["atoms"].apply(ref_angle)
+    ff.angles["parameter"] = ff.angles["atoms"].apply(param_angle)
+
+    ff.dihedrals = pd.DataFrame({
+        "type": "dihedrals",
+        "atoms": get_dihedral_atoms(A)
+    })
+    ff.dihedrals["reference_value"] = ff.dihedrals["atoms"].apply(ref_dihedral)
+    ff.dihedrals["parameter"] = ff.dihedrals["atoms"].apply(param_dihedral)
+
+    ff.repulsive = pd.DataFrame({
+        "type": "repulsive",
+        "atoms": get_repulsive_atoms(A)
+    })
+    ff.repulsive["reference_value"] = ff.repulsive["atoms"].apply(ref_repulsive)
+    ff.repulsive["parameter"] = ff.repulsive["atoms"].apply(param_repulsive)
