@@ -29,12 +29,12 @@ cd _build
 ninja -j 10
 ```
 
-# Modules
+## Modules
 
 for more information on modules, there is documentation in the code. 
 
 
-# psssht, tis a secret
+## psssht, tis a secret
 add file "optvals" with following values to influence the ff fitting:
 maxit, stepsize, threshold, constant_repulsion, rep_start
 the standard is:
@@ -52,3 +52,26 @@ a working file (with the name 'optvals') would be:
 ATTENTION! Every value needs to be defined for it to work. So you CAN NOT write sth like `1000, 0.05, 0.001, 0.01` in optvals.
 
 
+
+
+## Compiling fortran code 
+How to compile the fortran code (scikit-build needs to be pip installed)
+```
+rm -rf _skbuild/ pyTSguess.egg-info/ && python setup.py build_ext --inplace 
+```
+
+The current list of packages is in the virtual environment is: 
+```
+Package       Version
+------------- -------
+distro        1.9.0  
+networkx      3.1    
+numpy         1.24.4 
+packaging     25.0   
+pip           20.0.2 
+pkg-resources 0.0.0  
+scikit-build  0.18.1 
+setuptools    44.0.0 
+tomli         2.2.1  
+wheel         0.45.1 
+```

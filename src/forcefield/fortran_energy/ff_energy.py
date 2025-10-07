@@ -1,6 +1,6 @@
 from src.forcefield.fortran_energy.fortran_bindings import *
 from src.datatype.structure_data import ForceField
-from src.forcefield.fortran_energy.geometry_calc import gangle, bondlength, dihedral_angle
+from src.forcefield.fortran_energy.geometry_calc import angle, bondlength, dihedral_angle
 import numpy as np
 
 def energy_ff(geometry_displ, ff: ForceField):
