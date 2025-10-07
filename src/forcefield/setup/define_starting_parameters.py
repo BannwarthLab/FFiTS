@@ -146,7 +146,7 @@ def get_ff_reference_values(ff: ForceField, info: StructuralInformation):
         # TODO This does not give the right results
         # TODO I need to decide on giving data in angström or in bohr and be continous with it. 
 
-def check_correct_ff_initialization(ff: ForceField):
+def check_noNaN_ff_initialization(ff: ForceField):
     assert all(ff.c_bond.values())
     assert all(ff.c_angle.values())
     assert all(ff.c_dihedral.values())
