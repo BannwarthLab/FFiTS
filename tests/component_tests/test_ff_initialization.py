@@ -4,6 +4,7 @@ import os
 import tempfile
 from src.forcefield.setup.define_starting_parameters import fill_ff
 from src.forcefield.fortran_energy.geometry_calc import angle, bondlength, dihedral_angle
+from src.forcefield.fortran_energy.ff_energy import * 
 # to not rely on other functions, data is given statically
 XYZ = np.array([
     [-2.33287094, 3.31176687, 0.20110100],
@@ -104,18 +105,19 @@ def test_define_bonds():
         [6, 7]
     ])
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        path = os.path.join(tmpdirname, 'ff')
-        ff = ForceField(NAT, path, readff=False)
-        fill_ff(ff, info)
-        print(ff.bonds)
-        print(ff.angles)
-        print(ff.dihedrals)
-        print(ff.repulsive)
-        assert np.array_equal(ff.bond_list, expected_bond_list)
-        assert np.array_equal(ff.angle_list, expected_angle_list)
-        assert np.array_equal(ff.dihedral_list, expected_dihedral_list)
-        assert np.array_equal(ff.lj_list, expected_lj_list)
+    path = os.path.join('/home/dbabushkina/1_ts_search2024/pytsguess/tests/examples/small_single_molecule', 'ff1_new')
+    ff = ForceField(NAT, path, readff=True)
+    # fill_ff(ff, info)
+    print(ff.bonds)
+    print(ff.angles)
+    print(ff.dihedrals)
+    print(ff.repulsive)
+    # ff.write()
+    gradient = complete_gradient(info.fortran_xyz, ff)
+    print(gradient)
+    hessian = complete_hessian(info.fortran_xyz, ff)
+    print(hessian)
+    assert False
 
 
 # def test_get_vander_matrix():

@@ -1,4 +1,5 @@
 from src.forcefield.fortran_energy.fortran_bindings import get_single_bond_gradient
+from src.forcefield.fortran_energy.ff_energy import *
 from tests.component_tests.static_data import XYZ, WBO, ATOM_TYPES
 from src.datatype.structure_data import StructuralInformation
 from src.forcefield.fortran_energy.geometry_calc import bondlength

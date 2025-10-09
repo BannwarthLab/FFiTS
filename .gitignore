@@ -4,3 +4,4 @@ src/__pycache__/
 src/interface/__pycache__/
 *.mod
 _skbuild
+*.pyc

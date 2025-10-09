@@ -6,6 +6,7 @@ import networkx as nx
 import numpy as np
 import os
 import pandas as pd
+import re
 
 
 VANDER_VALUES = np.array([
@@ -135,7 +136,7 @@ class ForceField:
         self.dihedrals: pd.Datatframe = pd.DataFrame(columns=self.columns)
         self.repulsive: pd.Datatframe = pd.DataFrame(columns=self.columns)
         if readff:
-            self.readin_forcefield(ff_filename)
+            self.readin(ff_filename)
             # if not self.correct_dimensions():
             #     raise Exception('Dimensions of reference values and given dimensions do not fit.')
 
@@ -145,27 +146,41 @@ class ForceField:
         df_combined.to_csv(self.ff_filename)
 
     def readin(self, filename: str):
-        """Read in a force field CSV file and populate the corresponding DataFrames."""
+        """Read a force field CSV file and populate the corresponding DataFrames."""
         try:
-            df = pd.read_csv(filename)
+            # Custom parser for "atoms" column: handles both "[0 1]" and "[0, 1]" syntaxes
+            def parse_atoms(x):
+                if pd.isna(x):
+                    return np.array([], dtype=int)
+                if isinstance(x, (list, np.ndarray)):
+                    return np.array(x, dtype=int)
+
+                # Remove brackets and commas, split on whitespace
+                x = re.sub(r'[\[\],]', ' ', str(x))
+                tokens = x.split()
+                return np.array([int(tok) for tok in tokens], dtype=int)
+
+            df = pd.read_csv(
+                filename,
+                converters={
+                    'atoms': parse_atoms,
+                    'parameter': float,
+                    'reference_value': float,
+                }
+            )
+
         except FileNotFoundError:
             raise FileNotFoundError(f"Force field file '{filename}' not found.")
         except pd.errors.EmptyDataError:
             raise ValueError(f"Force field file '{filename}' is empty or malformed.")
+        except Exception as e:
+            raise ValueError(f"Error while reading '{filename}': {e}")
 
-        missing = self.columns - set(df.columns)
-        if missing:
-            raise ValueError(f"Missing required columns in {filename}: {', '.join(missing)}")
-
+        # --- Split into sub-dataframes ---
         self.bonds     = df[df['type'] == 'bonds'].copy()
         self.angles    = df[df['type'] == 'angles'].copy()
         self.dihedrals = df[df['type'] == 'dihedrals'].copy()
         self.repulsive = df[df['type'] == 'repulsive'].copy()
-
-        # Reset indices (may have been messed up through the copy)
-        for attr in self.columns:
-            setattr(self, attr, getattr(self, attr).reset_index(drop=True))
-
 
 
 class StructuralInformation:
