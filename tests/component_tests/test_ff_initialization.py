@@ -66,7 +66,7 @@ def test_define_bonds():
         [1, 5],
         [1, 7],
         [2, 3],
-        [2, 6]
+        [2, 6]dd 
     ])    
     expected_angle_list = np.array([
         [1, 2, 3],
