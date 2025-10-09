@@ -271,11 +271,10 @@ subroutine get_phi_derivatives(geometry, i, j, k, l, dcosdx, d2cosdxdy, dsindx, 
     d2bdxdy = 0.0_wp
     d2cdxdy = 0.0_wp
     d2ddxdy = 0.0_wp
-write (*,*)  geometry(1,j) , geometry(1,i)
     xji = geometry(1,j) - geometry(1,i)
     yji = geometry(2,j) - geometry(2,i)
     zji = geometry(3,j) - geometry(3,i)
-    write (*,*) xji, yji, zji
+    
     xkj = geometry(1,k) - geometry(1,j)
     ykj = geometry(2,k) - geometry(2,j)
     zkj = geometry(3,k) - geometry(3,j)
