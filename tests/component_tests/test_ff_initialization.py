@@ -66,7 +66,7 @@ def test_define_bonds():
         [1, 5],
         [1, 7],
         [2, 3],
-        [2, 6]dd 
+        [2, 6]
     ])    
     expected_angle_list = np.array([
         [1, 2, 3],
@@ -108,11 +108,13 @@ def test_define_bonds():
     path = os.path.join('/home/dbabushkina/1_ts_search2024/pytsguess/tests/examples/small_single_molecule', 'ff1_new')
     ff = ForceField(NAT, path, readff=True)
     # fill_ff(ff, info)
+
+    # ff.write()
+    print(energy_ff(info.fortran_xyz, ff))    
     print(ff.bonds)
     print(ff.angles)
     print(ff.dihedrals)
     print(ff.repulsive)
-    # ff.write()
     gradient = complete_gradient(info.fortran_xyz, ff)
     print(gradient)
     hessian = complete_hessian(info.fortran_xyz, ff)
@@ -120,17 +122,19 @@ def test_define_bonds():
     assert False
 
 
-# def test_get_vander_matrix():
-#     expected_vander_matrix = np.array([
-#        [2.64, 2.64, 2.54, 2.23, 2.23, 2.23, 2.23],
-#        [2.64, 2.64, 2.54, 2.23, 2.23, 2.23, 2.23],
-#        [2.54, 2.54, 2.44, 2.13, 2.13, 2.13, 2.13],
-#        [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
-#        [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
-#        [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
-#        [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82]])
-#     vander_matrix = get_vander_matrix(NAT, ATOM_TYPES)
-#     np.testing.assert_allclose(vander_matrix, expected_vander_matrix, rtol=1e-7)
+def test_get_vander_matrix():
+    expected_vander_matrix = np.array([
+       [2.64, 2.64, 2.54, 2.23, 2.23, 2.23, 2.23],
+       [2.64, 2.64, 2.54, 2.23, 2.23, 2.23, 2.23],
+       [2.54, 2.54, 2.44, 2.13, 2.13, 2.13, 2.13],
+       [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
+       [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
+       [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
+       [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82]])
+    vander_matrix = get_vander_matrix(NAT, ATOM_TYPES)
+    print(vander_matrix)
+    np.testing.assert_allclose(vander_matrix, expected_vander_matrix, rtol=1e-7)
+    assert False
 
 # def test_get_c_tables():
 #     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)

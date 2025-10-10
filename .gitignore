@@ -2,6 +2,10 @@ test/
 venv/
 src/__pycache__/
 src/interface/__pycache__/
+src/datatype/__pycache__/
 *.mod
 _skbuild
 *.pyc
+src/forcefield/fortran_energy/__pycache__/
+tests/__pycache__/
+tests/component_tests/__pycache__/
