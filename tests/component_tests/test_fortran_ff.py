@@ -29,14 +29,6 @@ ATOM_TYPES = ['C', 'C', 'O', 'H', 'H', 'H', 'H']
 
 NAT = 7
 
-
-# def test_run():
-#     grad =  np.zeros(7*3)
-#     struc = StructuralInformation(7, XYZ, WBO, ATOM_TYPES)
-#     get_single_bond_gradient(struc.fortran_xyz, np.array([0,1]), 2.84821353, 2.0, grad)
-#     print(bondlength(struc.fortran_xyz, 0, 1))
-#     print(grad)
-#     assert False
 import numpy as np
 def numerical_gradient(geometry_displ: np.ndarray, ff: ForceField, delta: float = 1e-5) -> np.ndarray:
     geometry_displ = np.asarray(geometry_displ, dtype=float)
@@ -110,7 +102,7 @@ def test_numerical_gradient():
     analytical_gradient = complete_gradient(info.fortran_xyz * 2, ff)
     num_gradient = numerical_gradient(info.fortran_xyz * 2, ff)
 
-    np.testing.assert_allclose(analytical_gradient, num_gradient, atol=1e-3)
+    np.testing.assert_allclose(analytical_gradient, num_gradient, rtol=1e-6)
 
 def test_numerical_hessian():
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
@@ -121,6 +113,17 @@ def test_numerical_hessian():
     ff = ForceField(NAT, path, readff=True)
 
     analytical_hessian = complete_hessian(info.fortran_xyz, ff)
-    num_hessian = numerical_hessian(info.fortran_xyz, ff, delta=1e-5)
+    num_hessian = numerical_hessian(info.fortran_xyz, ff, delta=1e-3)
 
-    np.testing.assert_allclose(analytical_hessian, num_hessian, atol=1e-3)
+    np.testing.assert_allclose(analytical_hessian, num_hessian, rtol=1e-3)
+
+def test_energy_ff():
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+    path = os.path.join(
+        '/home/dbabushkina/1_ts_search2024/pytsguess/tests/examples/small_single_molecule',
+        'ff1_new'
+    )
+    ff = ForceField(NAT, path, readff=True)
+    energy = energy_ff(info.fortran_xyz*1.01, ff)
+    assert energy < 0.01
+    

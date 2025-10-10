@@ -54,44 +54,8 @@ def energy_ff(geometry_displ, ff: ForceField):
     ff.repulsive["current_reference"] = ff.repulsive["atoms"].apply(
         lambda atoms: bondlength(geometry_displ, atoms[0], atoms[1]))
     
-    ff.repulsive['energy'] = fact_bond * ff.repulsive['parameter']**2 * (ff.repulsive['reference_value']/ff.repulsive['current_reference'])**12
+    ff.repulsive['energy'] = fact_bond * 4 * ff.repulsive['parameter']**2 * (ff.repulsive['reference_value']/ff.repulsive['current_reference'])**12
     energy += ff.repulsive['energy'].sum()
-
-    # # Bonds
-    # for a in range(len(ff.c_bond)):
-    #     i = ff.bond_list[0, a] - 1  
-    #     j = ff.bond_list[1, a] - 1
-    #     bondlength_displ = bondlength(geometry_displ, i, j)
-    #     energy += fact_bond * ff.c_bond[i, j]**2 * (bondlength_displ - ff.bondlengths[a])**2
-    
-    # # Angles
-    # for a in range(len(ff.angle_list)):
-    #     i = ff.angle_list[0, a] - 1
-    #     j = ff.angle_list[1, a] - 1
-    #     l = ff.angle_list[2, a] - 1
-    #     angle_displ = angle(geometry_displ, i, j, l)
-    #     energy += fact_ang * ff.c_angle[i, j, l]**2 * (angle_displ - ff.angles[a])**2
-    
-    # # Dihedrals
-    # for a in range(len(ff.dihedral_list)):
-    #     i = ff.dihedral_list[0, a] - 1
-    #     j = ff.dihedral_list[1, a] - 1
-    #     l = ff.dihedral_list[2, a] - 1
-    #     m = ff.dihedral_list[3, a] - 1
-    #     dihedral_displ = dihedral_angle(geometry_displ, i, j, l, m)
-        
-    #     energy += fact_dih * ff.c_dihedral[i, j, l, m]**2 * (
-    #         (np.cos(ff.dihedrals[a]) - np.cos(dihedral_displ))**2
-    #         + (np.sin(ff.dihedrals[a]) - np.sin(dihedral_displ))**2
-    #     )
-    
-    # # Lennard-Jones terms
-    # for a in range(len(ff.lj_list)):
-    #     i = ff.lj_list[0, a] - 1
-    #     j = ff.lj_list[1, a] - 1
-    #     bondlength_displ = bondlength(geometry_displ, i, j)
-    #     energy += 4 * ff.c_lj[i, j]**2 * (ff.lj_lengths[a]/bondlength_displ)**12
-    #     # full LJ: - (ff.lj_lengths[a]/bondlength_displ)**6
     
     return energy
 
@@ -146,7 +110,7 @@ def repulsive_gradient(xyz: np.array, ff: ForceField, gradient: np.ndarray):
         atoms = row['atoms']      
         param = row['reference_value']
         c_val = row['parameter']**2
-        fb.get_single_repulsive_gradient(xyz, atoms, row['parameter'], c_val, gradient)
+        fb.get_single_repulsive_gradient(xyz, atoms, param, c_val, gradient)
 
 
 def complete_gradient(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
@@ -159,7 +123,7 @@ def complete_gradient(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
     bond_gradient(xyz_displaced, ff, gradient)
     angle_gradient(xyz_displaced, ff, gradient)
     dihedral_gradient(xyz_displaced, ff, gradient)
-    #repulsive_gradient(xyz_displaced, ff, gradient)
+    repulsive_gradient(xyz_displaced, ff, gradient)
 
     return gradient
 
@@ -213,7 +177,7 @@ def repulsive_hessian(xyz: np.array, ff: ForceField, hessian: np.ndarray):
         atoms = row['atoms']      
         param = row['reference_value']
         c_val = row['parameter']**2
-        fb.get_single_repulsive_hessian(xyz, atoms, row['parameter'], c_val, hessian)
+        fb.get_single_repulsive_hessian(xyz, atoms, param, c_val, hessian)
 
 
 def complete_hessian(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
@@ -226,6 +190,6 @@ def complete_hessian(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
     bond_hessian(xyz_displaced, ff, hessian)
     angle_hessian(xyz_displaced, ff, hessian)
     dihedral_hessian(xyz_displaced, ff, hessian)
-    #repulsive_hessian(xyz_displaced, ff, hessian)
+    repulsive_hessian(xyz_displaced, ff, hessian)
 
     return hessian
