@@ -27,8 +27,8 @@ ATOM_TYPES = ['C', 'C', 'O', 'H', 'H', 'H', 'H']
 
 NAT = 7
 
-# def test_blanc_ff_object():
-    # ff = ForceField(7, os.path.join(os.getcwd))
+def test_blanc_ff_object():
+    ff = ForceField(7, os.path.join(os.getcwd))
 
 # def test_construct_ff_object_from_file():
 #     path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1')
