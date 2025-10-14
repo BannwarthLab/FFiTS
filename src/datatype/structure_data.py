@@ -159,16 +159,24 @@ class ForceField:
     def get_energy(self, xyz_displaced: np.ndarray): 
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.energy_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
+        if len(xyz_displaced) == self.nat*3:
+            print('HALLo')
+            print(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T))
+            return self.energy_calculator(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T), self)
         return self.energy_calculator(xyz_displaced, self)
     
     def get_gradient(self, xyz_displaced: np.ndarray): 
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.gradient_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
+        if len(xyz_displaced) == self.nat*3:
+            return self.gradient_calculator(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T), self)
         return self.gradient_calculator(xyz_displaced, self)
     
     def get_hessian(self, xyz_displaced: np.ndarray): 
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.hessian_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
+        if len(xyz_displaced) == self.nat*3:
+            return self.hessian_calculator(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T), self)
         return self.hessian_calculator(xyz_displaced, self)
 
     def write(self):
@@ -197,7 +205,8 @@ class ForceField:
                     'atoms': parse_atoms,
                     'parameter': float,
                     'reference_value': float,
-                }
+                }, 
+                index_col=0
             )
 
         except FileNotFoundError:

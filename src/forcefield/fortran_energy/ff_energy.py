@@ -123,7 +123,6 @@ def complete_gradient(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
     if np.shape(xyz_displaced) == (ff.nat, 3):
         raise Exception('Please give xyz in column-major format.')
     
-    print(ff.bonds)
     gradient = np.zeros((ff.nat * 3), order='F')
 
     bond_gradient(xyz_displaced, ff, gradient)

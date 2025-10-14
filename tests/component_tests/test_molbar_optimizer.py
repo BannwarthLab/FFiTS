@@ -1,7 +1,7 @@
 
 import numpy as np
 import os
-from src.interface.molbar_optimizer import anc_optimizer
+from src.interface.molbar_optimizer import anc_optimizer, scipy_optimizer
 from src.forcefield.fortran_energy.ff_energy import energy_ff, complete_gradient, complete_hessian
 from src.datatype.structure_data import ForceField, StructuralInformation
 from src.interface.reader import readin_xyz
@@ -44,4 +44,27 @@ def test_anc_optimizer():
     assert energy <= 0.1
 
     os.chdir(cwd)
+    assert False
 
+def test_scipy_optimizer():
+    cwd = os.getcwd()
+    temp_wd = os.path.join(cwd, '_manual_test/small_single_molecule')
+    os.chdir(temp_wd)
+
+    struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+    ff = ForceField(7, 'ff1_new', readff=True, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian) 
+    _, _, xyz_start, _ = readin_xyz('struc2.xyz') 
+
+    result = scipy_optimizer(xyz_start, ff, struc)
+    convergence = result.success
+    final_energy = result.fun
+    final_coordinates = result.x.reshape((len(xyz_start), 3))
+    steps = result.nit
+    message = result.message
+    print(message, steps)
+    os.chdir(cwd)
+    assert False
+
+
+if __name__ == "__main__":
+    test_scipy_optimizer()

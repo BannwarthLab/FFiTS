@@ -1,10 +1,10 @@
-from src.datatype.structure_data import ForceField, StructuralInformation, get_vander_matrix
+from src.datatype.structure_data import ForceField, StructuralInformation, get_vander_matrix, angstrom2bohr
 import numpy as np
 import os
 import tempfile
 from src.forcefield.setup.define_starting_parameters import fill_ff
 from src.forcefield.fortran_energy.geometry_calc import angle, bondlength, dihedral_angle
-from src.forcefield.fortran_energy.ff_energy import * 
+from src.forcefield.fortran_energy.ff_energy import energy_ff, complete_gradient, complete_hessian
 # to not rely on other functions, data is given statically
 XYZ = np.array([
     [-2.33287094, 3.31176687, 0.20110100],
@@ -28,7 +28,11 @@ ATOM_TYPES = ['C', 'C', 'O', 'H', 'H', 'H', 'H']
 NAT = 7
 
 def test_blanc_ff_object():
-    ff = ForceField(7, os.path.join(os.getcwd))
+    path = os.path.join(os.getcwd(), 
+        'tests/examples/small_single_molecule',
+        'ff1_new'
+    )
+    ff = ForceField(7, path, readff=True, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian) 
 
 # def test_construct_ff_object_from_file():
 #     path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1')
@@ -60,55 +64,13 @@ def test_get_structural_information():
 
 
 def test_define_bonds():
-    expected_bond_list = np.array([
-        [1, 2],
-        [1, 4],
-        [1, 5],
-        [1, 7],
-        [2, 3],
-        [2, 6]
-    ])    
-    expected_angle_list = np.array([
-        [1, 2, 3],
-        [1, 2, 6],
-        [2, 1, 4],
-        [2, 1, 5],
-        [2, 1, 7],
-        [3, 2, 6],
-        [4, 1, 5],
-        [4, 1, 7],
-        [5, 1, 7]
-    ])
-    expected_dihedral_list = np.array([
-        [3, 2, 1, 4],
-        [3, 2, 1, 5],
-        [3, 2, 1, 7],
-        [4, 1, 2, 6],
-        [5, 1, 2, 6],
-        [6, 2, 1, 7]
-    ])
-    expected_lj_list = np.array([
-        [1, 3],
-        [1, 6],
-        [2, 4],
-        [2, 5],
-        [2, 7],
-        [3, 4],
-        [3, 5],
-        [3, 6],
-        [3, 7],
-        [4, 5],
-        [4, 6],
-        [4, 7],
-        [5, 6],
-        [5, 7],
-        [6, 7]
-    ])
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
     path = os.path.join('/home/dbabushkina/1_ts_search2024/pytsguess/tests/examples/small_single_molecule', 'ff1_new')
-    ff = ForceField(NAT, path, readff=True)
-    # fill_ff(ff, info)
+    ff_readin = ForceField(NAT, path, readff=True)
+    ff = ForceField(NAT, path, readff=False)
 
+    fill_ff(ff, info)
+    np.testing.assert_allclose(ff_readin.bonds['atoms'], ff.bonds['atoms'], rtol=0.111)
     # ff.write()
     print(energy_ff(info.fortran_xyz, ff))    
     print(ff.bonds)
@@ -123,18 +85,18 @@ def test_define_bonds():
 
 
 def test_get_vander_matrix():
-    expected_vander_matrix = np.array([
+    expected_vander_matrix = angstrom2bohr(np.array([
        [2.64, 2.64, 2.54, 2.23, 2.23, 2.23, 2.23],
        [2.64, 2.64, 2.54, 2.23, 2.23, 2.23, 2.23],
        [2.54, 2.54, 2.44, 2.13, 2.13, 2.13, 2.13],
        [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
        [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
        [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
-       [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82]])
+       [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82]]))
     vander_matrix = get_vander_matrix(NAT, ATOM_TYPES)
     print(vander_matrix)
     np.testing.assert_allclose(vander_matrix, expected_vander_matrix, rtol=1e-7)
-    assert False
+
 
 # def test_get_c_tables():
 #     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)

@@ -29,7 +29,6 @@ ATOM_TYPES = ['C', 'C', 'O', 'H', 'H', 'H', 'H']
 
 NAT = 7
 
-import numpy as np
 def numerical_gradient(geometry_displ: np.ndarray, ff: ForceField, delta: float = 1e-5) -> np.ndarray:
     geometry_displ = np.asarray(geometry_displ, dtype=float)
     
@@ -93,8 +92,8 @@ def hessian_rmsd(H1: np.ndarray, H2: np.ndarray) -> float:
 
 def test_numerical_gradient():
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
-    path = os.path.join(
-        '/home/dbabushkina/1_ts_search2024/pytsguess/tests/examples/small_single_molecule',
+    path = os.path.join(os.getcwd(), 
+        'tests/examples/small_single_molecule',
         'ff1_new'
     )
     ff = ForceField(NAT, path, readff=True)
@@ -106,10 +105,11 @@ def test_numerical_gradient():
 
 def test_numerical_hessian():
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
-    path = os.path.join(
-        '/home/dbabushkina/1_ts_search2024/pytsguess/tests/examples/small_single_molecule',
+    path = os.path.join(os.getcwd(), 
+        'tests/examples/small_single_molecule',
         'ff1_new'
     )
+    
     ff = ForceField(NAT, path, readff=True)
 
     analytical_hessian = complete_hessian(info.fortran_xyz, ff)
@@ -119,8 +119,8 @@ def test_numerical_hessian():
 
 def test_energy_ff():
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
-    path = os.path.join(
-        '/home/dbabushkina/1_ts_search2024/pytsguess/tests/examples/small_single_molecule',
+    path = os.path.join(os.getcwd(), 
+        'tests/examples/small_single_molecule',
         'ff1_new'
     )
     ff = ForceField(NAT, path, readff=True)
