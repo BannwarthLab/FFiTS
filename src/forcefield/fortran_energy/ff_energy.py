@@ -75,6 +75,7 @@ def bond_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray):
         atoms = row['atoms']      
         param = row['reference_value']
         c_val = row['parameter']**2
+        fb.get_single_bond_gradient(xyz, atoms, param, c_val, gradient)
 
 
 # -------------------------------------------------------------------------

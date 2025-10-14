@@ -44,5 +44,4 @@ def test_anc_optimizer():
     assert energy <= 0.1
 
     os.chdir(cwd)
-    assert False
 

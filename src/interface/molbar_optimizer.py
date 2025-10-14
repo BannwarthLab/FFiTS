@@ -3,7 +3,7 @@ from src.datatype.structure_data import ForceField, StructuralInformation
 from molbar.utils.optimizer import optimize_geometry 
 
 
-def anc_optimizer(xyz_start: np.ndarray, ff: ForceField, struc: StructuralInformation, g_tol: float = 1e-2, e_tol: float = 1e-8, x_tol: float = 1e-3, max_micro_steps: int = 1, trajectory_filename: str = 'trajectory.xyz', final_geometry_filename: str = 'optimized.xyz'):
+def anc_optimizer(xyz_start: np.ndarray, ff: ForceField, struc: StructuralInformation, g_tol: float = 1e-2, e_tol: float = 1e-8, x_tol: float = 1e-3, max_micro_steps: int = 5, trajectory_filename: str = 'trajectory.xyz', final_geometry_filename: str = 'optimized.xyz'):
     if ff.energy_calculator == None:
         raise Exception('Function for energy calculation needs to be defined in FF object when using the ANC optimization.')
     if ff.gradient_calculator == None:
