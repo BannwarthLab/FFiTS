@@ -7,6 +7,7 @@ import numpy as np
 import os
 import pandas as pd
 import re
+from collections.abc import Callable
 
 
 VANDER_VALUES = np.array([
@@ -44,7 +45,19 @@ PERIODIC_TABLE = {
     "Lu": 71, "Hf": 72, "Ta": 73, "W": 74, "Re": 75, "Os": 76, "Ir": 77, "Pt": 78,
     "Au": 79, "Hg": 80, "Tl": 81, "Pb": 82, "Bi": 83, "Po": 84, "At": 85, "Rn": 86
 }
-
+def convert_xyz_to_fortranstyle(nat, xyz): 
+    x = []
+    y = []
+    z = []
+    for i in range(nat):
+        x.append(xyz[i][0])
+        y.append(xyz[i][1])
+        z.append(xyz[i][2])
+    return np.array([x,y,z],order='F')
+def angstrom2bohr(val):
+        if type(val) == np.array:
+            return np.divide(val, 1/1.8897259)
+        return val/(1/1.8897259)
 def atom_symbol_to_number(symbol: str) -> int:
     """Convert an element symbol (e.g. 'C') to its atomic number (e.g. 6)."""
     try:
@@ -127,11 +140,11 @@ class ForceField:
     """ 
     FF definition through FF parameters (np arrays starting with c_), reference values (bondlenghts, angles, etc) and corresponding atom numbers, which construct the bond / angle / dihedral angle / lj term. 
     """
-    def __init__(self, nat: int, ff_filename: str, readff: bool = True):
+    def __init__(self, nat: int, ff_filename: str, readff: bool = True, energy_calculator: Callable = None, gradient_calculator: Callable = None, hessian_calculator: Callable = None):
         self.nat = nat
         self.ff_filename = ff_filename
         self.columns = ['type', 'atoms', 'parameter', 'reference_value']
-        self.bonds: pd.DataFrame     = pd.DataFrame(columns=self.columns, index='')
+        self.bonds: pd.DataFrame     = pd.DataFrame(columns=self.columns)
         self.angles: pd.DataFrame    = pd.DataFrame(columns=self.columns)
         self.dihedrals: pd.DataFrame = pd.DataFrame(columns=self.columns)
         self.repulsive: pd.DataFrame = pd.DataFrame(columns=self.columns)
@@ -139,6 +152,24 @@ class ForceField:
             self.readin(ff_filename)
             # if not self.correct_dimensions():
             #     raise Exception('Dimensions of reference values and given dimensions do not fit.')
+        self.energy_calculator = energy_calculator
+        self.gradient_calculator = gradient_calculator
+        self.hessian_calculator = hessian_calculator
+
+    def get_energy(self, xyz_displaced: np.ndarray): 
+        if np.shape(xyz_displaced) == (self.nat, 3):
+            return self.energy_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
+        return self.energy_calculator(xyz_displaced, self)
+    
+    def get_gradient(self, xyz_displaced: np.ndarray): 
+        if np.shape(xyz_displaced) == (self.nat, 3):
+            return self.gradient_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
+        return self.gradient_calculator(xyz_displaced, self)
+    
+    def get_hessian(self, xyz_displaced: np.ndarray): 
+        if np.shape(xyz_displaced) == (self.nat, 3):
+            return self.hessian_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
+        return self.hessian_calculator(xyz_displaced, self)
 
     def write(self):
         """Combine all parameter DataFrames and write to CSV."""
@@ -199,6 +230,7 @@ class StructuralInformation:
         self.wbo = wbo_dict
         self.xyz = xyz
         self.atom_types = atom_types
+        self.hessian: np.ndarray # TOODO READIN
         self.bo_matrix: np.array = self.create_bomatrix_from_wbo()
         self.fortran_xyz: np.array = self.angstrom2bohr(self.convert_xyz_to_fortranstyle())
         self.complete_graph: nx.Graph = self.create_graph_from_wbo()

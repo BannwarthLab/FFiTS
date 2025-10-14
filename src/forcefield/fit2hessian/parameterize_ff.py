@@ -1,16 +1,12 @@
-from src.datatype.structure_data import ForceField
-
+from src.datatype.structure_data import ForceField, StructuralInformation
+from src.forcefield.fortran_energy.ff_energy import complete_hessian
+from src.forcefield.fortran_energy.fortran_bindings import get_single_bond_hessian, get_single_angle_hessian, get_single_dihedral_hessian, get_single_repulsive_hessian
 from typing import Optional
 import numpy as np
-import math
+import copy
 import warnings
+import molbar 
 
-
-def get_complete_hessian(hopot, geometry, gradient_out, hessian_ff_out):
-    """Compute full FF Hessian for current FF parameters.
-    Must fill hessian_ff_out in-place and optionally gradient_out.
-    """
-    raise NotImplementedError("get_complete_hessian must be provided by the host codebase")
 
 def calculate_hessian_rmsd(hessian_ff, hessian_ref, ndof, out_rmsd):
     """Compute RMSD between hessian_ff and hessian_ref and write scalar to out_rmsd (mutable).
@@ -20,17 +16,6 @@ def calculate_hessian_rmsd(hessian_ff, hessian_ref, ndof, out_rmsd):
     rmsd = np.sqrt(np.mean(diff**2))
     return rmsd
 
-def get_dihedral_hessian_four_atoms(geometry_ff, val_ref, atom1, atom2, atom3, atom4, c, gradient_out, hess_ff_single_out):
-    raise NotImplementedError("dihedral Hessian builder not implemented")
-
-def get_angle_hessian_three_atoms(geometry_ff, val_ref, atom1, atom2, atom3, c, gradient_out, hess_ff_single_out):
-    raise NotImplementedError("angle Hessian builder not implemented")
-
-def get_bond_hessian_two_atoms(geometry_ff, val_ref, atom1, atom2, c, gradient_out, hess_ff_single_out):
-    raise NotImplementedError("bond Hessian builder not implemented")
-
-def get_lj_hessian_two_atoms(geometry_ff, atom1, atom2, c, sigma, gradient_out, hess_ff_single_out):
-    raise NotImplementedError("lj Hessian builder not implemented")
 
 # --------------------------------------------------------------------
 # Utility helpers
@@ -44,34 +29,21 @@ def _atom_slice(atom_idx: int) -> slice:
 # Core functions (Python translation of Fortran module)
 # --------------------------------------------------------------------
 
-def fit_ff_to_hessian(hopot: ForceField,
+def fit_ff_to_hessian(struc: StructuralInformation,
+                      ff: ForceField,
                       maxit_ex: Optional[int] = None,
                       stepsize_ex: Optional[float] = None,
                       threshold_ex: Optional[float] = None,
                       constant_repulsion_ex: Optional[bool] = None):
     """
-    Fit FF parameters (c_bond, c_angle, c_dihedral, optionally c_lj) to match hopot.hessian
-    using a Newton–Raphson style iterative update of parameters.
-
-    Parameters
-    ----------
-    hopot : object
-        Host object with attributes as described above.
-    maxit_ex : Optional[int]
-        Maximum number of iterations (default 10_000_000).
-    stepsize_ex : Optional[float]
-        Step-size multiplier for Newton update (default 0.05).
-    threshold_ex : Optional[float]
-        Convergence threshold (default 0.001).
-    constant_repulsion_ex : Optional[bool]
-        If True, keep repulsion (c_lj) constant (default True).
+    description
     """
-    nat = int(hopot.nat)
-    ndof = 3 * nat
+    nat = int(ff.nat)
+    3 * natndof = 3 * nat
 
     # allocate scratch arrays
-    grd = np.zeros(ndof, dtype=np.float64)
-    hessian_ff = np.zeros((ndof, ndof), dtype=np.float64)
+    grd = np.zeros(3 * nat, dtype=np.float64)
+    hessian_ff = np.zeros((3 * nat, 3 * nat), dtype=np.float64)
 
     # default parameters
     maxit = 1000 if maxit_ex is None else int(maxit_ex)
@@ -85,6 +57,8 @@ def fit_ff_to_hessian(hopot: ForceField,
     rmsd_gap = 0.5
     rmsdd = 1.0
 
+    ff_new = copy.deepcopy(ff)
+    
     print("--------------------- START OF FF FITTING ---------------------")
     print("Following parameters are used (maxit, stepsize, threshold):", maxit, stepsize, threshold)
 
@@ -96,7 +70,7 @@ def fit_ff_to_hessian(hopot: ForceField,
         hessian_ff.fill(0.0)
 
         # compute FF Hessian given current parameters
-        get_complete_hessian(hopot, hopot.xyz0, grd, hessian_ff)
+        hessian_ff = complete_hessian(struc.fortran_xyz, ff_new)
 
         # update bonds
         for f in range(int(hopot.count_bond)):
@@ -122,6 +96,25 @@ def fit_ff_to_hessian(hopot: ForceField,
         rmsd_gap = abs(temp_old - temp)
 
     return {"iterations": counter, "final_rmsd": rmsdd}
+
+
+# -----------------------------
+# single-parameter update steps
+# -----------------------------
+def update_bonds4fit(row, struc: StructuralInformation, hessian_ff: np.ndarray, stepsize: float):
+    i = row['atoms'][0]
+    j = row['atoms'][1]
+
+    deriv1 = derivative_c_first_atomwise(struc.nat, struc.fortran_xyz,
+                                         row['reference_value'],
+                                         hessian_ff, struc.hessian,
+                                         atom1=i, atom2=j, c=row['parameter'])
+    deriv2 = derivative_c_second_atomwise(struc.nat, struc.fortran_xyz,
+                                         row['reference_value'],
+                                         hessian_ff, struc.hessian,
+                                         atom1=i, atom2=j, c=row['parameter'])
+
+    row['parameter'] = update_single_ffparam(row['parameter'], deriv1, deriv2, stepsize)
 
 
 # -----------------------------
@@ -254,7 +247,7 @@ def derivative_c_first_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: f
     hess_ff_single = np.zeros((ndof, ndof), dtype=np.float64)
 
     if (atom3 is not None) and (atom4 is not None):
-        get_dihedral_hessian_four_atoms(geometry_ff, val_ref, atom1, atom2, atom3, atom4, c, gradient, hess_ff_single)
+        get_single_dihedral_hessian(geometry_ff, val_ref, atom1, atom2, atom3, atom4, c, gradient, hess_ff_single)
         s = 0.0
         s = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, s)
         s = get_sum_first_c_deriv(c, atom1, atom3, hess_ff, hess_ref, hess_ff_single, s)
@@ -265,7 +258,7 @@ def derivative_c_first_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: f
         return s
 
     elif (atom3 is not None) and (atom4 is None):
-        get_angle_hessian_three_atoms(geometry_ff, val_ref, atom1, atom2, atom3, c, gradient, hess_ff_single)
+        get_single_angle_hessian(geometry_ff, val_ref, atom1, atom2, atom3, c, gradient, hess_ff_single)
         s = 0.0
         s = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, s)
         s = get_sum_first_c_deriv(c, atom1, atom3, hess_ff, hess_ref, hess_ff_single, s)
@@ -273,7 +266,7 @@ def derivative_c_first_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: f
         return s
 
     else:
-        get_bond_hessian_two_atoms(geometry_ff, val_ref, atom1, atom2, c, gradient, hess_ff_single)
+        get_single_bond_hessian(geometry_ff, val_ref, atom1, atom2, c, gradient, hess_ff_single)
         s = 0.0
         s = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, s)
         return s
