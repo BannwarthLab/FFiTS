@@ -187,7 +187,7 @@ def repulsive_hessian(xyz: np.array, ff: ForceField, hessian: np.ndarray):
 
 def complete_hessian(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
     """
-    Computes total hessian (flattened, Fortran order) for all force field terms.
+    Computes total hessian (Fortran order) for all force field terms.
     Uses DataFrame-based force field representation.
     """
     if np.shape(xyz_displaced) == (ff.nat, 3):

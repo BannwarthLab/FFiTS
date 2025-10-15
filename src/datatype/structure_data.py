@@ -160,8 +160,6 @@ class ForceField:
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.energy_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
         if len(xyz_displaced) == self.nat*3:
-            print('HALLo')
-            print(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T))
             return self.energy_calculator(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T), self)
         return self.energy_calculator(xyz_displaced, self)
     
@@ -272,6 +270,19 @@ class StructuralInformation:
             bo_matrix[i-1,j-1] = val 
             bo_matrix[j-1,i-1] = val 
         return bo_matrix
+    
+    def scipy_optimizer_callback(self, xk: np.ndarray) -> None:
+        """Callback function for scipy optimizer progress tracking."""
+        cwd = os.getcwd()
+        temp_wd = os.path.join(cwd, 'trj.xyz')
+
+        coordinates = xk.reshape(-1, 3)
+        elements = self.atom_types
+        with open(os.path.join(temp_wd), 'a') as f:
+            f.write(f"{len(coordinates)}\n")
+            f.write("Debug optimization step\n")
+            for e, c in zip(elements, coordinates):
+                f.write(f"{e} {c[0]:.6f} {c[1]:.6f} {c[2]:.6f}\n")
 
     def create_graph_from_wbo(self) -> nx.Graph:
         """ 

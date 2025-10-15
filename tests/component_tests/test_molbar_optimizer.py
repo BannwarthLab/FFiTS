@@ -61,10 +61,11 @@ def test_scipy_optimizer():
     final_coordinates = result.x.reshape((len(xyz_start), 3))
     steps = result.nit
     message = result.message
-    print(message, steps)
+    print(message, f'in {steps} steps with energy {final_energy}')
     os.chdir(cwd)
-    assert False
+    assert convergence
+    assert final_energy < 0.01
 
-
-if __name__ == "__main__":
-    test_scipy_optimizer()
+# This may be needed for the debugging tool 
+# if __name__ == "__main__":
+#     test_scipy_optimizer()
