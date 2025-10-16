@@ -1,6 +1,6 @@
 from src.forcefield.fortran_energy.fortran_bindings import get_single_bond_gradient
 from src.forcefield.fortran_energy.ff_energy import *
-from tests.component_tests.static_data import XYZ, WBO, ATOM_TYPES
+# from tests.component_tests.static_data import XYZ, WBO, ATOM_TYPES
 from src.datatype.structure_data import StructuralInformation, ForceField, angstrom2bohr, convert_xyz_to_fortranstyle
 from src.forcefield.fortran_energy.geometry_calc import bondlength
 from src.interface.reader import readin_xyz
@@ -51,85 +51,40 @@ def numerical_gradient(geometry_displ: np.ndarray, ff: ForceField, delta: float 
 
     return gradient
 
+def numerical_hessian(energy_func, coords, h=1e-5):
 
-def numerical_hessian(geometry_displ: np.ndarray, ff: ForceField, delta: float = 1e-4) -> np.ndarray:
-    geometry_displ = np.asarray(geometry_displ, dtype=float)
+    print(coords)
+    x = np.asarray(coords, dtype=float).flatten()
+    print(x)
+    print(x.reshape(7,3).T)
+    n = x.size
+    H = np.zeros((n, n), dtype=float)
+    E0 = energy_func(x.copy())
 
-    nat = geometry_displ.shape[1]
-    ncoords = nat * 3
-    hessian = np.zeros((ncoords, ncoords), dtype=float)
-
-    grad0 = numerical_gradient(geometry_displ, ff, delta=delta/10)
-
-    for a in range(nat):
-        for coord in range(3):
-            idx = 3 * a + coord  
-            geom_plus  = geometry_displ.copy()
-            geom_minus = geometry_displ.copy()
-
-            geom_plus[coord, a]  += delta
-            geom_minus[coord, a] -= delta
-
-            grad_plus  = numerical_gradient(geom_plus, ff, delta=delta/10)
-            grad_minus = numerical_gradient(geom_minus, ff, delta=delta/10)
-
-            hessian[:, idx] = (grad_plus - grad_minus) / (2 * delta)
-
-    # Enforce symmetry numerically
-    hessian = 0.5 * (hessian + hessian.T)
-    return hessian
-
-import numpy as np
-
-def numerical_hessian(energy_func, coords, h=1e-4):
-    """
-    Compute a numerical Hessian (3n x 3n) using only energy evaluations.
-    
-    Parameters
-    ----------
-    energy_func : callable
-        Function that takes a 1D numpy array of shape (3n,) and returns a scalar energy.
-    coords : np.ndarray
-        1D array of shape (3n,), the coordinates at which to compute the Hessian.
-    h : float, optional
-        Finite difference step size (default: 1e-4).
-    
-    Returns
-    -------
-    hessian : np.ndarray
-        Symmetric Hessian matrix of shape (3n, 3n).
-    """
-    coords = np.asarray(coords, dtype=float)
-    n = coords.size
-    hessian = np.zeros((n, n))
-    
-    E0 = energy_func(coords)
-
-    # Diagonal second derivatives
+    # diagonal second derivatives
     for i in range(n):
-        d = np.zeros(n)
-        d[i] = h
-        E_plus = energy_func(coords + d)
-        E_minus = energy_func(coords - d)
-        hessian[i, i] = (E_plus - 2*E0 + E_minus) / (h**2)
-    
-    # Off-diagonal cross derivatives
+        xf, xb = x.copy(), x.copy()
+        xf[i] += h; xb[i] -= h
+        H[i, i] = (energy_func(xf) + energy_func(xb) - 2.0 * E0) / (h * h)
+
+    # mixed second derivatives
     for i in range(n):
         for j in range(i+1, n):
-            d_i = np.zeros(n)
-            d_j = np.zeros(n)
-            d_i[i] = h
-            d_j[j] = h
-            
-            E_pp = energy_func(coords + d_i + d_j)
-            E_pm = energy_func(coords + d_i - d_j)
-            E_mp = energy_func(coords - d_i + d_j)
-            E_mm = energy_func(coords - d_i - d_j)
-            
-            val = (E_pp - E_pm - E_mp + E_mm) / (4 * h**2)
-            hessian[i, j] = hessian[j, i] = val  # enforce symmetry
+            x_pp = x.copy(); x_pm = x.copy(); x_mp = x.copy(); x_mm = x.copy()
+            x_pp[i] += h; x_pp[j] += h
+            x_pm[i] += h; x_pm[j] -= h
+            x_mp[i] -= h; x_mp[j] += h
+            x_mm[i] -= h; x_mm[j] -= h
+            E_pp = energy_func(x_pp)
+            E_pm = energy_func(x_pm)
+            E_mp = energy_func(x_mp)
+            E_mm = energy_func(x_mm)
+            Hij = (E_pp + E_mm - E_pm - E_mp) / (4.0 * h * h)
+            H[i, j] = Hij
+            H[j, i] = Hij
 
-    return hessian
+    return H
+
 
 
 def hessian_rmsd(H1: np.ndarray, H2: np.ndarray) -> float:
@@ -168,14 +123,15 @@ def test_numerical_hessian():
     )
     path2 = os.path.join(os.getcwd(), 
         'tests/examples/small_single_molecule',
-        'struc2.xyz'
+        'struc1.xyz'
     )
     ff = ForceField(NAT, path, readff=True, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
     _, _, xyz_start, _ = readin_xyz(path2) 
     analytical_hessian = ff.get_hessian(xyz_start)
     # num_hessian = numerical_hessian(angstrom2bohr(convert_xyz_to_fortranstyle(ff.nat, xyz_start)), ff, delta=1e-7)
-    num_hessian = numerical_hessian(ff.get_energy, xyz_start)
-
+    num_hessian = numerical_hessian(ff.get_energy, xyz_start, h=1e-4)
+    # print(num_hessian)
+    # print(analytical_hessian)
     np.testing.assert_allclose(analytical_hessian, num_hessian, rtol=1e-3)
 
 def test_energy_ff():
@@ -188,3 +144,5 @@ def test_energy_ff():
     energy = energy_ff(info.fortran_xyz*1.01, ff)
     assert energy < 0.01
     
+if __name__ == "__main__":
+    test_numerical_hessian()
