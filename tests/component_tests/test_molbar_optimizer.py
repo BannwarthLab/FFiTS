@@ -44,7 +44,7 @@ def test_anc_optimizer():
     assert energy <= 0.1
 
     os.chdir(cwd)
-    assert False
+    # assert False
 
 def test_scipy_optimizer():
     cwd = os.getcwd()

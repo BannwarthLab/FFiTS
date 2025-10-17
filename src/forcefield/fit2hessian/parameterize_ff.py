@@ -1,6 +1,6 @@
 from src.datatype.structure_data import ForceField, StructuralInformation
 from src.forcefield.fortran_energy.ff_energy import complete_hessian
-from src.forcefield.fortran_energy.fortran_bindings import get_single_bond_hessian, get_single_angle_hessian, get_single_dihedral_hessian, get_single_repulsive_hessian
+import src.forcefield.fortran_energy.fortran_bindings as fb
 from typing import Optional
 import numpy as np
 import copy
@@ -73,20 +73,20 @@ def fit_ff_to_hessian(struc: StructuralInformation,
         hessian_ff = complete_hessian(struc.fortran_xyz, ff_new)
 
         # update bonds
-        for f in range(int(hopot.count_bond)):
+        for f in range(len(ff.bonds)):
             update_bond(hopot, hessian_ff, f, stepsize)
 
         # update angles
-        for f in range(int(hopot.count_angle)):
+        for f in range(len(ff.angles)):
             update_angle(hopot, hessian_ff, f, stepsize)
 
         # update dihedrals
-        for f in range(int(hopot.count_dihedral)):
+        for f in range(len(ff.dihedrals)):
             update_dihedral(hopot, hessian_ff, f, stepsize)
 
         # update LJ (repulsion) if not kept constant
         if not constant_repulsion:
-            for f in range(int(hopot.count_lj)):
+            for f in range(len(ff.repulsive)):
                 update_repulsion(hopot, hessian_ff, f, stepsize)
 
         # compute RMSD between current FF Hessian and reference Hessian
@@ -209,7 +209,7 @@ def derivative_c_second_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: 
     hess_ff_single = np.zeros((ndof, ndof), dtype=np.float64)
 
     if (atom3 is not None) and (atom4 is not None):
-        get_dihedral_hessian_four_atoms(geometry_ff, val_ref, atom1, atom2, atom3, atom4, c, gradient, hess_ff_single)
+        fb.get_single_dihedral_hessian(geometry_ff, val_ref, atom1, atom2, atom3, atom4, c, gradient, hess_ff_single)
         deriv = 0.0
         deriv = get_sum_second_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
         deriv = get_sum_second_c_deriv(c, atom1, atom3, hess_ff, hess_ref, hess_ff_single, deriv)
@@ -220,7 +220,7 @@ def derivative_c_second_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: 
         return deriv * 2.0  # hessian symmetry factor
 
     elif (atom3 is not None) and (atom4 is None):
-        get_angle_hessian_three_atoms(geometry_ff, val_ref, atom1, atom2, atom3, c, gradient, hess_ff_single)
+        fb.get_single_angle_hessian(geometry_ff, val_ref, atom1, atom2, atom3, c, gradient, hess_ff_single)
         deriv = 0.0
         deriv = get_sum_second_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
         deriv = get_sum_second_c_deriv(c, atom1, atom3, hess_ff, hess_ref, hess_ff_single, deriv)
@@ -229,7 +229,7 @@ def derivative_c_second_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: 
 
     else:
         # bond case
-        get_bond_hessian_two_atoms(geometry_ff, val_ref, atom1, atom2, c, gradient, hess_ff_single)
+        fb.get_single_bond_hessian(geometry_ff, val_ref, atom1, atom2, c, gradient, hess_ff_single)
         deriv = 0.0
         deriv = get_sum_second_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
         return deriv * 2.0
@@ -247,7 +247,7 @@ def derivative_c_first_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: f
     hess_ff_single = np.zeros((ndof, ndof), dtype=np.float64)
 
     if (atom3 is not None) and (atom4 is not None):
-        get_single_dihedral_hessian(geometry_ff, val_ref, atom1, atom2, atom3, atom4, c, gradient, hess_ff_single)
+        fb.get_single_dihedral_hessian(geometry_ff, val_ref, atom1, atom2, atom3, atom4, c, gradient, hess_ff_single)
         s = 0.0
         s = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, s)
         s = get_sum_first_c_deriv(c, atom1, atom3, hess_ff, hess_ref, hess_ff_single, s)
@@ -258,7 +258,7 @@ def derivative_c_first_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: f
         return s
 
     elif (atom3 is not None) and (atom4 is None):
-        get_single_angle_hessian(geometry_ff, val_ref, atom1, atom2, atom3, c, gradient, hess_ff_single)
+        fb.get_single_angle_hessian(geometry_ff, val_ref, atom1, atom2, atom3, c, gradient, hess_ff_single)
         s = 0.0
         s = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, s)
         s = get_sum_first_c_deriv(c, atom1, atom3, hess_ff, hess_ref, hess_ff_single, s)
@@ -266,7 +266,7 @@ def derivative_c_first_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: f
         return s
 
     else:
-        get_single_bond_hessian(geometry_ff, val_ref, atom1, atom2, c, gradient, hess_ff_single)
+        fb.get_single_bond_hessian(geometry_ff, val_ref, atom1, atom2, c, gradient, hess_ff_single)
         s = 0.0
         s = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, s)
         return s
@@ -313,7 +313,7 @@ def lj_derivative_c_second_atomwise(n_atom: int, geometry_ff: np.ndarray,
     gradient = np.zeros(ndof, dtype=np.float64)
     hess_ff_single = np.zeros((ndof, ndof), dtype=np.float64)
 
-    get_lj_hessian_two_atoms(geometry_ff, atom1, atom2, c, sigma, gradient, hess_ff_single)
+    fb.get_single_repulsive_hessian(geometry_ff, atom1, atom2, c, sigma, gradient, hess_ff_single)
     deriv = 0.0
     deriv = get_sum_second_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
     return deriv * 2.0
@@ -326,7 +326,7 @@ def lj_derivative_c_first_atomwise(n_atom: int, geometry_ff: np.ndarray,
     gradient = np.zeros(ndof, dtype=np.float64)
     hess_ff_single = np.zeros((ndof, ndof), dtype=np.float64)
 
-    get_lj_hessian_two_atoms(geometry_ff, atom1, atom2, c, sigma, gradient, hess_ff_single)
+    fb.get_single_repulsive_hessian(geometry_ff, atom1, atom2, c, sigma, gradient, hess_ff_single)
     deriv = 0.0
     deriv = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
     return deriv
