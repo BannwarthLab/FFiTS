@@ -6,11 +6,9 @@ import numpy as np
 import warnings
 
 
-def calculate_hessian_rmsd(hessian_ff, hessian_ref, ndof, out_rmsd):
-    """Compute RMSD between hessian_ff and hessian_ref and write scalar to out_rmsd (mutable).
-    In Python we will just return the RMSD float."""
-    diff = hessian_ff[:ndof, :ndof] - hessian_ref[:ndof, :ndof]
-    # RMSD over matrix elements
+def calculate_hessian_rmsd(hessian_ff, hessian_ref, dim):
+    """rmsd"""
+    diff = hessian_ff[:dim, :dim] - hessian_ref[:dim, :dim]
     rmsd = np.sqrt(np.mean(diff**2))
     return rmsd
 
@@ -24,72 +22,80 @@ def _atom_slice(atom_idx: int) -> slice:
     return slice(start, start + 3)
 
 
-# def fit_ff_to_hessian(struc: StructuralInformation,
-#                       ff: ForceField,
-#                       maxit_ex: Optional[int] = None,
-#                       stepsize_ex: Optional[float] = None,
-#                       threshold_ex: Optional[float] = None,
-#                       constant_repulsion_ex: Optional[bool] = None):
-#     """
-#     description
-#     """
-#     nat = int(ff.nat)
-#     3 * natndof = 3 * nat
+def fit_ff_to_hessian(ff: ForceField,
+                      info: StructuralInformation,
+                      maxit: int = 1000,
+                      stepsize: float = 0.15,
+                      threshold: float = 0.0005,
+                      constant_repulsion: bool = True):
+    """
+    description
+    """
+    nat = ff.nat
 
-#     # allocate scratch arrays
-#     grd = np.zeros(3 * nat, dtype=np.float64)
-#     hessian_ff = np.zeros((3 * nat, 3 * nat), dtype=np.float64)
+    hessian_ff = np.zeros((3 * nat, 3 * nat), dtype=np.float64, order='F')
 
-#     # default parameters
-#     maxit = 1000 if maxit_ex is None else int(maxit_ex)
-#     stepsize = 0.05 if stepsize_ex is None else float(stepsize_ex)
-#     threshold = 0.001 if threshold_ex is None else float(threshold_ex)
-#     constant_repulsion = True if constant_repulsion_ex is None else bool(constant_repulsion_ex)
-
-#     counter = 0
-#     temp_old = 1.0
-#     temp = 1.0
-#     rmsd_gap = 0.5
-#     rmsdd = 1.0
+    counter = 0
+    temp_old = 1.0
+    temp = 1.0
+    rmsd_gap = 0.5
+    rmsdd = 1.0
 
     
-#     print("--------------------- START OF FF FITTING ---------------------")
-#     print("Following parameters are used (maxit, stepsize, threshold):", maxit, stepsize, threshold)
+    print("--------------------- START OF FF FITTING ---------------------")
+    print("Following parameters are used (maxit, stepsize, threshold):", maxit, stepsize, threshold)
 
-#     # Main iterative loop
-#     while (rmsd_gap >= threshold) and (counter < maxit):
-#         temp_old = temp
-#         temp = 0.0
-#         counter += 1
-#         hessian_ff.fill(0.0)
+    # Main iterative loop
+    while (rmsd_gap >= threshold) and (counter < maxit):
+        temp_old = temp
+        temp = 0.0
+        counter += 1
+        hessian_ff.fill(0.0)
 
-#         # compute FF Hessian given current parameters
-#         hessian_ff = ff.get_hessian(struc.fortran_xyz)
+        # compute FF Hessian given current parameters
+        hessian_ff = ff.get_hessian(info.fortran_xyz)
 
-#         # update bonds
-#         for row in enumerate(ff.bonds):
-#             update_bond(ff, hessian_ff, f, stepsize)
+        # update bonds
+        new_values = []
+        for row in ff.bonds.itertuples(): 
+            new_param = update_bond(row, info, hessian_ff, stepsize)
+            new_values.append((row.Index, new_param))
+        for idx, val in new_values:
+            ff.bonds.at[idx, 'parameter'] = val
 
-#         # update angles
-#         for f in range(len(ff.angles)):
-#             update_angle(hopot, hessian_ff, f, stepsize)
+        # update angles
+        new_values = []
+        for row in ff.dihedrals.itertuples(): 
+            new_param = update_dihedral(row, info, hessian_ff, stepsize)
+            new_values.append((row.Index, new_param))
+        for idx, val in new_values:
+            ff.dihedrals.at[idx, 'parameter'] = val
 
-#         # update dihedrals
-#         for f in range(len(ff.dihedrals)):
-#             update_dihedral(hopot, hessian_ff, f, stepsize)
+        # update dihedrals
+        new_values = []
+        for row in ff.angles.itertuples(): 
+            new_param = update_angle(row, info, hessian_ff, stepsize)
+            new_values.append((row.Index, new_param))
+        for idx, val in new_values:
+            ff.angles.at[idx, 'parameter'] = val
 
-#         # update LJ (repulsion) if not kept constant
-#         if not constant_repulsion:
-#             for f in range(len(ff.repulsive)):
-#                 update_repulsion(hopot, hessian_ff, f, stepsize)
+        # update LJ (repulsion) if not kept constant
+        if not constant_repulsion:
+            new_values = []
+            for row in ff.bonds.itertuples(): 
+                new_param = update_bond(row, info, hessian_ff, stepsize)
+                new_values.append((row.Index, new_param))
+            for idx, val in new_values:
+                ff.bonds.at[idx, 'parameter'] = val
 
-#         # compute RMSD between current FF Hessian and reference Hessian
-#         rmsdd = calculate_hessian_rmsd(hessian_ff, hopot.hessian, ndof, None)
-#         print("CYCLE", counter, "RMSD:", rmsdd)
-#         temp = rmsdd
-#         rmsd_gap = abs(temp_old - temp)
+        # compute RMSD between current FF Hessian and reference Hessian
+        rmsdd = calculate_hessian_rmsd(hessian_ff, info.hessian, 3*nat)
+        print("CYCLE", counter, "RMSD:", rmsdd) 
+        temp = rmsdd
+        rmsd_gap = abs(temp_old - temp)
 
-#     return {"iterations": counter, "final_rmsd": rmsdd}
+    print(f'Fitting finished after {counter} iterations with an RMSD of {round(rmsdd, 3)}.')
+    return {"iterations": counter, "final_rmsd": rmsdd}
 
 
 # -----------------------------

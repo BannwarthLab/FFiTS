@@ -4,7 +4,7 @@ import copy
 import pandas as pd
 import pytest
 from src.datatype.structure_data import ForceField, StructuralInformation
-from src.forcefield.fit2hessian.parameterize_ff import update_bond, update_angle, update_dihedral, update_repulsive
+from src.forcefield.fit2hessian.parameterize_ff import update_bond, update_angle, update_dihedral, update_repulsive, fit_ff_to_hessian
 from src.interface.reader import read_hessian
 from src.forcefield.fortran_energy.ff_energy import complete_hessian
 from src.forcefield.setup.define_starting_parameters import fill_ff
@@ -31,17 +31,28 @@ ATOM_TYPES = ['C', 'C', 'O', 'H', 'H', 'H', 'H']
 NAT = 7
 
 
-# def test_fit_ff_to_hessian():
-#     path = os.path.join(os.getcwd(), 
-#         'tests/examples/small_single_molecule',
-#         'ff1_new'
-#     )    
-#     path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
-#     hessian = read_hessian(path2hess)
-#     ff = ForceField(7, path, readff=True) 
-#     result = fit_ff_to_hessian(ff)
-#     print(ff)
-#     # assert result['final_rmsd'] <= 0.1
+
+def test_fit_ff_to_hessian():
+    """
+    tests whether the update_bond function changes only the ff parameter
+    """
+    path = os.path.join(os.getcwd(), 
+        'tests/examples/small_single_molecule',
+        'ff1_newi'
+    )
+    path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
+    hessian = read_hessian(path2hess)
+
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
+    ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
+    fill_ff(ff, info)
+
+    result = fit_ff_to_hessian(ff, info)
+    print(ff.bonds)
+    print(ff.angles)
+    print(ff.dihedrals)
+    assert False
+    
 
 def test_update_bond():
     """

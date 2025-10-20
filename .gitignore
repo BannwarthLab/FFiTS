@@ -12,4 +12,3 @@ tests/component_tests/__pycache__/
 tests/component_tests/__pycache__/test_fortran_ff.cpython-38-pytest-8.3.5.pyc
 src/datatype/__pycache__/structure_data.cpython-38.pyc
 _manual_test/
-*/__pycache__/*
