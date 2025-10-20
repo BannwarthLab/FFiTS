@@ -57,7 +57,6 @@ def fit_ff_to_hessian(struc: StructuralInformation,
     rmsd_gap = 0.5
     rmsdd = 1.0
 
-    ff_new = copy.deepcopy(ff)
     
     print("--------------------- START OF FF FITTING ---------------------")
     print("Following parameters are used (maxit, stepsize, threshold):", maxit, stepsize, threshold)
@@ -70,11 +69,11 @@ def fit_ff_to_hessian(struc: StructuralInformation,
         hessian_ff.fill(0.0)
 
         # compute FF Hessian given current parameters
-        hessian_ff = complete_hessian(struc.fortran_xyz, ff_new)
+        hessian_ff = ff.get_hessian(struc.fortran_xyz)
 
         # update bonds
         for f in range(len(ff.bonds)):
-            update_bond(hopot, hessian_ff, f, stepsize)
+            update_bond(ff, hessian_ff, f, stepsize)
 
         # update angles
         for f in range(len(ff.angles)):
@@ -120,11 +119,11 @@ def update_bonds4fit(row, struc: StructuralInformation, hessian_ff: np.ndarray, 
 # -----------------------------
 # single-parameter update steps
 # -----------------------------
-def update_bond(hopot, hessian_ff, position_in_list: int, stepsize: float):
-    i = int(hopot.bond_list[0, position_in_list])
-    j = int(hopot.bond_list[1, position_in_list])
+def update_bond(ff: ForceField, info: StructuralInformation, hessian_ff, stepsize: float):
+    i = ff.bonds['atoms'][0]
+    j = ff.bonds['atoms'][1]
 
-    deriv1 = derivative_c_first_atomwise(hopot.nat, hopot.xyz0,
+    deriv1 = derivative_c_first_atomwise(ff.nat, hopot.xyz0,
                                          hopot.bondlengths[position_in_list],
                                          hessian_ff, hopot.hessian,
                                          atom1=i, atom2=j, c=hopot.c_bond[i, j])
