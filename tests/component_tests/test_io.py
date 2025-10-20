@@ -2,7 +2,7 @@
 import os
 import numpy as np
 import pytest 
-from src.interface.reader import readin_xyz, read_wbo_file
+from src.interface.reader import readin_xyz, read_wbo_file, read_hessian
 from tests.component_tests.utility import compare_dictionaries
 
 
@@ -46,6 +46,13 @@ def test_read_wbo_file():
     path2wbo = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/wbo1')
     wbo_dict = read_wbo_file(path2wbo)
     assert compare_dictionaries(wbo_dict, expected_wbo_dict)
+
+def test_read_hessian():
+    path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
+    hessian = read_hessian(path2hess)
+    print(hessian)
+    assert np.shape(hessian) == (21,21)
+    np.allclose(hessian, hessian.T, rtol=1e-10) # checks if hessian is symmetric
 
 def test_read_wbo_file_error_filenotfound():
     path2wbo = 'wrongpath'

@@ -29,111 +29,97 @@ def _atom_slice(atom_idx: int) -> slice:
 # Core functions (Python translation of Fortran module)
 # --------------------------------------------------------------------
 
-def fit_ff_to_hessian(struc: StructuralInformation,
-                      ff: ForceField,
-                      maxit_ex: Optional[int] = None,
-                      stepsize_ex: Optional[float] = None,
-                      threshold_ex: Optional[float] = None,
-                      constant_repulsion_ex: Optional[bool] = None):
-    """
-    description
-    """
-    nat = int(ff.nat)
-    3 * natndof = 3 * nat
+# def fit_ff_to_hessian(struc: StructuralInformation,
+#                       ff: ForceField,
+#                       maxit_ex: Optional[int] = None,
+#                       stepsize_ex: Optional[float] = None,
+#                       threshold_ex: Optional[float] = None,
+#                       constant_repulsion_ex: Optional[bool] = None):
+#     """
+#     description
+#     """
+#     nat = int(ff.nat)
+#     3 * natndof = 3 * nat
 
-    # allocate scratch arrays
-    grd = np.zeros(3 * nat, dtype=np.float64)
-    hessian_ff = np.zeros((3 * nat, 3 * nat), dtype=np.float64)
+#     # allocate scratch arrays
+#     grd = np.zeros(3 * nat, dtype=np.float64)
+#     hessian_ff = np.zeros((3 * nat, 3 * nat), dtype=np.float64)
 
-    # default parameters
-    maxit = 1000 if maxit_ex is None else int(maxit_ex)
-    stepsize = 0.05 if stepsize_ex is None else float(stepsize_ex)
-    threshold = 0.001 if threshold_ex is None else float(threshold_ex)
-    constant_repulsion = True if constant_repulsion_ex is None else bool(constant_repulsion_ex)
+#     # default parameters
+#     maxit = 1000 if maxit_ex is None else int(maxit_ex)
+#     stepsize = 0.05 if stepsize_ex is None else float(stepsize_ex)
+#     threshold = 0.001 if threshold_ex is None else float(threshold_ex)
+#     constant_repulsion = True if constant_repulsion_ex is None else bool(constant_repulsion_ex)
 
-    counter = 0
-    temp_old = 1.0
-    temp = 1.0
-    rmsd_gap = 0.5
-    rmsdd = 1.0
+#     counter = 0
+#     temp_old = 1.0
+#     temp = 1.0
+#     rmsd_gap = 0.5
+#     rmsdd = 1.0
 
     
-    print("--------------------- START OF FF FITTING ---------------------")
-    print("Following parameters are used (maxit, stepsize, threshold):", maxit, stepsize, threshold)
+#     print("--------------------- START OF FF FITTING ---------------------")
+#     print("Following parameters are used (maxit, stepsize, threshold):", maxit, stepsize, threshold)
 
-    # Main iterative loop
-    while (rmsd_gap >= threshold) and (counter < maxit):
-        temp_old = temp
-        temp = 0.0
-        counter += 1
-        hessian_ff.fill(0.0)
+#     # Main iterative loop
+#     while (rmsd_gap >= threshold) and (counter < maxit):
+#         temp_old = temp
+#         temp = 0.0
+#         counter += 1
+#         hessian_ff.fill(0.0)
 
-        # compute FF Hessian given current parameters
-        hessian_ff = ff.get_hessian(struc.fortran_xyz)
+#         # compute FF Hessian given current parameters
+#         hessian_ff = ff.get_hessian(struc.fortran_xyz)
 
-        # update bonds
-        for f in range(len(ff.bonds)):
-            update_bond(ff, hessian_ff, f, stepsize)
+#         # update bonds
+#         for row in enumerate(ff.bonds):
+#             update_bond(ff, hessian_ff, f, stepsize)
 
-        # update angles
-        for f in range(len(ff.angles)):
-            update_angle(hopot, hessian_ff, f, stepsize)
+#         # update angles
+#         for f in range(len(ff.angles)):
+#             update_angle(hopot, hessian_ff, f, stepsize)
 
-        # update dihedrals
-        for f in range(len(ff.dihedrals)):
-            update_dihedral(hopot, hessian_ff, f, stepsize)
+#         # update dihedrals
+#         for f in range(len(ff.dihedrals)):
+#             update_dihedral(hopot, hessian_ff, f, stepsize)
 
-        # update LJ (repulsion) if not kept constant
-        if not constant_repulsion:
-            for f in range(len(ff.repulsive)):
-                update_repulsion(hopot, hessian_ff, f, stepsize)
+#         # update LJ (repulsion) if not kept constant
+#         if not constant_repulsion:
+#             for f in range(len(ff.repulsive)):
+#                 update_repulsion(hopot, hessian_ff, f, stepsize)
 
-        # compute RMSD between current FF Hessian and reference Hessian
-        rmsdd = calculate_hessian_rmsd(hessian_ff, hopot.hessian, ndof, None)
-        print("CYCLE", counter, "RMSD:", rmsdd)
-        temp = rmsdd
-        rmsd_gap = abs(temp_old - temp)
+#         # compute RMSD between current FF Hessian and reference Hessian
+#         rmsdd = calculate_hessian_rmsd(hessian_ff, hopot.hessian, ndof, None)
+#         print("CYCLE", counter, "RMSD:", rmsdd)
+#         temp = rmsdd
+#         rmsd_gap = abs(temp_old - temp)
 
-    return {"iterations": counter, "final_rmsd": rmsdd}
-
-
-# -----------------------------
-# single-parameter update steps
-# -----------------------------
-def update_bonds4fit(row, struc: StructuralInformation, hessian_ff: np.ndarray, stepsize: float):
-    i = row['atoms'][0]
-    j = row['atoms'][1]
-
-    deriv1 = derivative_c_first_atomwise(struc.nat, struc.fortran_xyz,
-                                         row['reference_value'],
-                                         hessian_ff, struc.hessian,
-                                         atom1=i, atom2=j, c=row['parameter'])
-    deriv2 = derivative_c_second_atomwise(struc.nat, struc.fortran_xyz,
-                                         row['reference_value'],
-                                         hessian_ff, struc.hessian,
-                                         atom1=i, atom2=j, c=row['parameter'])
-
-    row['parameter'] = update_single_ffparam(row['parameter'], deriv1, deriv2, stepsize)
+#     return {"iterations": counter, "final_rmsd": rmsdd}
 
 
 # -----------------------------
 # single-parameter update steps
 # -----------------------------
-def update_bond(ff: ForceField, info: StructuralInformation, hessian_ff, stepsize: float):
-    i = ff.bonds['atoms'][0]
-    j = ff.bonds['atoms'][1]
+def update_bond(row, info: StructuralInformation, hessian_ff: np.ndarray, stepsize: float):
+    i = row.atoms[0]
+    j = row.atoms[1]
 
-    deriv1 = derivative_c_first_atomwise(ff.nat, hopot.xyz0,
-                                         hopot.bondlengths[position_in_list],
-                                         hessian_ff, hopot.hessian,
-                                         atom1=i, atom2=j, c=hopot.c_bond[i, j])
-    deriv2 = derivative_c_second_atomwise(hopot.nat, hopot.xyz0,
-                                          hopot.bondlengths[position_in_list],
-                                          hessian_ff, hopot.hessian,
-                                          atom1=i, atom2=j, c=hopot.c_bond[i, j])
+    deriv1 = derivative_c_first_atomwise(
+            info.nat, info.fortran_xyz,
+            row.reference_value,
+            hessian_ff, info.hessian,
+            atom1=i, atom2=j, c=row.parameter
+        )
+    deriv2 = derivative_c_second_atomwise(
+            info.nat, info.fortran_xyz,
+            row.reference_value,
+            hessian_ff, info.hessian,
+            atom1=i, atom2=j, c=row.parameter
+        )
 
-    hopot.c_bond[i, j] = update_single_ffparam(hopot.c_bond[i, j], deriv1, deriv2, stepsize)
+    return update_single_ffparam(row.parameter, deriv1, deriv2, stepsize)
 
+ 
 
 def update_angle(hopot, hessian_ff, position_in_list: int, stepsize: float):
     i = int(hopot.angle_list[0, position_in_list])
@@ -204,8 +190,8 @@ def derivative_c_second_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: 
     Returns the scalar deriv value (already multiplied by required symmetry factor).
     """
     ndof = 3 * n_atom
-    gradient = np.zeros(ndof, dtype=np.float64)
-    hess_ff_single = np.zeros((ndof, ndof), dtype=np.float64)
+    gradient = np.zeros(ndof, dtype=np.float64, order='F')
+    hess_ff_single = np.zeros((ndof, ndof), dtype=np.float64, order='F')
 
     if (atom3 is not None) and (atom4 is not None):
         fb.get_single_dihedral_hessian(geometry_ff, val_ref, atom1, atom2, atom3, atom4, c, gradient, hess_ff_single)
@@ -228,7 +214,7 @@ def derivative_c_second_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: 
 
     else:
         # bond case
-        fb.get_single_bond_hessian(geometry_ff, val_ref, atom1, atom2, c, gradient, hess_ff_single)
+        fb.get_single_bond_hessian(geometry_ff, np.array([atom1, atom2]), val_ref, c, hess_ff_single)
         deriv = 0.0
         deriv = get_sum_second_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
         return deriv * 2.0
@@ -242,9 +228,8 @@ def derivative_c_first_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: f
     Compute first derivative (scalar) wrt FF parameter c for specified atoms.
     """
     ndof = 3 * n_atom
-    gradient = np.zeros(ndof, dtype=np.float64)
-    hess_ff_single = np.zeros((ndof, ndof), dtype=np.float64)
-
+    gradient = np.zeros(ndof, dtype=np.float64, order='F')
+    hess_ff_single = np.zeros((ndof, ndof), dtype=np.float64, order='F')
     if (atom3 is not None) and (atom4 is not None):
         fb.get_single_dihedral_hessian(geometry_ff, val_ref, atom1, atom2, atom3, atom4, c, gradient, hess_ff_single)
         s = 0.0
@@ -265,7 +250,7 @@ def derivative_c_first_atomwise(n_atom: int, geometry_ff: np.ndarray, val_ref: f
         return s
 
     else:
-        fb.get_single_bond_hessian(geometry_ff, val_ref, atom1, atom2, c, gradient, hess_ff_single)
+        fb.get_single_bond_hessian(geometry_ff, [atom1, atom2], val_ref, c, hess_ff_single)
         s = 0.0
         s = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, s)
         return s
@@ -294,6 +279,7 @@ def get_sum_second_c_deriv(c: float, atom1: int, atom2: int,
     """
     acc += (2*hess_ff_single/c**2) * (2*hess_ff_single + hess_ff - hess_ref)
     """
+    # print(hess_ff_single)
     sl_i = _atom_slice(atom1)
     sl_j = _atom_slice(atom2)
     A = hess_ff_single[sl_i, sl_j]
