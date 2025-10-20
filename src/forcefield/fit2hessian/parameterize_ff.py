@@ -12,6 +12,18 @@ def calculate_hessian_rmsd(hessian_ff, hessian_ref, dim):
     rmsd = np.sqrt(np.mean(diff**2))
     return rmsd
 
+def ff_fit_objective_function(hessian_ff: np.ndarray, hessian_ref: np.ndarray, dim: int):
+    if np.shape(hessian_ff) != (dim, dim):
+        raise Exception('Hessian has the wrong dimension')
+    if np.shape(hessian_ref) != (dim, dim):
+        raise Exception('Hessian has the wrong dimension')
+    res = 0
+    for i in range(dim):
+        for j in range(dim):
+            if i != j:
+                res = 0.5(hessian_ff(i,j) - hessian_ref(i,j))**2
+    return res
+
 
 # --------------------------------------------------------------------
 # Utility helpers
@@ -90,6 +102,7 @@ def fit_ff_to_hessian(ff: ForceField,
 
         # compute RMSD between current FF Hessian and reference Hessian
         rmsdd = calculate_hessian_rmsd(hessian_ff, info.hessian, 3*nat)
+        obj_fun = 
         print("CYCLE", counter, "RMSD:", rmsdd) 
         temp = rmsdd
         rmsd_gap = abs(temp_old - temp)
