@@ -47,10 +47,35 @@ def test_fit_ff_to_hessian():
     ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
     fill_ff(ff, info)
 
-    result = fit_ff_to_hessian(ff, info)
+    result = fit_ff_to_hessian(ff, info, stepsize=0.05, threshold=0.001)
     print(ff.bonds)
     print(ff.angles)
     print(ff.dihedrals)
+    assert result['final_rmsd'] <= 0.1
+    assert result['iterations'] <= 700
+
+def test_fit_ff_to_hessian_with_repulsion():
+    """
+    tests whether the update_bond function changes only the ff parameter
+    """
+    path = os.path.join(os.getcwd(), 
+        'tests/examples/small_single_molecule',
+        'ff1_newi'
+    )
+    path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
+    hessian = read_hessian(path2hess)
+
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
+    ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
+    fill_ff(ff, info)
+
+    result = fit_ff_to_hessian(ff, info, constant_repulsion=False, stepsize=0.05, threshold=0.001)
+    print(ff.bonds)
+    print(ff.angles)
+    print(ff.dihedrals)
+    print(ff.repulsive)
+    assert result['final_rmsd'] <= 0.1
+    assert result['iterations'] <= 700
     assert False
     
 
