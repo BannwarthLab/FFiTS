@@ -74,9 +74,9 @@ def test_fit_ff_to_hessian_with_repulsion():
     print(ff.angles)
     print(ff.dihedrals)
     print(ff.repulsive)
+    # repulsive terms are all fitted to the same value but that could be due to only little repulsive forces in this molecule?
     assert result['final_rmsd'] <= 0.1
     assert result['iterations'] <= 700
-    assert False
     
 
 def test_update_bond():

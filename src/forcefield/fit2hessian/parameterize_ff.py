@@ -197,7 +197,7 @@ def update_repulsive(row, info: StructuralInformation, hessian_ff: np.ndarray, s
             hessian_ff, info.hessian,
             atom1=i, atom2=j, c=row.parameter
         )
-
+    
     return update_single_ffparam(row.parameter, deriv1, deriv2, stepsize)
 
 
