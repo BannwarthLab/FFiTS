@@ -231,13 +231,13 @@ class StructuralInformation:
         seperate_molecule_list: List of subgraphs not connectred by edges in complete_graph.
         molecule_count: number of seperate molecules in structure.
     """
-    def __init__(self, nat: int, xyz: np.array, wbo_dict: dict, atom_types: np.array, energy: float = np.NaN):
+    def __init__(self, nat: int, xyz: np.array, wbo_dict: dict, atom_types: np.array, energy: float = np.NaN, hessian: np.ndarray = None):
         self.nat = nat 
         self.energy = energy 
         self.wbo = wbo_dict
         self.xyz = xyz
         self.atom_types = atom_types
-        self.hessian: np.ndarray # TOODO READIN
+        self.hessian: np.ndarray = hessian
         self.bo_matrix: np.array = self.create_bomatrix_from_wbo()
         self.fortran_xyz: np.array = self.angstrom2bohr(self.convert_xyz_to_fortranstyle())
         self.complete_graph: nx.Graph = self.create_graph_from_wbo()

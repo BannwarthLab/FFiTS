@@ -45,3 +45,31 @@ def read_wbo_file(wbo_path) -> dict:
                 wbo_dict[bond] = float(wbo)
     return wbo_dict
 
+import numpy as np
+
+def read_hessian(file_path):
+    """
+    Reads a Hessian matrix from the xtb output format 
+    """
+    
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+    
+    data_lines = [line.strip() for line in lines if not line.lower().startswith("$hessian")]
+    
+    numbers = []
+    for line in data_lines:
+        if line:  # skip empty lines
+            numbers.extend(map(float, line.split()))
+    
+    total_values = len(numbers)
+    dim = int(np.sqrt(total_values))
+    
+    if dim * dim != total_values:
+        raise ValueError(f"The number of Hessian elements ({total_values}) does not form a square matrix.")
+    
+    if dim % 3 != 0:
+        raise ValueError(f"The Hessian dimensions ({dim}x{dim}) is not divisible by 3.")
+    
+    hessian = np.array(numbers).reshape((dim, dim))
+    return hessian
