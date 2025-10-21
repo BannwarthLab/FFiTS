@@ -12,3 +12,4 @@ tests/component_tests/__pycache__/
 tests/component_tests/__pycache__/test_fortran_ff.cpython-38-pytest-8.3.5.pyc
 src/datatype/__pycache__/structure_data.cpython-38.pyc
 _manual_test/
+src/forcefield/fortran_energy/.nfs000000000028a8ea00010c34
