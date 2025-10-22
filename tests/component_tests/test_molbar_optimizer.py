@@ -1,6 +1,7 @@
 
 import numpy as np
 import os
+import shutil 
 from src.interface.molbar_optimizer import anc_optimizer, scipy_optimizer
 from src.forcefield.fortran_energy.ff_energy import energy_ff, complete_gradient, complete_hessian
 from src.datatype.structure_data import ForceField, StructuralInformation
@@ -34,11 +35,15 @@ def test_anc_optimizer():
     temp_wd = os.path.join(cwd, '_manual_test/small_single_molecule')
     os.chdir(temp_wd)
 
+    data_dir = os.path.join(cwd, 'tests/examples/small_single_molecule')
+    shutil.copy(os.path.join(data_dir, 'ff1_new'), temp_wd)
+    shutil.copy(os.path.join(data_dir, 'struc2.xyz'), temp_wd)
+    
     struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
     ff = ForceField(7, 'ff1_new', readff=True, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian) 
     _, _, xyz_start, _ = readin_xyz('struc2.xyz') 
 
-    converged, energy, _, _, _, _ = anc_optimizer(xyz_start, ff, struc)
+    converged, energy, _, _, _, _ = anc_optimizer(xyz_start, ff, struc, max_micro_steps=5)
 
     assert converged 
     assert energy <= 0.1
@@ -50,6 +55,10 @@ def test_scipy_optimizer():
     cwd = os.getcwd()
     temp_wd = os.path.join(cwd, '_manual_test/small_single_molecule')
     os.chdir(temp_wd)
+
+    data_dir = os.path.join(cwd, 'tests/examples/small_single_molecule')
+    shutil.copy(os.path.join(data_dir, 'ff1_new'), temp_wd)
+    shutil.copy(os.path.join(data_dir, 'struc2.xyz'), temp_wd)
 
     struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
     ff = ForceField(7, 'ff1_new', readff=True, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian) 
