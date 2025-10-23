@@ -1,10 +1,11 @@
 import os
-from src.forcefield.transition_state.mix_ff import combine_ff_terms
+import pandas as pd
+from src.forcefield.transition_state.mix_ff import combine_ff_terms, remove_bonds_from_repulsive
 from src.datatype.structure_data import ForceField, StructuralInformation
 from src.interface.reader import readin_xyz, read_wbo_file
 from src.forcefield.setup.define_starting_parameters import fill_ff
 
-def define_ff_examples():
+def _define_ff_examples():
     """Hard-coded example ff information"""
     ### ff1
     path1 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
@@ -24,12 +25,33 @@ def define_ff_examples():
 
     return ff1, info1, ff2, info2
 
-
-
+def _all_values_in_either(tsff_ref: pd.Series, ff1_ref: pd.Series, ff2_ref: pd.Series):
+    combined_values = pd.concat([ff1_ref, ff2_ref]).unique()
+    missing = tsff_ref[~tsff_ref.isin(combined_values)]
+    return missing.empty # true if all values present in either ff1 or ff2
 
 def test_combine_ff_terms():
-    ff1, info1, ff2, info2 = define_ff_examples()
-    print(ff1.bonds)
-    print(ff2.bonds)
-    print(combine_ff_terms(ff1.bonds, ff2.bonds))
-    assert False
+    """Tests whether the bond, angle and dihedral atoms are mixed correctly."""
+    ff1, _, ff2, _ = _define_ff_examples()
+    tsff = ForceField(7, 'temp', readff=False)
+    tsff.bonds = combine_ff_terms(ff1.bonds, ff2.bonds)
+    tsff.angles = combine_ff_terms(ff1.angles, ff2.angles)
+    tsff.dihedrals = combine_ff_terms(ff1.dihedrals, ff2.dihedrals)
+
+    assert _all_values_in_either(tsff.bonds['atoms'], ff1.bonds['atoms'], ff2.bonds['atoms'])
+    assert _all_values_in_either(tsff.angles['atoms'], ff1.angles['atoms'], ff2.angles['atoms'])
+    assert _all_values_in_either(tsff.dihedrals['atoms'], ff1.dihedrals['atoms'], ff2.dihedrals['atoms'])
+        
+def test_remove_bonds_from_repulsive():
+    """Tests whether the repulsive atoms are mixed correctly."""
+    ff1, _, ff2, _ = _define_ff_examples()
+    tsff = ForceField(7, 'temp', readff=False)
+    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_terms(ff1.repulsive, ff2.repulsive), combine_ff_terms(ff1.bonds, ff2.bonds))
+    
+    assert _all_values_in_either(tsff.repulsive['atoms'], ff1.repulsive['atoms'], ff2.repulsive['atoms'])
+    for idx, val in tsff.repulsive['atoms'].items():
+        in_ff1 = any(tuple(val) == tuple(b) for b in ff1.bonds['atoms'])
+        in_ff2 = any(tuple(val) == tuple(b) for b in ff2.bonds['atoms'])
+        if in_ff1 or in_ff2:
+            raise AssertionError(f"{val} (index {idx}) is present in another list")
+    

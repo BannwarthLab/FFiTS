@@ -179,23 +179,29 @@ class ForceField:
 
     def write(self):
         """Combine all parameter DataFrames and write to CSV."""
+        def format_atoms(t):
+            return "[" + " ".join(map(str, t)) + "]"
+
         df_combined = pd.concat([self.bonds, self.angles, self.dihedrals, self.repulsive], ignore_index=True)
+        df_combined = df_combined.copy()
+        df_combined['atoms'] = df_combined['atoms'].apply(format_atoms)
         df_combined.to_csv(self.ff_filename)
+
 
     def readin(self, filename: str):
         """Read a force field CSV file and populate the corresponding DataFrames."""
         try:
-            # Custom parser for "atoms" column: handles both "[0 1]" and "[0, 1]" syntaxes
             def parse_atoms(x):
+                """Parse 'atoms' column into a tuple of integers."""
                 if pd.isna(x):
-                    return np.array([], dtype=int)
-                if isinstance(x, (list, np.ndarray)):
-                    return np.array(x, dtype=int)
-
+                    return tuple()
+                if isinstance(x, (list, tuple)):
+                    # Already iterable — ensure tuple of ints
+                    return tuple(int(i) for i in x)
                 # Remove brackets and commas, split on whitespace
                 x = re.sub(r'[\[\],]', ' ', str(x))
                 tokens = x.split()
-                return np.array([int(tok) for tok in tokens], dtype=int)
+                return tuple(int(tok) for tok in tokens)
 
             df = pd.read_csv(
                 filename,
@@ -203,7 +209,7 @@ class ForceField:
                     'atoms': parse_atoms,
                     'parameter': float,
                     'reference_value': float,
-                }, 
+                },
                 index_col=0
             )
 
@@ -219,6 +225,7 @@ class ForceField:
         self.angles    = df[df['type'] == 'angles'].copy()
         self.dihedrals = df[df['type'] == 'dihedrals'].copy()
         self.repulsive = df[df['type'] == 'repulsive'].copy()
+
 
 
 class StructuralInformation:

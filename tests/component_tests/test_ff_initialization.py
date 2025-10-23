@@ -81,7 +81,7 @@ def test_fill_ff():
     ff_readin = ForceField(NAT, path, readff=True)
     ff = ForceField(NAT, path, readff=False)
     fill_ff(ff, info)
-
+    
     pd.testing.assert_series_equal(ff_readin.bonds['reference_value'], ff.bonds['reference_value'], rtol=1e-5, atol=1e-8, check_index=False)
     pd.testing.assert_series_equal(ff_readin.bonds['atoms'], ff.bonds['atoms'], rtol=1e-5, atol=1e-8, check_index=False)
     pd.testing.assert_series_equal(ff_readin.bonds['type'], ff.bonds['type'], rtol=1e-5, atol=1e-8, check_index=False)
