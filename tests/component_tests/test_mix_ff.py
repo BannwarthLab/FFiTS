@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-from src.forcefield.transition_state.mix_ff import combine_ff_terms, remove_bonds_from_repulsive
+import numpy as np
+from src.forcefield.transition_state.mix_ff import combine_ff_terms, remove_bonds_from_repulsive, mix_c
 from src.datatype.structure_data import ForceField, StructuralInformation
 from src.interface.reader import readin_xyz, read_wbo_file
 from src.forcefield.setup.define_starting_parameters import fill_ff
@@ -49,9 +50,28 @@ def test_remove_bonds_from_repulsive():
     tsff.repulsive = remove_bonds_from_repulsive(combine_ff_terms(ff1.repulsive, ff2.repulsive), combine_ff_terms(ff1.bonds, ff2.bonds))
     
     assert _all_values_in_either(tsff.repulsive['atoms'], ff1.repulsive['atoms'], ff2.repulsive['atoms'])
-    for idx, val in tsff.repulsive['atoms'].items():
-        in_ff1 = any(tuple(val) == tuple(b) for b in ff1.bonds['atoms'])
-        in_ff2 = any(tuple(val) == tuple(b) for b in ff2.bonds['atoms'])
+    for _, val in tsff.repulsive['atoms'].items():
+        in_ff1 = any(val == b for b in ff1.bonds['atoms'])
+        in_ff2 = any(val == b for b in ff2.bonds['atoms'])
         if in_ff1 or in_ff2:
-            raise AssertionError(f"{val} (index {idx}) is present in another list")
+            raise AssertionError(f"{val} is present in another list")
     
+def test_mix_c():
+    ff1, _, ff2, _ = _define_ff_examples()
+    tsff = ForceField(7, 'temp', readff=False)
+    print(ff1.bonds)
+    print(ff2.bonds)
+    tsff.bonds = combine_ff_terms(ff1.bonds, ff2.bonds)
+    tsff.angles = combine_ff_terms(ff1.angles, ff2.angles)
+    tsff.dihedrals = combine_ff_terms(ff1.dihedrals, ff2.dihedrals)
+    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_terms(ff1.repulsive, ff2.repulsive), combine_ff_terms(ff1.bonds, ff2.bonds))
+
+    mix_c(tsff.bonds, ff1.bonds, ff2.bonds)
+    mix_c(tsff.angles, ff1.angles, ff2.angles)
+    mix_c(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals)
+    mix_c(tsff.repulsive, ff1.repulsive, ff2.repulsive)
+
+    
+    assert not all(tsff.bonds['parameter'].isnull())
+    assert not all(np.isnan(tsff.bonds['parameter']))
+    # compared values and they seemed to be averaged as expected

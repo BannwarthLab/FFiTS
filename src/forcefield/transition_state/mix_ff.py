@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from src.forcefield.fortran_energy.geometry_calc import bondlength, angle, dihedral_angle
+from src.datatype.structure_data import ForceField, StructuralInformation
 
 def combine_ff_terms(df1: pd.DataFrame, df2: pd.DataFrame, term_type: str = "bond") -> pd.Series:
     """
@@ -83,3 +84,31 @@ def remove_bonds_from_repulsive(df_source: pd.DataFrame, df_reference: pd.DataFr
     # Keep only rows whose 'atoms' are not in reference_atoms
     mask = ~df_source['atoms'].isin(reference_atoms)
     return df_source[mask].copy().reset_index(drop=True)
+
+
+def mix_c(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame):
+    """
+    Fill tsff_df['parameter'] with the average of corresponding parameters
+    found in ff1_df and ff2_df where 'atoms' entries match.
+    """
+    new_params = []
+
+    for idx, row in tsff_df.iterrows():
+        c1_series = ff1_df.loc[ff1_df['atoms'].apply(lambda x: x == row['atoms']), 'parameter']
+        c2_series = ff2_df.loc[ff2_df['atoms'].apply(lambda x: x == row['atoms']), 'parameter']
+
+        c1 = c1_series.squeeze() if not c1_series.empty else 0 # TODO ggf hier das es dann der wert einzeln ist anstatt mit 0 geaveraged
+        c2 = c2_series.squeeze() if not c2_series.empty else 0
+
+        new_val = _average_c(c1, c2)
+        new_params.append((idx, new_val))
+
+    for idx, val in new_params:
+        tsff_df.at[idx, 'parameter'] = val
+
+
+
+def _average_c(c1: float, c2: float, c1_factor: float = 0.5, c2_factor: float = 0.5) -> float:
+    if round(c1_factor + c2_factor, 2) != 1.00:
+        raise ValueError(f'c1 factor {c1_factor} + c2 factor {c2_factor} needs to be 1')
+    return c1 * c1_factor + c2 * c2_factor
