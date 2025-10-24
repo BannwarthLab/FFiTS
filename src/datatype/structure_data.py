@@ -84,11 +84,10 @@ def get_vander_matrix(nat, at, vander_values=VANDER_VALUES, factor=1.8897259):
     vander_matrix : np.ndarray (nat x nat)
     """
     # Convert atomic numbers to 0-based indices
-    vander_matrix = np.zeros((nat, nat), dtype=float)
-    for i in range(nat):
-        for j in range(nat):
-            # If Fortran `at` is 1-based atomic numbers, subtract 1 for Python indexing
-            vander_matrix[i, j] = vander_values[atom_symbol_to_number(at[i])-1] * factor + vander_values[atom_symbol_to_number(at[j])-1] * factor
+    radii = np.array([vander_values[atom_symbol_to_number(sym) - 1] * factor for sym in at])
+
+    # Build the full symmetric matrix (outer sum)
+    vander_matrix = radii[:, None] + radii[None, :]
 
     return vander_matrix
 
@@ -179,23 +178,29 @@ class ForceField:
 
     def write(self):
         """Combine all parameter DataFrames and write to CSV."""
+        def format_atoms(t):
+            return "[" + " ".join(map(str, t)) + "]"
+
         df_combined = pd.concat([self.bonds, self.angles, self.dihedrals, self.repulsive], ignore_index=True)
+        df_combined = df_combined.copy()
+        df_combined['atoms'] = df_combined['atoms'].apply(format_atoms)
         df_combined.to_csv(self.ff_filename)
+
 
     def readin(self, filename: str):
         """Read a force field CSV file and populate the corresponding DataFrames."""
         try:
-            # Custom parser for "atoms" column: handles both "[0 1]" and "[0, 1]" syntaxes
             def parse_atoms(x):
+                """Parse 'atoms' column into a tuple of integers."""
                 if pd.isna(x):
-                    return np.array([], dtype=int)
-                if isinstance(x, (list, np.ndarray)):
-                    return np.array(x, dtype=int)
-
+                    return tuple()
+                if isinstance(x, (list, tuple)):
+                    # Already iterable — ensure tuple of ints
+                    return tuple(int(i) for i in x)
                 # Remove brackets and commas, split on whitespace
                 x = re.sub(r'[\[\],]', ' ', str(x))
                 tokens = x.split()
-                return np.array([int(tok) for tok in tokens], dtype=int)
+                return tuple(int(tok) for tok in tokens)
 
             df = pd.read_csv(
                 filename,
@@ -203,7 +208,7 @@ class ForceField:
                     'atoms': parse_atoms,
                     'parameter': float,
                     'reference_value': float,
-                }, 
+                },
                 index_col=0
             )
 
@@ -219,6 +224,7 @@ class ForceField:
         self.angles    = df[df['type'] == 'angles'].copy()
         self.dihedrals = df[df['type'] == 'dihedrals'].copy()
         self.repulsive = df[df['type'] == 'repulsive'].copy()
+
 
 
 class StructuralInformation:

@@ -35,7 +35,6 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
     Uses imported geometry functions:
         bondlength(), angle(), dihedral_angle()
     """
-
     repulsive_start = 0.01 if repulsive_start_ex is None else repulsive_start_ex
     n = ff.nat
     wbo = info.bo_matrix
@@ -53,7 +52,7 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
         i, j = np.where(np.triu(A, 1))
         bonds = np.stack([i, j], axis=1)
         bonds = bonds[np.lexsort((bonds[:, 1], bonds[:, 0]))]
-        return [np.array([a, b], dtype=int) for a, b in bonds]
+        return [tuple(map(int, pair)) for pair in bonds]
 
     def get_angle_atoms(A):
         angles = []
@@ -62,13 +61,12 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
             for i in neighbors:
                 for k in neighbors:
                     if i < k:
-                        angles.append((i, j, k))
-        if len(angles) == 0:
+                        angles.append((int(i), int(j), int(k)))
+        if not angles:
             return []
-        angles = np.array(angles)[np.lexsort((np.array(angles)[:, 2],
-                                              np.array(angles)[:, 1],
-                                              np.array(angles)[:, 0]))]
-        return [np.array([i, j, k], dtype=int) for i, j, k in angles]
+        angles = np.array(angles)
+        angles = angles[np.lexsort((angles[:, 2], angles[:, 1], angles[:, 0]))]
+        return [tuple(map(int, triplet)) for triplet in angles]
 
     def get_dihedral_atoms(A):
         dihedrals = []
@@ -82,14 +80,14 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
                             continue
                         dihedrals.append(canonical_dihedral(i, j, l, m))
         dihedrals = sorted(set(dihedrals))
-        return [np.array([i, j, k, l], dtype=int) for i, j, k, l in dihedrals]
+        return [tuple(map(int, d)) for d in dihedrals]
 
     def get_repulsive_atoms(A):
         all_i, all_j = np.triu_indices(n, 1)
         mask = (A[all_i, all_j] == 0)
         pairs = np.stack([all_i[mask], all_j[mask]], axis=1)
         pairs = pairs[np.lexsort((pairs[:, 1], pairs[:, 0]))]
-        return [np.array([i, j], dtype=int) for i, j in pairs]
+        return [tuple(map(int, pair)) for pair in pairs]
 
     # ---- Reference calculations ----
     def ref_bond(atoms):
@@ -114,7 +112,7 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
         bl = bondlength(info.fortran_xyz, i, j)
         bo = info.bo_matrix[i, j]
         if bo * bl == 0:
-            raise ZeroDivisionError(f"Division by zero for bond {atoms.tolist()}.")
+            raise ZeroDivisionError(f"Division by zero for bond {atoms}.")
         return bo / bl
 
     def param_angle(atoms):
@@ -123,7 +121,7 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
         bl2 = bondlength(info.fortran_xyz, j, k)
         prod = info.bo_matrix[i, j] * info.bo_matrix[j, k]
         if bl1 * bl2 * prod == 0:
-            raise ZeroDivisionError(f"Division by zero for angle {atoms.tolist()}.")
+            raise ZeroDivisionError(f"Division by zero for angle {atoms}.")
         return (prod / (bl1 * bl2)) ** 0.5
 
     def param_dihedral(atoms):
@@ -133,7 +131,7 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
         bl3 = bondlength(info.fortran_xyz, k, l)
         prod = info.bo_matrix[i, j] * info.bo_matrix[j, k] * info.bo_matrix[k, l]
         if bl1 * bl2 * bl3 * prod == 0:
-            raise ZeroDivisionError(f"Division by zero for dihedral {atoms.tolist()}.")
+            raise ZeroDivisionError(f"Division by zero for dihedral {atoms}.")
         return (prod / (bl1 * bl2 * bl3)) ** (1 / 3)
 
     def param_repulsive(_atoms):

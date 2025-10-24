@@ -73,6 +73,7 @@ def test_get_vander_matrix():
     vander_matrix = get_vander_matrix(NAT, ATOM_TYPES)
     print(vander_matrix)
     np.testing.assert_allclose(vander_matrix, expected_vander_matrix, rtol=1e-7)
+    assert False
 
 
 def test_fill_ff():
@@ -81,7 +82,7 @@ def test_fill_ff():
     ff_readin = ForceField(NAT, path, readff=True)
     ff = ForceField(NAT, path, readff=False)
     fill_ff(ff, info)
-
+    
     pd.testing.assert_series_equal(ff_readin.bonds['reference_value'], ff.bonds['reference_value'], rtol=1e-5, atol=1e-8, check_index=False)
     pd.testing.assert_series_equal(ff_readin.bonds['atoms'], ff.bonds['atoms'], rtol=1e-5, atol=1e-8, check_index=False)
     pd.testing.assert_series_equal(ff_readin.bonds['type'], ff.bonds['type'], rtol=1e-5, atol=1e-8, check_index=False)
