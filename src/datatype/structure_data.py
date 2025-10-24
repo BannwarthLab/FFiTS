@@ -84,11 +84,10 @@ def get_vander_matrix(nat, at, vander_values=VANDER_VALUES, factor=1.8897259):
     vander_matrix : np.ndarray (nat x nat)
     """
     # Convert atomic numbers to 0-based indices
-    vander_matrix = np.zeros((nat, nat), dtype=float)
-    for i in range(nat):
-        for j in range(nat):
-            # If Fortran `at` is 1-based atomic numbers, subtract 1 for Python indexing
-            vander_matrix[i, j] = vander_values[atom_symbol_to_number(at[i])-1] * factor + vander_values[atom_symbol_to_number(at[j])-1] * factor
+    radii = np.array([vander_values[atom_symbol_to_number(sym) - 1] * factor for sym in at])
+
+    # Build the full symmetric matrix (outer sum)
+    vander_matrix = radii[:, None] + radii[None, :]
 
     return vander_matrix
 

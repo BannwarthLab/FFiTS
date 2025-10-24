@@ -114,36 +114,38 @@ def _average_c(c1: float, c2: float, c1_factor: float = 0.5, c2_factor: float = 
     return c1 * c1_factor + c2 * c2_factor
 
 
-def mix_reference_values(tsff: ForceField, ff1: ForceField, ff2: ForceField, info: StructuralInformation):
+def mix_reference_values(tsff: ForceField, ff1: ForceField, ff2: ForceField, info1: StructuralInformation, info2: StructuralInformation):
 
-    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info, 'bonds')
-    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info, 'angles')
-    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info, 'dihedrals')
-    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info, 'repulsive')
+    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info1, info2, 'bonds')
+    _mix_reference(tsff.angles, ff1.angles, ff2.angles, info1, info2, 'angles')
+    _mix_reference(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, info1, info2, 'dihedrals')
+    _mix_reference(tsff.repulsive, ff1.repulsive, ff2.repulsive, info1, info2, 'repulsive')
 
-def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info: StructuralInformation, calctype: str, fact1: float = 0.5, fact2: float = 0.5):
+def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info1: StructuralInformation, info2: StructuralInformation, calctype: str, fact1: float = 0.5, fact2: float = 0.5):
     new_params = []
     for idx, row in tsff_df.iterrows():
-        a, b = row['atoms']
         val1_series = ff1_df.loc[ff1_df['atoms'].apply(lambda x: x == row['atoms']), 'reference_value']
         val2_series = ff2_df.loc[ff2_df['atoms'].apply(lambda x: x == row['atoms']), 'reference_value']
 
-
         # TODO when changed to python v higher match calctype:
         if calctype == 'bonds':
-            print(a, b, info.vander_matrix[a, b])
-            val1 = val1_series.squeeze() if not val1_series.empty else info.vander_matrix[a, b]
-            val2 = val2_series.squeeze() if not val2_series.empty else info.vander_matrix[a, b]
+            a, b = row['atoms']
+            print(a, b, info1.vander_matrix[a, b])
+            val1 = val1_series.squeeze() if not val1_series.empty else info1.vander_matrix[a, b]
+            val2 = val2_series.squeeze() if not val2_series.empty else info2.vander_matrix[a, b]
             new_val = _average_single_bond(val1, val2, fact1, fact2)
         elif calctype == 'angles':
-            val1 = val1_series.squeeze() if not val1_series.empty else val2_series.squeeze()
-            val2 = val2_series.squeeze() if not val2_series.empty else val1_series.squeeze()
+            a, b, c = row['atoms']
+            val1 = val1_series.squeeze() if not val1_series.empty else angle(info1.fortran_xyz, a, b, c)
+            val2 = val2_series.squeeze() if not val2_series.empty else angle(info2.fortran_xyz, a, b, c)
             new_val = _average_single_angle(val1, val2, fact1, fact2)
         elif calctype == 'dihedrals':
-            val1 = val1_series.squeeze() if not val1_series.empty else val2_series.squeeze()
-            val2 = val2_series.squeeze() if not val2_series.empty else val1_series.squeeze()
+            a, b, c, d = row['atoms']
+            val1 = val1_series.squeeze() if not val1_series.empty else dihedral_angle(info1.fortran_xyz, a, b, c, d)
+            val2 = val2_series.squeeze() if not val2_series.empty else dihedral_angle(info2.fortran_xyz, a, b, c, d)
             new_val = _average_single_dihedral(val1, val2, fact1, fact2)
         elif calctype == 'repulsive':
+            a, b = row['atoms']
             val1 = val1_series.squeeze() if not val1_series.empty else val2_series.squeeze()
             val2 = val2_series.squeeze() if not val2_series.empty else val1_series.squeeze()
             new_val = _average_single_repulsive(val1, val2, fact1, fact2)

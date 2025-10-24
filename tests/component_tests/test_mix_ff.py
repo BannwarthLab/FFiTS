@@ -78,7 +78,7 @@ def test_mix_parameters():
     # compared values and they seemed to be averaged as expected
     
 def test_mix_reference_values():
-    ff1, info1, ff2, _ = _define_ff_examples()
+    ff1, info1, ff2, info2 = _define_ff_examples()
     tsff = ForceField(7, 'temp', readff=False)
     print(ff1.bonds)
     print(ff2.bonds)
@@ -87,12 +87,30 @@ def test_mix_reference_values():
     tsff.dihedrals = combine_ff_terms(ff1.dihedrals, ff2.dihedrals)
     tsff.repulsive = remove_bonds_from_repulsive(combine_ff_terms(ff1.repulsive, ff2.repulsive), combine_ff_terms(ff1.bonds, ff2.bonds))
 
-    mix_reference_values(tsff, ff1, ff2, info1)
+    mix_reference_values(tsff, ff1, ff2, info1, info2)
+    print('TSFF -------------')
     print(tsff.bonds)
     print(tsff.angles)
     print(tsff.dihedrals)
     print(tsff.repulsive)
-    assert False
-    assert not all(tsff.bonds['parameter'].isnull())
+    print('FF 1. -------------')
+    print(ff1.bonds)
+    print(ff1.angles)
+    print(ff1.dihedrals)
+    print(ff1.repulsive)
+    print('FF 2 -------------')
+    print(ff2.bonds)
+    print(ff2.angles)
+    print(ff2.dihedrals)
+    print(ff2.repulsive)
     assert not all(np.isnan(tsff.bonds['parameter']))
+    assert not all(np.isnan(tsff.angles['parameter']))
+    assert not all(np.isnan(tsff.dihedrals['parameter']))
+    assert not all(np.isnan(tsff.repulsive['parameter']))
+    assert all(tsff.bonds.apply(lambda row: row.reference_value <= info1.vander_matrix[row.atoms[0], row.atoms[1]], axis=1)) # checks whether all bondlengths are shorter than the vdw distance
+    assert all(tsff.angles.apply(lambda row: row.reference_value <= np.pi, axis=1))
+    assert all(tsff.angles.apply(lambda row: np.abs(row.reference_value) <= np.pi, axis=1))
+    assert all(tsff.repulsive.apply(lambda row: row.reference_value <= info1.vander_matrix[row.atoms[0], row.atoms[1]], axis=1))
+
+
     # compared values and they seemed to be averaged as expected
