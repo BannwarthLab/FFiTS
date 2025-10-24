@@ -1,10 +1,15 @@
 import os
 import pandas as pd
+import shutil
 import numpy as np
-from src.forcefield.transition_state.mix_ff import combine_ff_terms, remove_bonds_from_repulsive, mix_parameters, mix_reference_values
-from src.datatype.structure_data import ForceField, StructuralInformation
-from src.interface.reader import readin_xyz, read_wbo_file
+from src.forcefield.transition_state.mix_ff import combine_ff_atoms, remove_bonds_from_repulsive, mix_parameters, mix_reference_values
+from src.datatype.structure_data import ForceField, StructuralInformation, StructurePath, Structure
+from src.interface.reader import readin_xyz, read_wbo_file, read_hessian
 from src.forcefield.setup.define_starting_parameters import fill_ff
+from src.forcefield.fit2hessian.parameterize_ff import fit_ff_to_hessian
+
+from src.forcefield.transition_state.guess import get_ts_guess
+from src.forcefield.fortran_energy.ff_energy import energy_ff, complete_gradient, complete_hessian
 
 def _define_ff_examples():
     """Hard-coded example ff information"""
@@ -36,9 +41,9 @@ def test_combine_ff_terms():
     """Tests whether the bond, angle and dihedral atoms are mixed correctly."""
     ff1, _, ff2, _ = _define_ff_examples()
     tsff = ForceField(7, 'temp', readff=False)
-    tsff.bonds = combine_ff_terms(ff1.bonds, ff2.bonds)
-    tsff.angles = combine_ff_terms(ff1.angles, ff2.angles)
-    tsff.dihedrals = combine_ff_terms(ff1.dihedrals, ff2.dihedrals)
+    tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+    tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+    tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
 
     assert _all_values_in_either(tsff.bonds['atoms'], ff1.bonds['atoms'], ff2.bonds['atoms'])
     assert _all_values_in_either(tsff.angles['atoms'], ff1.angles['atoms'], ff2.angles['atoms'])
@@ -48,7 +53,7 @@ def test_remove_bonds_from_repulsive():
     """Tests whether the repulsive atoms are mixed correctly."""
     ff1, _, ff2, _ = _define_ff_examples()
     tsff = ForceField(7, 'temp', readff=False)
-    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_terms(ff1.repulsive, ff2.repulsive), combine_ff_terms(ff1.bonds, ff2.bonds))
+    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
     
     assert _all_values_in_either(tsff.repulsive['atoms'], ff1.repulsive['atoms'], ff2.repulsive['atoms'])
     for _, val in tsff.repulsive['atoms'].items():
@@ -62,10 +67,10 @@ def test_mix_parameters():
     tsff = ForceField(7, 'temp', readff=False)
     print(ff1.bonds)
     print(ff2.bonds)
-    tsff.bonds = combine_ff_terms(ff1.bonds, ff2.bonds)
-    tsff.angles = combine_ff_terms(ff1.angles, ff2.angles)
-    tsff.dihedrals = combine_ff_terms(ff1.dihedrals, ff2.dihedrals)
-    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_terms(ff1.repulsive, ff2.repulsive), combine_ff_terms(ff1.bonds, ff2.bonds))
+    tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+    tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+    tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
 
     mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds)
     mix_parameters(tsff.angles, ff1.angles, ff2.angles)
@@ -82,10 +87,10 @@ def test_mix_reference_values():
     tsff = ForceField(7, 'temp', readff=False)
     print(ff1.bonds)
     print(ff2.bonds)
-    tsff.bonds = combine_ff_terms(ff1.bonds, ff2.bonds)
-    tsff.angles = combine_ff_terms(ff1.angles, ff2.angles)
-    tsff.dihedrals = combine_ff_terms(ff1.dihedrals, ff2.dihedrals)
-    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_terms(ff1.repulsive, ff2.repulsive), combine_ff_terms(ff1.bonds, ff2.bonds))
+    tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+    tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+    tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
 
     mix_reference_values(tsff, ff1, ff2, info1, info2)
     print('TSFF -------------')
@@ -111,6 +116,55 @@ def test_mix_reference_values():
     assert all(tsff.angles.apply(lambda row: row.reference_value <= np.pi, axis=1))
     assert all(tsff.angles.apply(lambda row: np.abs(row.reference_value) <= np.pi, axis=1))
     assert all(tsff.repulsive.apply(lambda row: row.reference_value <= info1.vander_matrix[row.atoms[0], row.atoms[1]], axis=1))
+
+def test_get_ts_guess():
+    cwd = os.getcwd()
+    temp_wd = os.path.join(cwd, '_manual_test/small_single_molecule')
+    
+    data_dir = os.path.join(cwd, 'tests/examples/small_single_molecule')
+    shutil.copy(os.path.join(data_dir, 'struc1.xyz'), temp_wd)
+    shutil.copy(os.path.join(data_dir, 'struc2.xyz'), temp_wd)
+    shutil.copy(os.path.join(data_dir, 'wbo1'), temp_wd)
+    shutil.copy(os.path.join(data_dir, 'wbo2'), temp_wd)
+    
+    path1 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
+    nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, 'struc1.xyz'))
+    wbo = read_wbo_file(os.path.join(path1, 'wbo1'))
+    path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
+    hessian = read_hessian(path2hess)
+    info1 = StructuralInformation(nat, xyz, wbo, atom_types, hessian=hessian)
+    ff1 = ForceField(nat, os.path.join(path1, 'ff1_new'), readff=False)
+
+    ff1.energy_calculator = energy_ff
+    ff1.gradient_calculator = complete_gradient
+    ff1.hessian_calculator = complete_hessian
+    fill_ff(ff1, info1)
+    result = fit_ff_to_hessian(ff1, info1, constant_repulsion=False, stepsize=0.05, threshold=0.001)
+
+    ### ff2
+    path2 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
+    nat, _, xyz, atom_types = readin_xyz(os.path.join(path2, 'struc2.xyz'))
+    print(atom_types)
+    wbo = read_wbo_file(os.path.join(path2, 'wbo2'))
+    path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess2')
+    hessian = read_hessian(path2hess)
+    info2 = StructuralInformation(nat, xyz, wbo, atom_types, hessian=hessian)
+    ff2 = ForceField(nat, os.path.join(path2, 'ff2_new'), readff=False)
+    ff2.energy_calculator = energy_ff
+    ff2.gradient_calculator = complete_gradient
+    ff2.hessian_calculator = complete_hessian
+    fill_ff(ff2, info2)
+    result = fit_ff_to_hessian(ff2, info2, constant_repulsion=False, stepsize=0.05, threshold=0.001)
+
+    os.chdir(temp_wd)
+
+    struc1 = Structure(StructurePath(1,'t','t','t','t'), ff1, info1)
+    struc2 = Structure(StructurePath(1,'t','t','t','t'), ff2, info2)
+    
+    tsff = get_ts_guess(struc1, struc2)
+    
+    os.chdir(cwd)
+    assert False
 
 
     # compared values and they seemed to be averaged as expected

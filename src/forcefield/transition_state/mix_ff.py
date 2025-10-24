@@ -3,7 +3,23 @@ import pandas as pd
 from src.forcefield.fortran_energy.geometry_calc import bondlength, angle, dihedral_angle
 from src.datatype.structure_data import ForceField, StructuralInformation
 
-def combine_ff_terms(df1: pd.DataFrame, df2: pd.DataFrame, term_type: str = "bond") -> pd.Series:
+def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation) -> ForceField:
+    tsff = ForceField(ff1.nat, '_', readff=False)
+    tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+    tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+    tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
+
+    mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds)
+    mix_parameters(tsff.angles, ff1.angles, ff2.angles)
+    mix_parameters(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals)
+    mix_parameters(tsff.repulsive, ff1.repulsive, ff2.repulsive)
+    
+    mix_reference_values(tsff, ff1, ff2, info1, info2)
+
+    return tsff
+
+def combine_ff_atoms(df1: pd.DataFrame, df2: pd.DataFrame, term_type: str = "bond") -> pd.Series:
     """
     Combine two force field term DataFrames (bonds, angles, dihedrals, LJ, etc.)
     without duplicating entries based on their atom connectivity.
