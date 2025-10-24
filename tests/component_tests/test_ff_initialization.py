@@ -73,6 +73,7 @@ def test_get_vander_matrix():
     vander_matrix = get_vander_matrix(NAT, ATOM_TYPES)
     print(vander_matrix)
     np.testing.assert_allclose(vander_matrix, expected_vander_matrix, rtol=1e-7)
+    assert False
 
 
 def test_fill_ff():

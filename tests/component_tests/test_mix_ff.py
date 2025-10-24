@@ -19,6 +19,7 @@ def _define_ff_examples():
     ### ff2
     path2 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
     nat, _, xyz, atom_types = readin_xyz(os.path.join(path2, 'struc2.xyz'))
+    print(atom_types)
     wbo = read_wbo_file(os.path.join(path2, 'wbo2'))
     info2 = StructuralInformation(nat, xyz, wbo, atom_types)
     ff2 = ForceField(nat, os.path.join(path2, 'ff2_new'), readff=False)
@@ -88,8 +89,9 @@ def test_mix_reference_values():
 
     mix_reference_values(tsff, ff1, ff2, info1)
     print(tsff.bonds)
-    print(ff1.bonds)
-    print(ff2.bonds)
+    print(tsff.angles)
+    print(tsff.dihedrals)
+    print(tsff.repulsive)
     assert False
     assert not all(tsff.bonds['parameter'].isnull())
     assert not all(np.isnan(tsff.bonds['parameter']))

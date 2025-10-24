@@ -116,35 +116,76 @@ def _average_c(c1: float, c2: float, c1_factor: float = 0.5, c2_factor: float = 
 
 def mix_reference_values(tsff: ForceField, ff1: ForceField, ff2: ForceField, info: StructuralInformation):
 
-    # bonds
-    _mix_bond_reference(tsff.bonds, ff1.bonds, ff2.bonds, info)
+    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info, 'bonds')
+    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info, 'angles')
+    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info, 'dihedrals')
+    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info, 'repulsive')
 
-def _mix_bond_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info: StructuralInformation, fact1: float = 0.5, fact2: float = 0.5, ):
+def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info: StructuralInformation, calctype: str, fact1: float = 0.5, fact2: float = 0.5):
     new_params = []
     for idx, row in tsff_df.iterrows():
         a, b = row['atoms']
-        print(a,b)
         val1_series = ff1_df.loc[ff1_df['atoms'].apply(lambda x: x == row['atoms']), 'reference_value']
         val2_series = ff2_df.loc[ff2_df['atoms'].apply(lambda x: x == row['atoms']), 'reference_value']
 
-        
-        val1 = val1_series.squeeze() if not val1_series.empty else info.vander_matrix[a, b]
-        val2 = val2_series.squeeze() if not val2_series.empty else info.vander_matrix[a, b]
 
-        new_val = val1 * fact1 + val2 * fact2
+        # TODO when changed to python v higher match calctype:
+        if calctype == 'bonds':
+            print(a, b, info.vander_matrix[a, b])
+            val1 = val1_series.squeeze() if not val1_series.empty else info.vander_matrix[a, b]
+            val2 = val2_series.squeeze() if not val2_series.empty else info.vander_matrix[a, b]
+            new_val = _average_single_bond(val1, val2, fact1, fact2)
+        elif calctype == 'angles':
+            val1 = val1_series.squeeze() if not val1_series.empty else val2_series.squeeze()
+            val2 = val2_series.squeeze() if not val2_series.empty else val1_series.squeeze()
+            new_val = _average_single_angle(val1, val2, fact1, fact2)
+        elif calctype == 'dihedrals':
+            val1 = val1_series.squeeze() if not val1_series.empty else val2_series.squeeze()
+            val2 = val2_series.squeeze() if not val2_series.empty else val1_series.squeeze()
+            new_val = _average_single_dihedral(val1, val2, fact1, fact2)
+        elif calctype == 'repulsive':
+            val1 = val1_series.squeeze() if not val1_series.empty else val2_series.squeeze()
+            val2 = val2_series.squeeze() if not val2_series.empty else val1_series.squeeze()
+            new_val = _average_single_repulsive(val1, val2, fact1, fact2)
+        else:
+            raise Exception(f'Typ {calctype} not known.')
+
         new_params.append((idx, new_val))
 
     for idx, val in new_params:
         tsff_df.at[idx, 'reference_value'] = val
 
 
-def _mix_angle_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info: StructuralInformation):
-    pass 
+def _average_single_bond(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
+    return val1 * fact1 + val2 * fact2
+def _average_single_angle(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
+    return val1 * fact1 + val2 * fact2
 
+def _average_single_dihedral(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
+    pi = np.pi
+    
+    temp1 = abs(val1 - val2)
+    temp2 = abs(val1 + 2.0 * pi - val2)
+    temp3 = abs(val1 - (val2 + 2.0 * pi))
 
-def _mix_dihedral_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info: StructuralInformation):
-    pass 
+    if temp1 < temp2 and temp1 < temp3:
+        cosphi0 = np.cos(val1) * fact1 + np.cos(val2) * fact2
+        sinphi0 = np.sin(val1) * fact1 + np.sin(val2) * fact2
+    elif temp2 < temp1 and temp2 < temp3:
+        cosphi0 = np.cos(val1 + 2.0 * pi) * fact1 + np.cos(val2) * fact2
+        sinphi0 = np.sin(val1 + 2.0 * pi) * fact1 + np.sin(val2) * fact2
+    else:  # temp3 is smallest
+        cosphi0 = np.cos(val1) * fact1 + np.cos(val2 + 2.0 * pi) * fact2
+        sinphi0 = np.sin(val1) * fact1 + np.sin(val2 + 2.0 * pi) * fact2
 
+    phi_avg = np.arctan2(sinphi0, cosphi0)
 
-def _mix_repulsive_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info: StructuralInformation):
-    pass 
+    if phi_avg > pi:
+        phi_avg -= 2.0 * pi
+    elif phi_avg <= -pi:
+        phi_avg += 2.0 * pi
+
+    return phi_avg
+
+def _average_single_repulsive(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
+    return val1 * fact1 + val2 * fact2
