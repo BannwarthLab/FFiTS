@@ -1,0 +1,69 @@
+[system]
+charge = 0
+multiplicity = 1
+
+# ============================
+# Reactant configuration
+# ============================
+
+[reactant.path]
+xyz_filename = "struc1.xyz"
+wbo_filename = "wbo1"
+hessian_filename = "hess1"
+ff_filename = "ff1"
+
+[reactant.calculation]
+geometry_optimization = false
+# If true, a geometry optimization with GFN2-xTB is performed.
+wbo_calc = true
+# WBO is calculated during runtime. If false, it is read from wbo_filename.
+hessian_calc = true
+# Hessian is calculated during runtime. If false, it is read from hessian_filename.
+ff_parameterization = false
+# If false, FF is read from "ff_filename".
+test_parameterization = false
+# If true, the parameterized FF is used to optimize the input structure and
+# the RMSD between reactant and FF-optimized reactant is printed.
+
+# ============================
+# Product configuration
+# ============================
+
+[product.path]
+xyz_filename = "struc1.xyz"
+wbo_filename = "wbo1"
+hessian_filename = "hess1"
+ff_filename = "ff1"
+
+[product.calculation]
+geometry_optimization = false
+wbo_calc = true
+hessian_calc = true
+ff_parameterization = false
+test_parameterization = false
+
+# ============================
+# TS Guess calculation
+# ============================
+
+[ts_guess_calculation.path]
+ff_filename = "tsff"
+
+[ts_guess_calculation.calculation]
+factor_reactant = 0.5
+factor_product = 0.5
+optimizer = "molbar-optimizer"
+# Other option: "scipy-optimizer" 
+energy_threshold_two_optimizations = 0.15
+# the energy threshold for to repeat the optimization from the product if started at reactant was to high. 
+perform_two_optimizations = false 
+# if true, performs a optimization from reactant and from product with the given input and takes the structure with the lower ff energy.  
+
+# ============================
+# Postprocessing
+# ============================
+
+[postprocessing]
+relaxation = "None"
+# Options: "None", "gfn2-xtb", "pbeh-3c"
+# Fixes reactive atoms and performs a geometry optimization on chosen theory level.
