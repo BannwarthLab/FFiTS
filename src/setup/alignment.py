@@ -7,7 +7,7 @@ import os
 from src.datatype.structure_data import Structure, ForceField
 from src.datatype.calculation_data import Reaction, CalculationParameters
 from src.calculation import GeometryOptimization, HessianCalculation
-from src.interface.exceptions import ConvergenceError
+from src.io.exceptions import ConvergenceError
 
 
 def get_connecting_pair(reaction: Reaction, struc: Structure, forbidden_pair=[[-1,-1]]):

@@ -5,9 +5,9 @@ import shutil
 from src.calculation import TsGuessCalculation, GeometryOptimization, HessianCalculation, WboCalculation
 from src.datatype.calculation_data import CalculationParameters, Reaction
 from src.datatype.structure_data import Structure, ForceField
-from src.interface.exceptions import ConvergenceError
-from src.interface.reader import readin_xyz
-from src.interface.printer import generate_xtb_fix_input, write_string2file
+from src.io.exceptions import ConvergenceError
+from src.io.reader import readin_xyz
+from src.io.printer import generate_xtb_fix_input, write_string2file
 
 
 def constrained_optimization(reac: Reaction, calc: CalculationParameters):

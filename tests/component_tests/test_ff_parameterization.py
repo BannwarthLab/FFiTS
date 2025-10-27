@@ -5,9 +5,9 @@ import pandas as pd
 import pytest
 from src.datatype.structure_data import ForceField, StructuralInformation
 from src.forcefield.fit2hessian.parameterize_ff import update_bond, update_angle, update_dihedral, update_repulsive, fit_ff_to_hessian
-from src.interface.reader import read_hessian
+from src.io.reader import read_hessian
 from src.forcefield.fortran_energy.ff_energy import complete_hessian
-from src.forcefield.setup.define_starting_parameters import fill_ff
+from src.ts_guess.define_starting_parameters import fill_ff
 
 XYZ = np.array([
     [-2.33287094, 3.31176687, 0.20110100],

@@ -2,7 +2,7 @@
 
 import subprocess
 import os
-from src.interface.reader import read_wbo_file, readin_xyz
+from src.io.reader import read_wbo_file, readin_xyz
 
 class Xtb:
     '''

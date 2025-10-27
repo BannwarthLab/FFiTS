@@ -3,7 +3,7 @@ from src.forcefield.fortran_energy.ff_energy import *
 # from tests.component_tests.static_data import XYZ, WBO, ATOM_TYPES
 from src.datatype.structure_data import StructuralInformation, ForceField, angstrom2bohr, convert_xyz_to_fortranstyle
 from src.forcefield.fortran_energy.geometry_calc import bondlength
-from src.interface.reader import readin_xyz
+from src.io.reader import readin_xyz
 import scipy as sc
 import numpy as np
 from src.forcefield.fortran_energy.ff_energy import * 

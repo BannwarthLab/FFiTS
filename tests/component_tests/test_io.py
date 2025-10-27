@@ -2,7 +2,7 @@
 import os
 import numpy as np
 import pytest 
-from src.interface.reader import readin_xyz, read_wbo_file, read_hessian
+from src.io.reader import readin_xyz, read_wbo_file, read_hessian
 from tests.component_tests.utility import compare_dictionaries
 
 

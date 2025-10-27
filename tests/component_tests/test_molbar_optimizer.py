@@ -2,10 +2,10 @@
 import numpy as np
 import os
 import shutil 
-from src.interface.molbar_optimizer import anc_optimizer, scipy_optimizer
+from src.io.molbar_optimizer import anc_optimizer, scipy_optimizer
 from src.forcefield.fortran_energy.ff_energy import energy_ff, complete_gradient, complete_hessian
 from src.datatype.structure_data import ForceField, StructuralInformation
-from src.interface.reader import readin_xyz
+from src.io.reader import readin_xyz
 
 NAT = 7
 

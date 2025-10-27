@@ -2,10 +2,10 @@ import os
 import pandas as pd
 import shutil
 import numpy as np
-from src.forcefield.transition_state.mix_ff import combine_ff_atoms, remove_bonds_from_repulsive, mix_parameters, mix_reference_values
+from src.ts_guess.mix_ff import combine_ff_atoms, remove_bonds_from_repulsive, mix_parameters, mix_reference_values
 from src.datatype.structure_data import ForceField, StructuralInformation, StructurePath, Structure
-from src.interface.reader import readin_xyz, read_wbo_file, read_hessian
-from src.forcefield.setup.define_starting_parameters import fill_ff
+from src.io.reader import readin_xyz, read_wbo_file, read_hessian
+from src.ts_guess.define_starting_parameters import fill_ff
 from src.forcefield.fit2hessian.parameterize_ff import fit_ff_to_hessian
 
 from src.forcefield.transition_state.guess import get_ts_guess

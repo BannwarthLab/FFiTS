@@ -4,12 +4,12 @@ import shutil
 import copy
 from src.datatype.structure_data import *
 from src.datatype.calculation_data import *
-from src.initialization import *
+from src.setup.initialization import *
 from src.calculation import *
-from src.alignment import align
-from src.interface.reader import *
-from src.interface.xtb import *
-from src.tssearch import search_ts, constrained_optimization
+from src.setup.alignment import align
+from src.io.reader import *
+from src.io.xtb import *
+from src.ts_guess.tssearch import search_ts, constrained_optimization
 
 
 def main(calc_params):

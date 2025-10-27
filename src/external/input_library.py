@@ -1,11 +1,11 @@
 #!/bin/python
 
 
-from src.interface.input_generator_crest import HeaderBlock 
-from src.interface.input_generator_crest import CalcBlock 
-from src.interface.input_generator_crest import SsffBlock
-from src.interface.input_generator_crest import TsffBlock 
-from src.interface.input_generator_crest import generate_input
+from src.external.input_generator_crest import HeaderBlock 
+from src.external.input_generator_crest import CalcBlock 
+from src.external.input_generator_crest import SsffBlock
+from src.external.input_generator_crest import TsffBlock 
+from src.external.input_generator_crest import generate_input
 from src.datatype.calculation_data import CalculationParameters
 from src.datatype.structure_data import *
 

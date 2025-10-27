@@ -2,7 +2,7 @@ from src.datatype.structure_data import ForceField, StructuralInformation, get_v
 import numpy as np
 import os
 import tempfile
-from src.forcefield.setup.define_starting_parameters import fill_ff
+from src.ts_guess.define_starting_parameters import fill_ff
 from src.forcefield.fortran_energy.geometry_calc import angle, bondlength, dihedral_angle
 from src.forcefield.fortran_energy.ff_energy import energy_ff, complete_gradient, complete_hessian
 import pandas as pd

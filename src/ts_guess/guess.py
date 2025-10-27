@@ -1,9 +1,9 @@
 import os
 import pandas as pd
 import numpy as np
-from src.forcefield.transition_state.mix_ff import create_tsff
+from src.ts_guess.mix_ff import create_tsff
 from src.datatype.structure_data import ForceField, StructuralInformation, Structure
-from src.interface.molbar_optimizer import anc_optimizer, scipy_optimizer
+from src.io.molbar_optimizer import anc_optimizer, scipy_optimizer
 from src.forcefield.fortran_energy.ff_energy import energy_ff, complete_gradient, complete_hessian
 
 
