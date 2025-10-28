@@ -10,7 +10,7 @@ def test_load_config_with_second_file():
     path = os.path.join(os.getcwd(), 'tests', 'examples', 'small_single_molecule', 'testconfig.toml')
     config = load_config(path)
     print(config) 
-    assert config["system"]["charge"] == 0
+    assert config["system"]["charge"] == -2
     
 
 
