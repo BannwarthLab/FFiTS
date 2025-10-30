@@ -118,22 +118,10 @@ class StructurePath:
     """
     Paths/Filenames and ID for a given structure.
     """
-    id: int
     xyz_filename: str 
     hess_filename: str 
     wbo_filename: str 
     ff_filename: str
-
-    @staticmethod
-    def from_json(id: int, str):
-        """ 
-        returns StructurePath filled with values from json file part 'str'.
-        """
-        return StructurePath(id=id,
-                             xyz_filename = str["xyz"],
-                             wbo_filename = str["wbo"],
-                             hess_filename = str["hessian"],
-                             ff_filename = str["forcefield"])   
 
 class ForceField:
     """ 

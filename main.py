@@ -2,6 +2,7 @@
 import time
 import os
 import copy
+from src.datatype.calculation_data import CalculationData
 from src.io.toml_parser import load_calculation_data, overwrite_from_commandline
 from src.io.commandline_parser import parse_args
 
@@ -12,7 +13,7 @@ def main():
     calcdata = load_calculation_data(args["input_file"])
     overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"])
 
-
+    prepare_structures(calcdata)
 
     # cwd = os.getcwd() 
     

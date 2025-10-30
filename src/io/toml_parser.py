@@ -128,9 +128,22 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     # =======================
     post = data.get("postprocessing", {})
     cd.postprocessing.relaxation = post.get("relaxation", cd.postprocessing.relaxation)
+
     # =======================
     # Sanity checks
     # =======================
+    if not cd.reactant_calc.hessian_calc and os.path.exists(cd.reactant_path.hessian_filename) :
+        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path} not found.')
+    
+    if not cd.product_calc.hessian_calc and os.path.exists(cd.product_calc.hessian_filename) :
+        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path} not found.')
+    
+    if cd.system.multiplicity > 3 or cd.system.multiplicity < 1:
+        raise ValueError(f'Multiplicity of {cd.system.multiplicity} is chemically unreasonable on this theory level.')
+    
+    # if cd.system.charge > 3 or cd.system.charge < -3:
+    #     print(f'[WARNING] Charge of {cd.system.charge} may be a bit much. Are you certain this is correct?')
+    
     # Ensure factors sum to 1.0
     if abs(cd.ts_calc.factor_reactant + cd.ts_calc.factor_product - 1.0) > 1e-8:
         raise ValueError("Error: factor_reactant + factor_product must equal 1.0")
