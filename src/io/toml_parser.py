@@ -1,5 +1,6 @@
 import os
 from src.datatype.calculation_data import CalculationData
+import argparse
 
 # For Python 3.11+, tomllib is built in.
 # For older versions, install tomli (`pip install tomli`)
@@ -50,7 +51,10 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     Load configuration data from a TOML file (if provided) and fill
     a CalculationData instance with defaults for missing values.
     """
-    data = load_config(user_path)
+    if user_path:
+        data = load_config(user_path)
+    else: 
+        data = load_config()
     cd = CalculationData()  # start with defaults
 
     # =======================
@@ -124,7 +128,6 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     # =======================
     post = data.get("postprocessing", {})
     cd.postprocessing.relaxation = post.get("relaxation", cd.postprocessing.relaxation)
-
     # =======================
     # Sanity checks
     # =======================
@@ -143,3 +146,14 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
         raise ValueError(f"Invalid relaxation option: {cd.postprocessing.relaxation}")
 
     return cd
+
+def overwrite_from_commandline(calcdata: CalculationData, multiplicity: int | None, charge: int | None):
+    '''overwrites information in CalculationData object if given via commandline'''
+    if multiplicity:
+        if multiplicity != calcdata.system.multiplicity:
+            print(f"[INFO] Multiplicity of {calcdata.system.multiplicity} is being overwritten by {multiplicity}.")
+        calcdata.system.multiplicity = multiplicity
+    if charge:
+        if charge != calcdata.system.charge:
+            print(f"[INFO] Charge of {calcdata.system.charge} is being overwritten by {charge}.")
+        calcdata.system.charge = charge

@@ -45,3 +45,5 @@ class CalculationData:
     ts_calc: TSCalculationOptions = field(default_factory=TSCalculationOptions)
     ts_path: PathData = field(default_factory=PathData)
     postprocessing: Postprocessing = field(default_factory=Postprocessing)
+
+
