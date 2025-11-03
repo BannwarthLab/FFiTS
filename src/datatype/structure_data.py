@@ -219,35 +219,28 @@ class StructuralInformation:
     """ 
     Information on the given structure.
         nat: number of atoms
-        energy: energy calculated by unspecified method
+        xyz: directly transferred into bohr
         wbo: Wilberg Bond Order as directory of bond pairs and corresponding WBO values
         complete_graph: networkx Graph object with atoms as nodes and bond order larger then 0 as edges.
         seperate_molecule_list: List of subgraphs not connectred by edges in complete_graph.
         molecule_count: number of seperate molecules in structure.
     """
-    def __init__(self, nat: int, xyz: np.array, wbo_dict: dict, atom_types: np.array, energy: float = np.NaN, hessian: np.ndarray = None):
+    def __init__(self, nat: int, xyz: np.array, wbo_dict: dict, atom_types: np.array, hessian: np.ndarray = None):
         self.nat = nat 
-        self.energy = energy 
         self.wbo = wbo_dict
-        self.xyz = xyz
+        self.xyz = self.angstrom2bohr(xyz)
         self.atom_types = atom_types
         self.hessian: np.ndarray = hessian
         self.bo_matrix: np.array = self.create_bomatrix_from_wbo()
-        self.fortran_xyz: np.array = self.angstrom2bohr(self.convert_xyz_to_fortranstyle())
+        self.fortran_xyz: np.array = self.convert_xyz_to_fortranstyle(self.xyz)
         self.complete_graph: nx.Graph = self.create_graph_from_wbo()
         self.seperate_molecule_list = self.split_in_subgraphs()
         self.molecule_count = len(self.seperate_molecule_list)
         self.vander_matrix: np.array = get_vander_matrix(self.nat, self.atom_types)
 
-    def convert_xyz_to_fortranstyle(self) -> np.array:
-        x = []
-        y = []
-        z = []
-        for i in range(self.nat):
-            x.append(self.xyz[i][0])
-            y.append(self.xyz[i][1])
-            z.append(self.xyz[i][2])
-        return np.array([x,y,z],order='F')
+    def convert_xyz_to_fortranstyle(self, xyz) -> np.array:
+        '''returns column major version of xyz'''
+        return np.asarray(xyz, dtype=float, order='F').T 
     
     def angstrom2bohr(self, val):
         if type(val) == np.array:

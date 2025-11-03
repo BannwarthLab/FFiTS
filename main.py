@@ -5,6 +5,7 @@ import copy
 from src.datatype.calculation_data import CalculationData
 from src.io.toml_parser import load_calculation_data, overwrite_from_commandline
 from src.io.commandline_parser import parse_args
+from src.setup.structure_preparatation import get_preliminary_information
 
 def main():
     # read commandline arguments and get calculation data from given config file
@@ -13,7 +14,8 @@ def main():
     calcdata = load_calculation_data(args["input_file"])
     overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"])
 
-    prepare_structures(calcdata)
+    struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path)
+    struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path)
 
     # cwd = os.getcwd() 
     

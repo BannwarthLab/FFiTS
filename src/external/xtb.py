@@ -2,136 +2,151 @@
 
 import subprocess
 import os
-from src.io.reader import read_wbo_file, readin_xyz
+from src.io.reader import read_wbo_file, read_hessian, readin_xyz
+import subprocess
+import tempfile
+import shutil
+from pathlib import Path
+
 
 class Xtb:
-    '''
-    xtb program caller and xtb specific operations.
-    '''
-    def __init__(self, xtb_path='xtb') -> None:
-        # maybe define all names here instead of giving them in func
+    """
+    xTB program caller and wrapper, calculations are performed in temporary directories
+    """
+    #TODO add lömi
+
+    def __init__(self, chrg: int, mult: int, xtb_path: str = "xtb") -> None:
         self.xtb_path = xtb_path
-        a = 0
-        if os.path.exists('.UHF'):
-            with open('.UHF', 'r') as f:
-                x = f.readlines()
-                a = x[0].strip()
-            f.close()
-        elif not os.path.exists('.UHF'):
-            a = 1
-        self.mult = a
-        if os.path.exists('.CHRG'):
-            with open('.CHRG', 'r') as f:
-                x = f.readlines()
-                a = x[0].strip()
-            f.close()
-        elif not os.path.exists('.CHRG'):
-            a = 0
-        self.chrg = a
-        print(f'> xTB will be run with mult {self.mult} and chrg {self.chrg}.')
-            
+        self.chrg = chrg
+        self.mult = mult
+        self._check_xtb_loaded()
+        print(f"> xTB will be run with mult={self.mult}, chrg={self.chrg}")
 
-    def get_command(self, input, keyword: str) -> str:
-        return f"{self.xtb_path} {input} --uhf {self.mult} --chrg {self.chrg} {keyword}"
-    
-    def find_energy_in_output(self, output_filename: str) -> float:
-        with open(output_filename, 'r') as f:
-            lines = f.readlines()
-        for line in reversed(lines):
-            if "TOTAL ENERGY" in line:
-                return float(line.split()[3])
-        raise Exception("No Energy was found in output of the xTB singlepoint calculation.")
+    # ------------------------------------------------------------------
+    # --- UTILITIES ----------------------------------------------------
+    # ------------------------------------------------------------------
+
+    def _check_xtb_loaded(self):
+        """Check if xTB executable is available."""
+        result = subprocess.run(
+            ["which", self.xtb_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if not result.stdout.strip():
+            raise RuntimeError(f"xTB executable '{self.xtb_path}' not found in PATH.")
+
+    def _run_xtb(self, command: str, cwd: Path):
+        """Run an xTB command inside cwd and handle errors."""
+        stdout = cwd / "xtb.out"
+        stderr = cwd / "xtb_err.out"
+        result = subprocess.run(
+            command,
+            shell=True,
+            cwd=cwd,
+            stdout=stdout.open("w"),
+            stderr=stderr.open("w"),
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"xTB failed with code {result.returncode}. See {stderr}")
+        return result.returncode
+
+    def _get_command(self, input_xyz: Path, keyword: str) -> str:
+        """Build xTB command string."""
+        return f"{self.xtb_path} {input_xyz} --uhf {self.mult} --chrg {self.chrg} {keyword}"
+
+    # ------------------------------------------------------------------
+    # --- CORE CALCULATIONS --------------------------------------------
+    # ------------------------------------------------------------------
+
+    def singlepoint(self, input_xyz: str, output_name: str) -> float:
+        """Run xTB singlepoint calculation in a temporary directory."""
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            tmp = Path(tmpdir)
+            shutil.copy(input_xyz, tmp / Path(input_xyz).name)
+            command = self._get_command(Path(input_xyz).name, "")
+            self._run_xtb(command, tmp)
+
+            # Save result outputs
+            energy = self._find_energy_in_output(tmp / "xtb.out")
+            shutil.copy(tmp / "xtb.out", f"{output_name}_singlepoint.out")
+            return energy
+
+    def geomopt(self, input_xyz: str, output_name: str):
+        """Run xTB geometry optimization and save optimized geometry."""
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            tmp = Path(tmpdir)
+            xyz_name = Path(input_xyz).name
+            shutil.copy(input_xyz, tmp / xyz_name)
+
+            command = self._get_command(xyz_name, "--opt")
+            self._run_xtb(command, tmp)
+
+            optimized_xyz = tmp / "xtbopt.xyz"
+            optimized_log = tmp / "xtbopt.log"
+            if not optimized_xyz.exists():
+                raise RuntimeError("No optimized geometry found (xtbopt.xyz missing).")
+
+            shutil.copy(optimized_xyz, f"{output_name}_opt.xyz")
+            shutil.copy(optimized_log, f"{output_name}_opt.log")
+            (tmp / "xtbrestart").unlink(missing_ok=True)
+
+            return f"{output_name}_opt.xyz"
+
+    def hesscalc(self, input_xyz: str, output_name: str):
+        """Run xTB Hessian calculation."""
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            tmp = Path(tmpdir)
+            shutil.copy(input_xyz, tmp / Path(input_xyz).name)
+            command = self._get_command(Path(input_xyz).name, "--hess")
+            self._run_xtb(command, tmp)
+
+            hess_file = tmp / "hessian"
+            if not hess_file.exists():
+                raise RuntimeError("No Hessian file generated.")
+            shutil.copy(hess_file, f"{output_name}")
+            return read_hessian(f"{output_name}")
+
+    def wbocalc(self, input_xyz: str, output_name: str):
+        """Run xTB WBO calculation and return parsed WBO data."""
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            tmp = Path(tmpdir)
+            shutil.copy(input_xyz, tmp / Path(input_xyz).name)
+            command = self._get_command(Path(input_xyz).name, "--wbo")
+            self._run_xtb(command, tmp)
+
+            wbo_file = tmp / "wbo"
+            if not wbo_file.exists():
+                raise RuntimeError("No WBO file generated.")
+            shutil.copy(wbo_file, f"{output_name}_wbo")
+            return read_wbo_file(f"{output_name}_wbo")
         
-        
-    def singlepoint(self, input_xyz: str) -> float:
-        command = "xtb " + input_xyz 
-        with open('xtb_single.out', 'w') as stdout_file, open('xtb_single_err.out', 'w') as stderr_file:
-            p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
-            p.wait()
-            rc = p.returncode
-            if os.path.exists('xtbrestart'):
-                os.remove('xtbrestart')
-            return self.find_energy_in_output("xtb_single.out")
-            if rc != 0:
-                raise Exception("An Error happend during the xTB geometry optimization, with the return code ", rc)
-    
+    def geomopt_with_topology_check(self, input_xyz: str, output_basename: str, threshold: int = 0.3) -> str:
+        """
+        Perform geometry optimization and check if topology (WBOs) changed.
+        Returns True if significant WBO difference is detected, else False.
+        """
+        wbo_before = self.wbocalc(input_xyz, f"{output_basename}_before_geomopt")
+        opt_xyz = self.geomopt(input_xyz, f"{output_basename}")
+        wbo_after = self.wbocalc(opt_xyz, f"{output_basename}_after_geomopt")
 
-    def geomopt(self, input_xyz: str) -> float:
-        #return xtb energy 
-        command = self.get_command(input_xyz, '--opt') 
-        with open('xtb.out', 'w') as stdout_file, open('xtb_err.out', 'w') as stderr_file:
-            p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
-            p.wait()
-            rc = p.returncode
-            if rc == 0:
-                os.rename('xtbopt.xyz', input_xyz)
-                print(input_xyz)
-                if os.path.exists('xtbrestart'):
-                    os.remove('xtbrestart')
-                return readin_xyz(input_xyz)
-            else:
-                raise Exception("An Error happend during the xTB geometry optimization, with the return code ", rc)
-        
-    def hesscalc(self, hess_filename, input_xyz: str) -> None:
-        #creates hess file after xtb hess call
-        command = self.get_command(input_xyz, '--hess') 
-        with open('xtbhess.out', 'w') as stdout_file, open('xtbhess_err.out', 'w') as stderr_file:
-            p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
-            p.wait()
-            rc = p.returncode
-            if rc == 0:
-                if os.path.isfile("hessian"):
-                    os.rename('hessian', hess_filename)   
-                    if os.path.exists('xtbrestart'):
-                        os.remove('xtbrestart')
-                    # print("Hessian for calculation of", input_xyz, "was generated to file", hess_filename)
-                else:
-                    raise Exception("No Hessian was generated")
-            else:
-                raise Exception("An Error happend during the xTB Hessian calculation, with the return code ", rc)
-    
+        for bond, before_val in wbo_before.items():
+            after_val = wbo_after.get(bond, 0.0)
+            if abs(after_val - before_val) > threshold:
+                print(f'[WARNING] Topology changed significantly during geometry optimization in bond {bond} with a change in bond order of {abs(after_val - before_val)}.')
+                return f"{opt_xyz}" 
 
+        return f"{opt_xyz}"  
 
-    def wbocalc(self, wbo_filename, input_xyz: str) -> dict:
-        # creates wbo file
-        command = self.get_command(input_xyz, '--wbo') 
-        with open('xtbwbo.out', 'w') as stdout_file, open('xtbwbo_err.out', 'w') as stderr_file:
-            p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
-            p.wait()
-            rc = p.returncode
-            if rc == 0:
-                if os.path.isfile("wbo"):
-                    os.rename("wbo", wbo_filename)
-                else:
-                    raise Exception("No WBO was generated")
-            else:
-                raise Exception("An Error happend during the WBO calculation, with the return code ", rc)
-            if os.path.exists('xtbrestart'):
-                os.remove('xtbrestart')
-            return read_wbo_file(wbo_filename)
-            
-    def get_negative_frequencies(self, vibspectrum_filename, input_xyz: str) -> list:
-        command = "xtb " + input_xyz + " --hess"
-        with open('xtbhess.out', 'w') as stdout_file, open('xtbhess_err.out', 'w') as stderr_file:
-            p = subprocess.Popen(command, stdout=stdout_file, stderr=stderr_file, shell=True)
-            p.wait()
-            rc = p.returncode
-            if rc == 0:
-                if os.path.isfile("vibspectrum"):
-                    os.rename('vibspectrum', vibspectrum_filename)   
-                    with open(vibspectrum_filename, 'r') as f:
-                        lines = f.readlines()
-                    neg_freq = []
-                    for i in range(3, len(lines)):
-                        val = float(lines[i].split()[2])
-                        if val < -10:
-                            neg_freq.append(val)
-                            print(val)
-                        elif val > 10: 
-                            break 
-                    return neg_freq
-                else:
-                    raise Exception("No Vibspectrum was generated")
-            else:
-                raise Exception("An Error happend during the xTB Hessian and vibrations calculation, with the return code ", rc)
-    
+    # ------------------------------------------------------------------
+    # --- ANALYSIS -----------------------------------------------------
+    # ------------------------------------------------------------------
+
+    def _find_energy_in_output(self, output_filename: Path) -> float:
+        """Parse total energy from an xTB output file."""
+        with output_filename.open("r") as f:
+            for line in reversed(f.readlines()):
+                if "TOTAL ENERGY" in line:
+                    return float(line.split()[3])
+        raise ValueError(f"No total energy found in {output_filename}")
