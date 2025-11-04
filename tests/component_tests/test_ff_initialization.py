@@ -1,12 +1,13 @@
 from src.datatype.structure_data import ForceField, StructuralInformation, get_vander_matrix, angstrom2bohr
 import numpy as np
+import pandas as pd
 import os
 import tempfile
 from src.ts_guess.define_starting_parameters import fill_ff
-from src.forcefield.fortran_energy.geometry_calc import angle, bondlength, dihedral_angle
-from src.forcefield.fortran_energy.ff_energy import energy_ff, complete_gradient, complete_hessian
-import pandas as pd
+from src.utils.geometry_calc import angle, bondlength, dihedral_angle
+from src.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
 # to not rely on other functions, data is given statically
+
 XYZ = np.array([
     [-2.33287094, 3.31176687, 0.20110100],
     [-0.91630217, 2.85867268, -0.04327585],
@@ -45,7 +46,7 @@ def test_construct_ff_object_from_file():
     assert len(ff.bonds) == 6
 
 def test_get_structural_information():
-    expected_bo_matrix = np.array([
+    expected_bo_matrix = angstrom2bohr(np.array([
         [0,1.02668632226515,0,0.955689824153634,0.955863695522291,0,0.982636418257069],
         [1.02668632226515,0,1.92755303185758,0,0,0.933812077856736,0],
         [0,1.92755303185758,0,0,0,0,0],
@@ -53,9 +54,7 @@ def test_get_structural_information():
         [0.955863695522291,0,0,0,0,0,0],
         [0,0.933812077856736,0,0,0,0,0],        
         [0.982636418257069,0,0,0,0,0,0]      
-    ])
-    path2wbo = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/wbo1')
-    path2xyz = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/struc1.xyz')
+    ]))
 
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
     assert info.molecule_count == 1
@@ -70,17 +69,47 @@ def test_get_vander_matrix():
        [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
        [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82],
        [2.23, 2.23, 2.13, 1.82, 1.82, 1.82, 1.82]]))
-    vander_matrix = get_vander_matrix(NAT, ATOM_TYPES)
-    print(vander_matrix)
+    vander_matrix = get_vander_matrix(ATOM_TYPES)
     np.testing.assert_allclose(vander_matrix, expected_vander_matrix, rtol=1e-7)
-    assert False
 
 
 def test_fill_ff():
+
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
-    path = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule', 'ff1_new')
-    ff_readin = ForceField(NAT, path, readff=True)
-    ff = ForceField(NAT, path, readff=False)
+
+    # Create dummy "read" force field (as if it came from file)
+    ff_readin = ForceField(NAT, "dummy_path", readff=False)
+
+    # manually populate ff_readin dataframes
+    ff_readin.bonds = pd.DataFrame({
+        "type": ["bonds"] * 6,
+        "atoms": [[0,1],[0,3],[0,4],[0,6],[1,2],[1,5]],
+        "reference_value": [2.8482134514, 2.0730618879, 2.0728922799, 2.0621791428, 2.2878212238, 2.1059095046],
+        "parameter": [0.30795441, 0.38313140, 0.38325460, 0.39383956, 0.64039171, 0.34563851]
+    })
+    ff_readin.angles = pd.DataFrame({
+        "type": ["angles"] * 9,
+        "atoms": [[0,1,2],[0,1,5],[1,0,3],[1,0,4],[1,0,6],[2,1,5],[3,0,4],[3,0,6],[4,0,6]],
+        "reference_value": [2.17528567, 2.00315781, 1.91550051, 1.91559648, 1.92842546, 2.10474182, 1.86118849, 1.92084246, 1.92116183],
+        "parameter": [0.29646144, 0.14188003, 0.20087313, 0.20110327, 0.23096817, 0.35160379, 0.19145774, 0.19774637, 0.19782851]
+    })
+    ff_readin.dihedrals = pd.DataFrame({
+        "type": ["dihedrals"] * 6,
+        "atoms": [[2,1,0,3],[2,1,0,4],[2,1,0,6],[3,0,1,5],[4,0,1,5],[5,1,0,6]],
+        "reference_value": [2.11933159, -2.12383049, -0.00201816, -1.02233516, 1.01768806, 3.13950040],
+        "parameter": [0.27810253, 0.27831880, 0.26302920, 0.19815370, 0.19808951, 0.30038770]
+    })
+    ff_readin.repulsive = pd.DataFrame({
+        "type": ["repulsive"] * 15,
+        "atoms": [[0,2],[0,5],[1,3],[1,4],[1,6],[2,3],[2,4],[2,5],[2,6],[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]],
+        "reference_value": [4.27622813,3.75432627,3.75432627,3.75432627,3.75432627,3.58597083,
+                            3.58597083,3.58597083,3.58597083,3.06406897,3.06406897,3.06406897,
+                            3.06406897,3.06406897,3.06406897],
+        "parameter": [0.01]*15
+    })
+
+    # Create new FF to fill
+    ff = ForceField(NAT, "dummy_path", readff=False)
     fill_ff(ff, info)
     
     pd.testing.assert_series_equal(ff_readin.bonds['reference_value'], ff.bonds['reference_value'], rtol=1e-5, atol=1e-8, check_index=False)

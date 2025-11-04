@@ -5,7 +5,8 @@ import os
 # from src.input_library import input_ff_optimization, input_ts_search
 
 
-    
+### TODO add tested interface to use the crest optimizer and the implemented FF in CREST to run calculations 
+
 class Crest:
     '''
     CREST caller and CREST specific operations.

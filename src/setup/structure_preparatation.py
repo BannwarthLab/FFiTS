@@ -30,6 +30,11 @@ def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData,
 
     info = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
 
+    ff = ForceField(nat, path.ff_filename)
+    
+    return Structure(path, ff, info)
     #TODO add FF initilization and then return Structure()
 
 
+def parameterize_ff():
+    pass

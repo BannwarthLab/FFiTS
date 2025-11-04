@@ -1,7 +1,6 @@
 #!/bin/python
 
 from dataclasses import dataclass
-from typing import List
 import networkx as nx
 import numpy as np
 import os
@@ -54,10 +53,12 @@ def convert_xyz_to_fortranstyle(nat, xyz):
         y.append(xyz[i][1])
         z.append(xyz[i][2])
     return np.array([x,y,z],order='F')
+
 def angstrom2bohr(val):
         if type(val) == np.array:
             return np.divide(val, 1/1.8897259)
         return val/(1/1.8897259)
+
 def atom_symbol_to_number(symbol: str) -> int:
     """Convert an element symbol (e.g. 'C') to its atomic number (e.g. 6)."""
     try:
@@ -65,7 +66,7 @@ def atom_symbol_to_number(symbol: str) -> int:
     except KeyError:
         raise ValueError(f"Unknown atom symbol: {symbol}")
     
-def get_vander_matrix(nat, at, vander_values=VANDER_VALUES, factor=1.8897259):
+def get_vander_matrix(at, vander_values=VANDER_VALUES, factor=1.8897259):
     """
     Build van der Waals interaction matrix.
 
@@ -236,7 +237,7 @@ class StructuralInformation:
         self.complete_graph: nx.Graph = self.create_graph_from_wbo()
         self.seperate_molecule_list = self.split_in_subgraphs()
         self.molecule_count = len(self.seperate_molecule_list)
-        self.vander_matrix: np.array = get_vander_matrix(self.nat, self.atom_types)
+        self.vander_matrix: np.array = get_vander_matrix(self.atom_types)
 
     def convert_xyz_to_fortranstyle(self, xyz) -> np.array:
         '''returns column major version of xyz'''

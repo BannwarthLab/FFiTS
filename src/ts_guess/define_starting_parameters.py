@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from src.datatype.structure_data import StructuralInformation, ForceField
-from src.forcefield.fortran_energy.geometry_calc import angle, bondlength, dihedral_angle
+from src.utils.geometry_calc import angle, bondlength, dihedral_angle
 
 
 

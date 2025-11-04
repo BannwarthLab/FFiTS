@@ -17,6 +17,8 @@ def main():
     struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path)
     struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path)
 
+    
+
     # cwd = os.getcwd() 
     
     # calcdata = load_calculation_data()
