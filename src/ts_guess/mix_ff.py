@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from src.forcefield.fortran_energy.geometry_calc import bondlength, angle, dihedral_angle
+from src.utils.geometry_calc import bondlength, angle, dihedral_angle
 from src.datatype.structure_data import ForceField, StructuralInformation
 
 def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation) -> ForceField:

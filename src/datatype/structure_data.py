@@ -66,7 +66,7 @@ def atom_symbol_to_number(symbol: str) -> int:
     except KeyError:
         raise ValueError(f"Unknown atom symbol: {symbol}")
     
-def get_vander_matrix(at, vander_values=VANDER_VALUES, factor=1.8897259):
+def get_vander_matrix(at: np.ndarray, vander_values=VANDER_VALUES, factor=1.8897259):
     """
     Build van der Waals interaction matrix.
 
@@ -243,7 +243,7 @@ class StructuralInformation:
         '''returns column major version of xyz'''
         return np.asarray(xyz, dtype=float, order='F').T 
     
-    def angstrom2bohr(self, val):
+    def angstrom2bohr(self, val: float | np.ndarray):
         if type(val) == np.array:
             return np.divide(val, 1/1.8897259)
         return val/(1/1.8897259)

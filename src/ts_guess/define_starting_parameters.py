@@ -32,8 +32,6 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
     Build and fill ForceField DataFrames (bonds, angles, dihedrals, repulsive)
     with 0-based atom indices, reference values, and parameters.
 
-    Uses imported geometry functions:
-        bondlength(), angle(), dihedral_angle()
     """
     repulsive_start = 0.01 if repulsive_start_ex is None else repulsive_start_ex
     n = ff.nat

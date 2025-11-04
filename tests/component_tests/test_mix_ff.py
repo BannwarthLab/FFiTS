@@ -6,10 +6,10 @@ from src.ts_guess.mix_ff import combine_ff_atoms, remove_bonds_from_repulsive, m
 from src.datatype.structure_data import ForceField, StructuralInformation, StructurePath, Structure
 from src.io.reader import readin_xyz, read_wbo_file, read_hessian
 from src.ts_guess.define_starting_parameters import fill_ff
-from src.forcefield.fit2hessian.parameterize_ff import fit_ff_to_hessian
+from src.ts_guess.parameterize_ff import fit_ff_to_hessian
 
-from src.forcefield.transition_state.guess import get_ts_guess
-from src.forcefield.fortran_energy.ff_energy import energy_ff, complete_gradient, complete_hessian
+from src.ts_guess.guess import get_ts_guess
+from src.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
 
 def _define_ff_examples():
     """Hard-coded example ff information"""
@@ -117,7 +117,7 @@ def test_mix_reference_values():
     assert all(tsff.angles.apply(lambda row: np.abs(row.reference_value) <= np.pi, axis=1))
     assert all(tsff.repulsive.apply(lambda row: row.reference_value <= info1.vander_matrix[row.atoms[0], row.atoms[1]], axis=1))
 
-def test_get_ts_guess():
+def test_get_ts_guess(): # TODO VERY unfinished and sloppy 
     cwd = os.getcwd()
     temp_wd = os.path.join(cwd, '_manual_test/small_single_molecule')
     
@@ -158,13 +158,12 @@ def test_get_ts_guess():
 
     os.chdir(temp_wd)
 
-    struc1 = Structure(StructurePath(1,'t','t','t','t'), ff1, info1)
-    struc2 = Structure(StructurePath(1,'t','t','t','t'), ff2, info2)
+    struc1 = Structure(StructurePath('t','t','t','t'), ff1, info1)
+    struc2 = Structure(StructurePath('t','t','t','t'), ff2, info2)
     
     tsff = get_ts_guess(struc1, struc2)
     
     os.chdir(cwd)
-    assert False
 
 
     # compared values and they seemed to be averaged as expected

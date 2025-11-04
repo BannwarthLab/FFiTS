@@ -6,6 +6,7 @@ from src.datatype.calculation_data import CalculationData
 from src.io.toml_parser import load_calculation_data, overwrite_from_commandline
 from src.io.commandline_parser import parse_args
 from src.setup.structure_preparatation import get_preliminary_information
+from src.ts_guess.define_starting_parameters import fill_ff
 
 def main():
     # read commandline arguments and get calculation data from given config file
@@ -16,8 +17,11 @@ def main():
 
     struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path)
     struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path)
-
+    #    TODO add repulsive start and bo threshold in calcdata
     
+    fill_ff(struc1.ff, struc1.info) 
+    fill_ff(struc2.ff, struc2.info) 
+
 
     # cwd = os.getcwd() 
     

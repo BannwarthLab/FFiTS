@@ -1,6 +1,6 @@
 from src.datatype.structure_data import ForceField, StructuralInformation
-from src.forcefield.fortran_energy.ff_energy import complete_hessian
-import src.forcefield.fortran_energy.fortran_bindings as fb
+from src.forcefield.python_interface.ff_energy import complete_hessian
+import src.forcefield.python_interface.fortran_bindings as fb
 from typing import Optional
 import numpy as np
 import warnings
