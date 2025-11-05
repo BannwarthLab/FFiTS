@@ -2,8 +2,8 @@
 import numpy as np
 import os
 import shutil 
-from src.io.molbar_optimizer import anc_optimizer, scipy_optimizer
-from src.forcefield.fortran_energy.ff_energy import energy_ff, complete_gradient, complete_hessian
+from src.external.molbar_optimizer import anc_optimizer, scipy_optimizer
+from src.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
 from src.datatype.structure_data import ForceField, StructuralInformation
 from src.io.reader import readin_xyz
 
@@ -43,7 +43,7 @@ def test_anc_optimizer():
     ff = ForceField(7, 'ff1_new', readff=True, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian) 
     _, _, xyz_start, _ = readin_xyz('struc2.xyz') 
 
-    converged, energy, _, _, _, _ = anc_optimizer(xyz_start, ff, struc, max_micro_steps=5)
+    converged, energy, _, _, _, _ = anc_optimizer(xyz_start, ff, struc.atom_types, max_micro_steps=5)
 
     assert converged 
     assert energy <= 0.1

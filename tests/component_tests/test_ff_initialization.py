@@ -46,7 +46,7 @@ def test_construct_ff_object_from_file():
     assert len(ff.bonds) == 6
 
 def test_get_structural_information():
-    expected_bo_matrix = angstrom2bohr(np.array([
+    expected_bo_matrix = np.array([
         [0,1.02668632226515,0,0.955689824153634,0.955863695522291,0,0.982636418257069],
         [1.02668632226515,0,1.92755303185758,0,0,0.933812077856736,0],
         [0,1.92755303185758,0,0,0,0,0],
@@ -54,7 +54,7 @@ def test_get_structural_information():
         [0.955863695522291,0,0,0,0,0,0],
         [0,0.933812077856736,0,0,0,0,0],        
         [0.982636418257069,0,0,0,0,0,0]      
-    ]))
+    ])
 
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
     assert info.molecule_count == 1

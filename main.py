@@ -7,6 +7,8 @@ from src.io.toml_parser import load_calculation_data, overwrite_from_commandline
 from src.io.commandline_parser import parse_args
 from src.setup.structure_preparatation import get_preliminary_information
 from src.ts_guess.define_starting_parameters import fill_ff
+from src.ts_guess.parameterize_ff import fit_ff_to_hessian
+from src.ts_guess.guess import get_ts_guess
 
 def main():
     # read commandline arguments and get calculation data from given config file
@@ -15,14 +17,17 @@ def main():
     calcdata = load_calculation_data(args["input_file"])
     overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"])
 
-    struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path)
-    struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path)
-    #    TODO add repulsive start and bo threshold in calcdata
+    struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path, 1, calcdata.system.charge, calcdata.system.multiplicity)
+    struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system.charge, calcdata.system.multiplicity)
+    #    TODO add repulsive start and bo threshold in calcdata, and all the parameters in ff fit 
     
     fill_ff(struc1.ff, struc1.info) 
     fill_ff(struc2.ff, struc2.info) 
 
+    fit_ff_to_hessian(struc1.ff, struc1.info)
+    fit_ff_to_hessian(struc2.ff, struc2.info)
 
+    get_ts_guess(struc1, struc2)
     # cwd = os.getcwd() 
     
     # calcdata = load_calculation_data()

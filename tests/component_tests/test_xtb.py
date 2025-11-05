@@ -54,14 +54,14 @@ def mock_run_xtb(monkeypatch):
 # ---------------------------------------------------------------------
 
 def test_check_xtb_loaded_success(dummy_xyz):
-    xtb = Xtb(str(dummy_xyz), chrg=0, mult=1, xtb_path="xtb")
+    xtb = Xtb(chrg=0, mult=1, xtb_path="xtb")
     assert xtb.xtb_path == "xtb"
     assert xtb.chrg == 0
     assert xtb.mult == 1
 
 
 def test_get_command(dummy_xyz):
-    xtb = Xtb(str(dummy_xyz), chrg=1, mult=2)
+    xtb = Xtb(chrg=1, mult=2)
     cmd = xtb._get_command(dummy_xyz, "--opt")
     assert "--opt" in cmd
     assert "--uhf 2" in cmd
@@ -78,35 +78,35 @@ def test_find_energy_in_output(tmp_path):
 
 
 def test_singlepoint_creates_output(dummy_xyz, tmp_path, mock_run_xtb):
-    xtb = Xtb(str(dummy_xyz), chrg=0, mult=1)
+    xtb = Xtb(chrg=0, mult=1)
     energy = xtb.singlepoint(str(dummy_xyz), tmp_path / "out")
     assert isinstance(energy, float)
     assert Path(tmp_path / "out_singlepoint.out").exists()
 
 
 def test_geomopt_creates_opt_file(dummy_xyz, tmp_path, mock_run_xtb):
-    xtb = Xtb(str(dummy_xyz), 0, 1)
+    xtb = Xtb(0, 1)
     result_file = xtb.geomopt(str(dummy_xyz), tmp_path / "geom")
     assert Path(result_file).exists()
     assert str(result_file).endswith("_opt.xyz")
 
 
 def test_hesscalc_reads_hessian(dummy_xyz, tmp_path, mock_run_xtb):
-    xtb = Xtb(str(dummy_xyz), 0, 1)
+    xtb = Xtb(0, 1)
     hessian = xtb.hesscalc(str(dummy_xyz), tmp_path / "hess_output")
     assert isinstance(hessian, np.ndarray)
     np.testing.assert_equal(hessian, [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
 
 def test_wbocalc_reads_wbo(dummy_xyz, tmp_path, mock_run_xtb):
-    xtb = Xtb(str(dummy_xyz), 0, 1)
+    xtb = Xtb(0, 1)
     wbo = xtb.wbocalc(str(dummy_xyz), tmp_path / "wbo_output")
     assert isinstance(wbo, dict)
     assert (1, 2) in wbo
 
 
 def test_geomopt_with_topology_check_no_change(dummy_xyz, tmp_path, mock_run_xtb):
-    xtb = Xtb(str(dummy_xyz), 0, 1)
+    xtb = Xtb(0, 1)
     result = xtb.geomopt_with_topology_check(str(dummy_xyz), tmp_path / "geo")
-    assert result is False
+    assert result is str( tmp_path / "geo")
 
