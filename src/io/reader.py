@@ -25,10 +25,8 @@ def readin_xyz(xyz_path: str) -> Tuple[int, str, np.ndarray, List[str]]:
         nat = int(lines[0])
     except ValueError:
         raise ValueError(f"First line of XYZ file must be an integer (number of atoms).")
-    print(lines)
     comment = lines[1]
     atom_lines = lines[2:]
-    print(atom_lines)
     if len(atom_lines) != nat:
         raise ValueError(
             f"Atom count mismatch in {xyz_path}: declared {nat}, found {len(atom_lines)}"

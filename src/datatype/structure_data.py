@@ -128,7 +128,7 @@ class ForceField:
     """ 
     FF definition through FF parameters (np arrays starting with c_), reference values (bondlenghts, angles, etc) and corresponding atom numbers, which construct the bond / angle / dihedral angle / lj term. 
     """
-    def __init__(self, nat: int, ff_filename: str, readff: bool = True, energy_calculator: Callable = None, gradient_calculator: Callable = None, hessian_calculator: Callable = None):
+    def __init__(self, nat: int, ff_filename: str, readff: bool = False, energy_calculator: Callable = None, gradient_calculator: Callable = None, hessian_calculator: Callable = None):
         self.nat = nat
         self.ff_filename = ff_filename
         self.columns = ['type', 'atoms', 'parameter', 'reference_value']
@@ -232,12 +232,12 @@ class StructuralInformation:
         self.xyz = self.angstrom2bohr(xyz)
         self.atom_types = atom_types
         self.hessian: np.ndarray = hessian
-        self.bo_matrix: np.array = self.create_bomatrix_from_wbo()
-        self.fortran_xyz: np.array = self.convert_xyz_to_fortranstyle(self.xyz)
+        self.bo_matrix: np.ndarray = self.create_bomatrix_from_wbo()
+        self.fortran_xyz: np.ndarray = self.convert_xyz_to_fortranstyle(self.xyz)
         self.complete_graph: nx.Graph = self.create_graph_from_wbo()
         self.seperate_molecule_list = self.split_in_subgraphs()
         self.molecule_count = len(self.seperate_molecule_list)
-        self.vander_matrix: np.array = get_vander_matrix(self.atom_types)
+        self.vander_matrix: np.ndarray = get_vander_matrix(self.atom_types)
 
     def convert_xyz_to_fortranstyle(self, xyz) -> np.array:
         '''returns column major version of xyz'''
@@ -248,7 +248,7 @@ class StructuralInformation:
             return np.divide(val, 1/1.8897259)
         return val/(1/1.8897259)
 
-    def create_bomatrix_from_wbo(self) -> np.array:
+    def create_bomatrix_from_wbo(self) -> np.ndarray:
         bo_matrix = np.zeros((self.nat,self.nat))
         for atoms, val in self.wbo.items(): 
             i = atoms[0] 

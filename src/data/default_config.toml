@@ -30,10 +30,10 @@ test_parameterization = false
 # ============================
 
 [product.path]
-xyz_filename = "struc1.xyz"
-wbo_filename = "wbo1"
-hessian_filename = "hess1"
-ff_filename = "ff1"
+xyz_filename = "struc2.xyz"
+wbo_filename = "wbo2"
+hessian_filename = "hess2"
+ff_filename = "ff2"
 
 [product.calculation]
 geometry_optimization = false

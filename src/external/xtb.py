@@ -20,7 +20,7 @@ class Xtb:
         self.chrg = chrg
         self.mult = mult
         self._check_xtb_loaded()
-        print(f"> xTB will be run with mult={self.mult}, chrg={self.chrg}")
+        print(f"[INFO] xTB will be run with mult={self.mult}, chrg={self.chrg}")
 
     # ------------------------------------------------------------------
     # --- UTILITIES ----------------------------------------------------
@@ -120,6 +120,7 @@ class Xtb:
             if not wbo_file.exists():
                 raise RuntimeError("No WBO file generated.")
             shutil.copy(wbo_file, f"{output_name}_wbo")
+            print(f'[INFO] WBO calculation for {input_xyz} finished successfully.')
             return read_wbo_file(f"{output_name}_wbo")
         
     def geomopt_with_topology_check(self, input_xyz: str, output_basename: str, threshold: int = 0.3) -> str:

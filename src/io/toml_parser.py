@@ -10,6 +10,7 @@ except ModuleNotFoundError:
     import tomli as tomllib
 
 
+
 def load_toml(path: str) -> dict:
     """Load a TOML file from the given path."""
     with open(path, "rb") as f:
@@ -31,9 +32,9 @@ def deep_update(base: dict, updates: dict) -> dict:
 
 def load_config(user_path: str | None = None) -> dict:
     """Load the default TOML config and update with user overrides."""
-    current_dir = os.getcwd()
-    default_path = os.path.join(current_dir, 'src', 'data', 'default_config.toml')
-
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.abspath(os.path.join(this_dir, ".."))  # go from src/io → src
+    default_path = os.path.join(project_root, "data", "default_config.toml")
     # Load defaults
     config = load_toml(default_path)
 
