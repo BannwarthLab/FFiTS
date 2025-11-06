@@ -12,10 +12,11 @@ def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData,
     path = StructurePath(pathdata.xyz_filename, pathdata.hessian_filename, pathdata.wbo_filename, pathdata.ff_filename)
     xtbrunner = Xtb(chrg, mult)
 
-
+    # TODO add somewhere check that wbo and hess needs to be calculated if geomopt is performed
     if calcopt.geometry_optimization: 
-        new_xyz_filename = xtbrunner.geomopt_with_topology_check(pathdata.xyz_filename, pathdata.xyz_filename)
+        new_xyz_filename, wbo = xtbrunner.geomopt_with_topology_check(pathdata.xyz_filename, pathdata.xyz_filename, pathdata.wbo_filename)
         path.xyz_filename = new_xyz_filename # need to change that, so that old file is ignored
+        calcopt.wbo_calc = False
 
     nat, _, xyz, atom_types = readin_xyz(path.xyz_filename)
     

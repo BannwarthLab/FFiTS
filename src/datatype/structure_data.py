@@ -174,6 +174,7 @@ class ForceField:
         df_combined = df_combined.copy()
         df_combined['atoms'] = df_combined['atoms'].apply(format_atoms)
         df_combined.to_csv(self.ff_filename)
+        print(f'[INFO] FF information written to {self.ff_filename}.')
 
 
     def readin(self, filename: str):
@@ -229,11 +230,11 @@ class StructuralInformation:
     def __init__(self, nat: int, xyz: np.array, wbo_dict: dict, atom_types: np.array, hessian: np.ndarray = None):
         self.nat = nat 
         self.wbo = wbo_dict
-        self.xyz = self.angstrom2bohr(xyz)
+        self.xyz = xyz
         self.atom_types = atom_types
         self.hessian: np.ndarray = hessian
         self.bo_matrix: np.ndarray = self.create_bomatrix_from_wbo()
-        self.fortran_xyz: np.ndarray = self.convert_xyz_to_fortranstyle(self.xyz)
+        self.fortran_xyz: np.ndarray = self.angstrom2bohr(self.convert_xyz_to_fortranstyle(self.xyz))
         self.complete_graph: nx.Graph = self.create_graph_from_wbo()
         self.seperate_molecule_list = self.split_in_subgraphs()
         self.molecule_count = len(self.seperate_molecule_list)

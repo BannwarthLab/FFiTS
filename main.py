@@ -9,14 +9,20 @@ from src.setup.structure_preparatation import get_preliminary_information
 from src.ts_guess.define_starting_parameters import fill_ff
 from src.ts_guess.parameterize_ff import fit_ff_to_hessian
 from src.ts_guess.guess import get_ts_guess
+from src.io.print.config import print_calculation_data, print_setup
+from src.io.print.header import print_program_header
 
 def main():
     # read commandline arguments and get calculation data from given config file
     # a normal call would python main.py struc1.xyz struc2.xyz -i input.toml -m 3 -c 1
+    print_program_header()
     args = parse_args()
     calcdata = load_calculation_data(args["input_file"])
     overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"])
+    print_calculation_data(calcdata)
 
+
+    print_setup()
     struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path, 1, calcdata.system.charge, calcdata.system.multiplicity)
     struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system.charge, calcdata.system.multiplicity)
     #    TODO add repulsive start and bo threshold in calcdata, and all the parameters in ff fit 
@@ -24,8 +30,8 @@ def main():
     fill_ff(struc1.ff, struc1.info) 
     fill_ff(struc2.ff, struc2.info) 
 
-    fit_ff_to_hessian(struc1.ff, struc1.info)
-    fit_ff_to_hessian(struc2.ff, struc2.info)
+    fit_ff_to_hessian(struc1)
+    fit_ff_to_hessian(struc2)
 
     get_ts_guess(struc1, struc2)
     # cwd = os.getcwd() 

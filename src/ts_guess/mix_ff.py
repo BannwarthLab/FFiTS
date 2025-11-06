@@ -4,7 +4,9 @@ from src.utils.geometry_calc import bondlength, angle, dihedral_angle
 from src.datatype.structure_data import ForceField, StructuralInformation
 
 def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation) -> ForceField:
-    tsff = ForceField(ff1.nat, '_', readff=False)
+
+    # TODO add parameter transfer for averaging and add that in printout too
+    tsff = ForceField(ff1.nat, 'tsff', readff=False)
     tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
     tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
     tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
@@ -16,7 +18,8 @@ def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, 
     mix_parameters(tsff.repulsive, ff1.repulsive, ff2.repulsive)
     
     mix_reference_values(tsff, ff1, ff2, info1, info2)
-
+    print(f'[INFO] TS FF generation finished.')
+    tsff.write()
     return tsff
 
 def combine_ff_atoms(df1: pd.DataFrame, df2: pd.DataFrame, term_type: str = "bond") -> pd.Series:
@@ -113,8 +116,8 @@ def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
         c1_series = ff1_df.loc[ff1_df['atoms'].apply(lambda x: x == row['atoms']), 'parameter']
         c2_series = ff2_df.loc[ff2_df['atoms'].apply(lambda x: x == row['atoms']), 'parameter']
 
-        c1 = c1_series.squeeze() if not c1_series.empty else 0 # TODO ggf hier das es dann der wert einzeln ist anstatt mit 0 geaveraged
-        c2 = c2_series.squeeze() if not c2_series.empty else 0
+        c1 = c1_series.squeeze() if not c1_series.empty else c2_series.squeeze() # TODO ggf hier das es dann der wert einzeln ist anstatt mit 0 geaveraged
+        c2 = c2_series.squeeze() if not c2_series.empty else c1_series.squeeze()
 
         new_val = _average_c(c1, c2)
         new_params.append((idx, new_val))
@@ -146,7 +149,6 @@ def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
         # TODO when changed to python v higher match calctype:
         if calctype == 'bonds':
             a, b = row['atoms']
-            print(a, b, info1.vander_matrix[a, b])
             val1 = val1_series.squeeze() if not val1_series.empty else info1.vander_matrix[a, b]
             val2 = val2_series.squeeze() if not val2_series.empty else info2.vander_matrix[a, b]
             new_val = _average_single_bond(val1, val2, fact1, fact2)

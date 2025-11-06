@@ -1,5 +1,5 @@
 {
-    "cmake.sourceDirectory": "/home/dbabushkina/1_ts_search2024/pytsguess",
+    "cmake.sourceDirectory": "/home/dbabushkina/1_ts_search2024/ffits",
     "python.testing.pytestArgs": [
         "tests"
     ],

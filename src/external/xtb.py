@@ -88,11 +88,12 @@ class Xtb:
             if not optimized_xyz.exists():
                 raise RuntimeError("No optimized geometry found (xtbopt.xyz missing).")
 
-            shutil.copy(optimized_xyz, f"{output_name}_opt.xyz")
-            shutil.copy(optimized_log, f"{output_name}_opt.log")
+            shutil.copy(optimized_xyz, f"{output_name}")
+            shutil.copy(optimized_log, f"trj_{output_name}")
             (tmp / "xtbrestart").unlink(missing_ok=True)
+            print(f'[INFO] Geometry optimization of {input_xyz} to {output_name} finished successfully.')
 
-            return f"{output_name}_opt.xyz"
+            return f"{output_name}"
 
     def hesscalc(self, input_xyz: str, output_name: str):
         """Run xTB Hessian calculation."""
@@ -106,6 +107,7 @@ class Xtb:
             if not hess_file.exists():
                 raise RuntimeError("No Hessian file generated.")
             shutil.copy(hess_file, f"{output_name}")
+            print(f'[INFO] Hessian calculation for {input_xyz} finished successfully.')
             return read_hessian(f"{output_name}")
 
     def wbocalc(self, input_xyz: str, output_name: str):
@@ -119,18 +121,18 @@ class Xtb:
             wbo_file = tmp / "wbo"
             if not wbo_file.exists():
                 raise RuntimeError("No WBO file generated.")
-            shutil.copy(wbo_file, f"{output_name}_wbo")
+            shutil.copy(wbo_file, f"{output_name}")
             print(f'[INFO] WBO calculation for {input_xyz} finished successfully.')
-            return read_wbo_file(f"{output_name}_wbo")
+            return read_wbo_file(f"{output_name}")
         
-    def geomopt_with_topology_check(self, input_xyz: str, output_basename: str, threshold: int = 0.3) -> str:
+    def geomopt_with_topology_check(self, input_xyz: str, output_basename: str, wbo_output_basename: str, threshold: int = 0.3) -> str:
         """
         Perform geometry optimization and check if topology (WBOs) changed.
         Returns True if significant WBO difference is detected, else False.
         """
-        wbo_before = self.wbocalc(input_xyz, f"{output_basename}_before_geomopt")
-        opt_xyz = self.geomopt(input_xyz, f"{output_basename}")
-        wbo_after = self.wbocalc(opt_xyz, f"{output_basename}_after_geomopt")
+        wbo_before = self.wbocalc(input_xyz, f"before_{wbo_output_basename}")
+        opt_xyz = self.geomopt(input_xyz, f"opt_{output_basename}")
+        wbo_after = self.wbocalc(opt_xyz, f"{wbo_output_basename}")
 
         for bond, before_val in wbo_before.items():
             after_val = wbo_after.get(bond, 0.0)
@@ -138,7 +140,7 @@ class Xtb:
                 print(f'[WARNING] Topology changed significantly during geometry optimization in bond {bond} with a change in bond order of {abs(after_val - before_val)}.')
                 return f"{opt_xyz}" 
 
-        return f"{opt_xyz}"  
+        return f"{opt_xyz}", wbo_after  
 
     # ------------------------------------------------------------------
     # --- ANALYSIS -----------------------------------------------------

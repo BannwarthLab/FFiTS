@@ -1,6 +1,7 @@
-from src.datatype.structure_data import ForceField, StructuralInformation
+from src.datatype.structure_data import ForceField, StructuralInformation, Structure
 from src.forcefield.python_interface.ff_energy import complete_hessian
 import src.forcefield.python_interface.fortran_bindings as fb
+from src.io.print.details import print_ff_fitting
 from typing import Optional
 import numpy as np
 import warnings
@@ -34,8 +35,7 @@ def _atom_slice(atom_idx: int) -> slice:
     return slice(start, start + 3)
 
 
-def fit_ff_to_hessian(ff: ForceField,
-                      info: StructuralInformation,
+def fit_ff_to_hessian(struc: Structure, 
                       maxit: int = 1000,
                       stepsize: float = 0.15,
                       threshold: float = 0.0005,
@@ -43,6 +43,8 @@ def fit_ff_to_hessian(ff: ForceField,
     """
     description
     """
+    ff = struc.ff
+    info = struc.info
     nat = ff.nat
 
     hessian_ff = np.zeros((3 * nat, 3 * nat), dtype=np.float64, order='F')
@@ -54,8 +56,8 @@ def fit_ff_to_hessian(ff: ForceField,
     rmsdd = 1.0
 
     
-    print("--------------------- START OF FF FITTING ---------------------")
-    print("Following parameters are used (maxit, stepsize, threshold):", maxit, stepsize, threshold)
+    print_ff_fitting(struc.path.xyz_filename)
+    print("Following parameters are used (maxit, stepsize, threshold):", maxit, stepsize, threshold, '\n')
 
     # Main iterative loop
     while (rmsd_gap >= threshold) and (counter < maxit):
@@ -106,11 +108,13 @@ def fit_ff_to_hessian(ff: ForceField,
         # compute RMSD between current FF Hessian and reference Hessian
         rmsdd = calculate_hessian_rmsd(hessian_ff, info.hessian, 3*nat)
         obj_fun = ff_fit_objective_function(hessian_ff, info.hessian, 3*nat)
-        print("CYCLE", counter, "RMSD:", rmsdd) #, "obj_fun", obj_fun) 
+        print(f"CYCLE {counter} RMSD: {round(rmsdd, 4):.4f}") #, "obj_fun", obj_fun) 
         temp = rmsdd
         rmsd_gap = abs(temp_old - temp)
 
-    print(f'Fitting finished after {counter} iterations with an RMSD of {round(rmsdd, 4)} and {round(obj_fun, 4)}.')
+    print(f'[INFO] Fitting finished after {counter} iterations with an RMSD of {round(rmsdd, 4)} and {round(obj_fun, 4)}.')
+
+    ff.write()
     return {"iterations": counter, 
             "final_rmsd": rmsdd, 
             "final_objectiv_function": obj_fun}
