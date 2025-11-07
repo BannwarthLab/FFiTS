@@ -1,0 +1,6 @@
+networkx>=3.1
+numpy>=2.3.4
+# molbar==1.2.0
+pandas>=2.3.3
+pytest>=8.4.2
+
