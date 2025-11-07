@@ -90,19 +90,19 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
     # ---- Reference calculations ----
     def ref_bond(atoms):
         i, j = atoms
-        return bondlength(info.fortran_xyz, i, j)
+        return round(bondlength(info.fortran_xyz, i, j), 8)
 
     def ref_angle(atoms):
         i, j, k = atoms
-        return angle(info.fortran_xyz, i, j, k)
+        return round(angle(info.fortran_xyz, i, j, k), 8)
 
     def ref_dihedral(atoms):
         i, j, k, l = atoms
-        return dihedral_angle(info.fortran_xyz, i, j, k, l)
+        return round(dihedral_angle(info.fortran_xyz, i, j, k, l), 8)
 
     def ref_repulsive(atoms):
         i, j = atoms
-        return info.vander_matrix[i, j] / (2 ** (1 / 6))
+        return round(info.vander_matrix[i, j], 8) # / (2 ** (1 / 6)) For some reason we dont need this and i dont know why
 
     # ---- Parameter calculations ----
     def param_bond(atoms):
@@ -111,7 +111,7 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
         bo = info.bo_matrix[i, j]
         if bo * bl == 0:
             raise ZeroDivisionError(f"Division by zero for bond {atoms}.")
-        return bo / bl
+        return round(bo / bl, 8)
 
     def param_angle(atoms):
         i, j, k = atoms
@@ -120,7 +120,7 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
         prod = info.bo_matrix[i, j] * info.bo_matrix[j, k]
         if bl1 * bl2 * prod == 0:
             raise ZeroDivisionError(f"Division by zero for angle {atoms}.")
-        return (prod / (bl1 * bl2)) ** 0.5
+        return round((prod / (bl1 * bl2)) ** 0.5, 8)
 
     def param_dihedral(atoms):
         i, j, k, l = atoms
@@ -130,14 +130,14 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
         prod = info.bo_matrix[i, j] * info.bo_matrix[j, k] * info.bo_matrix[k, l]
         if bl1 * bl2 * bl3 * prod == 0:
             raise ZeroDivisionError(f"Division by zero for dihedral {atoms}.")
-        return (prod / (bl1 * bl2 * bl3)) ** (1 / 3)
+        return round((prod / (bl1 * bl2 * bl3)) ** (1 / 3), 8)
 
     def param_repulsive(_atoms):
         return repulsive_start
 
     # ============================================================
     # Assemble ForceField DataFrames
-    # ============================================================
+    # ===== =======================================================
 
     ff.bonds = pd.DataFrame({
         "type": "bonds",

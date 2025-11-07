@@ -130,7 +130,7 @@ def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
 def _average_c(c1: float, c2: float, c1_factor: float = 0.5, c2_factor: float = 0.5) -> float:
     if round(c1_factor + c2_factor, 2) != 1.00:
         raise ValueError(f'c1 factor {c1_factor} + c2 factor {c2_factor} needs to be 1')
-    return c1 * c1_factor + c2 * c2_factor
+    return round(c1 * c1_factor + c2 * c2_factor, 8)
 
 
 def mix_reference_values(tsff: ForceField, ff1: ForceField, ff2: ForceField, info1: StructuralInformation, info2: StructuralInformation):
@@ -165,8 +165,9 @@ def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
         elif calctype == 'repulsive':
             a, b = row['atoms']
             val1 = val1_series.squeeze() if not val1_series.empty else val2_series.squeeze()
-            val2 = val2_series.squeeze() if not val2_series.empty else val1_series.squeeze()
+            val2 = val2_series.squeeze() if not val2_series.empty else val1_series.squeeze() 
             new_val = _average_single_repulsive(val1, val2, fact1, fact2)
+            # TODO eigentlich ist diese operation unnötig, könnte auch einfach vander distances suchen
         else:
             raise Exception(f'Typ {calctype} not known.')
 
@@ -177,9 +178,9 @@ def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
 
 
 def _average_single_bond(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
-    return val1 * fact1 + val2 * fact2
+    return round(val1 * fact1 + val2 * fact2, 8)
 def _average_single_angle(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
-    return val1 * fact1 + val2 * fact2
+    return round(val1 * fact1 + val2 * fact2, 8)
 
 def _average_single_dihedral(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
     pi = np.pi
@@ -205,7 +206,7 @@ def _average_single_dihedral(val1, val2, fact1: float = 0.5, fact2: float = 0.5)
     elif phi_avg <= -pi:
         phi_avg += 2.0 * pi
 
-    return phi_avg
+    return round(phi_avg, 8)
 
 def _average_single_repulsive(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
-    return val1 * fact1 + val2 * fact2
+    return round(val1 * fact1 + val2 * fact2, 8)

@@ -40,7 +40,6 @@ def main():
 
 
 # def main(calc_params):
-#     # TODO ich muss noch fälle festlegen wenn man Sachen nicht berechnen will, dass sie dann immer noch eingelesen werden .
 #     # calc_params = initialization('/home/dbabushkina/1_ts_search2024/pytsguess/config.json')
 
 #     struc1_info = generate_data_for_calculation(calc_params.struc1, calc_params)
