@@ -38,6 +38,31 @@ def anc_optimizer(xyz_start: np.ndarray, ff: ForceField, atom_types: np.ndarray,
 
     return converged, energy, final_geom, steps, time, message
 
+def failed_anc_opt(filename: str) -> bool:
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+    for line in lines:
+        if 'Final gradient norm: nan' in line.strip():
+            print(f'[WARNING] ANC optimization failed.')
+            return True 
+    return False
+  
+def write_last_valid_xyz(trajectory_filename: str = 'trajectory.xyz', final_geometry_filename: str = 'optimized.xyz'):
+    with open(trajectory_filename, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    nat = int(lines[0].strip())
+    total_lines = len(lines)
+    start_idx = max(total_lines - (nat + 2) * 2, 0)
+    end_idx = min(start_idx + (nat + 2), total_lines)
+
+    selected_lines = lines[start_idx:end_idx]
+
+    os.remove(final_geometry_filename)
+    with open(final_geometry_filename, 'w', encoding='utf-8') as out:
+        out.writelines(selected_lines)
+
+
 
 
 def scipy_optimizer(xyz_start: np.ndarray, ff: ForceField, struc: StructuralInformation):
