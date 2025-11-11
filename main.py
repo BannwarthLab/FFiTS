@@ -14,7 +14,7 @@ from src.io.print.header import print_program_header
 
 def main():
     # read commandline arguments and get calculation data from given config file
-    # a normal call would python main.py struc1.xyz struc2.xyz -i input.toml -m 3 -c 1
+    # a normal call would python3 main.py struc1.xyz struc2.xyz -i input.toml -m 3 -c 1
     print_program_header()
     args = parse_args()
     calcdata = load_calculation_data(args["input_file"])

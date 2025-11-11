@@ -35,8 +35,4 @@ def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData,
     ff = ForceField(nat, path.ff_filename, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
     
     return Structure(path, ff, info)
-    #TODO add FF initilization and then return Structure()
 
-
-def parameterize_ff():
-    pass

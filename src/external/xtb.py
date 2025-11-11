@@ -18,9 +18,9 @@ class Xtb:
     def __init__(self, chrg: int, mult: int, xtb_path: str = "xtb") -> None:
         self.xtb_path = xtb_path
         self.chrg = chrg
-        self.mult = mult
+        self.uhf = mult - 1 # multiplicity = number of unpaired electrons + 1
         self._check_xtb_loaded()
-        print(f"[INFO] xTB will be run with mult={self.mult}, chrg={self.chrg}")
+        print(f"[INFO] xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
 
     # ------------------------------------------------------------------
     # --- UTILITIES ----------------------------------------------------
@@ -54,7 +54,7 @@ class Xtb:
 
     def _get_command(self, input_xyz: Path, keyword: str) -> str:
         """Build xTB command string."""
-        return f"{self.xtb_path} {input_xyz} --uhf {self.mult} --chrg {self.chrg} {keyword}"
+        return f"{self.xtb_path} {input_xyz} --uhf {self.uhf} --chrg {self.chrg} {keyword}"
 
     # ------------------------------------------------------------------
     # --- CORE CALCULATIONS --------------------------------------------
