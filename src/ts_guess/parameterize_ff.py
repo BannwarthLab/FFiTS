@@ -21,7 +21,7 @@ def ff_fit_objective_function(hessian_ff: np.ndarray, hessian_ref: np.ndarray, d
     res = 0
     for i in range(dim):
         for j in range(dim):
-            if i != j:
+            if i//3 != j//3:
                 res += 0.5*(hessian_ff[i,j] - hessian_ref[i,j])**2
     return res
 
