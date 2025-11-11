@@ -151,6 +151,10 @@ def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
             a, b = row['atoms']
             val1 = val1_series.squeeze() if not val1_series.empty else info1.vander_matrix[a, b]
             val2 = val2_series.squeeze() if not val2_series.empty else info2.vander_matrix[a, b]
+            if val1 > info1.vander_matrix[a, b]: 
+                val1 = info1.vander_matrix[a, b]
+            if val2 > info2.vander_matrix[a, b]: 
+                val2 = info2.vander_matrix[a, b]
             new_val = _average_single_bond(val1, val2, fact1, fact2)
         elif calctype == 'angles':
             a, b, c = row['atoms']
