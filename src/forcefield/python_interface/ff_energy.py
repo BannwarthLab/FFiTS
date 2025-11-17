@@ -55,7 +55,6 @@ def energy_ff(xyz_displaced, ff: ForceField):
     # repulsive
     ff.repulsive["current_reference"] = ff.repulsive["atoms"].apply(
         lambda atoms: bondlength(xyz_displaced, atoms[0], atoms[1]))
-    
     ff.repulsive['energy'] = fact_bond * 4 * ff.repulsive['parameter']**2 * (ff.repulsive['reference_value']/ff.repulsive['current_reference'])**12
     energy += ff.repulsive['energy'].sum()
     

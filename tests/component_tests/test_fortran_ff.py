@@ -6,6 +6,7 @@ from src.utils.geometry_calc import bondlength
 from src.io.reader import readin_xyz
 import scipy as sc
 import numpy as np
+from src.ts_guess.parameterize_ff import calculate_hessian_rmsd
 from src.forcefield.python_interface.ff_energy import * 
 import os
 
@@ -51,39 +52,44 @@ def numerical_gradient(geometry_displ: np.ndarray, ff: ForceField, delta: float 
 
     return gradient
 
-def numerical_hessian(energy_func, coords, h=1e-5):
+def numerical_hessian(nat, energy_func, coords, delta: float = 1e-4):
+    n_atom = nat
+    hessian = np.zeros((3 * n_atom, 3 * n_atom), dtype=float)
 
-    print(coords)
-    x = np.asarray(coords, dtype=float).flatten()
-    print(x)
-    print(x.reshape(7,3).T)
-    n = x.size
-    H = np.zeros((n, n), dtype=float)
-    E0 = energy_func(x.copy())
+    xyz11   = coords.copy()
+    xyz1m1  = coords.copy()
+    xyzm11  = coords.copy()
+    xyzm1m1 = coords.copy()
 
-    # diagonal second derivatives
-    for i in range(n):
-        xf, xb = x.copy(), x.copy()
-        xf[i] += h; xb[i] -= h
-        H[i, i] = (energy_func(xf) + energy_func(xb) - 2.0 * E0) / (h * h)
+    for j in range(3 * n_atom):        
+        for i in range(3 * n_atom):    
+            coordinate1 = j % 3
+            atom1 = j // 3
+            coordinate2 = i % 3
+            atom2 = i // 3
 
-    # mixed second derivatives
-    for i in range(n):
-        for j in range(i+1, n):
-            x_pp = x.copy(); x_pm = x.copy(); x_mp = x.copy(); x_mm = x.copy()
-            x_pp[i] += h; x_pp[j] += h
-            x_pm[i] += h; x_pm[j] -= h
-            x_mp[i] -= h; x_mp[j] += h
-            x_mm[i] -= h; x_mm[j] -= h
-            E_pp = energy_func(x_pp)
-            E_pm = energy_func(x_pm)
-            E_mp = energy_func(x_mp)
-            E_mm = energy_func(x_mm)
-            Hij = (E_pp + E_mm - E_pm - E_mp) / (4.0 * h * h)
-            H[i, j] = Hij
-            H[j, i] = Hij
+            xyz11[coordinate1, atom1]   += delta
+            xyz11[coordinate2, atom2]   += delta
+            xyz1m1[coordinate1, atom1]  += delta
+            xyz1m1[coordinate2, atom2]  -= delta
+            xyzm11[coordinate1, atom1]  -= delta
+            xyzm11[coordinate2, atom2]  += delta
+            xyzm1m1[coordinate1, atom1] -= delta
+            xyzm1m1[coordinate2, atom2] -= delta
 
-    return H
+            energy11   = energy_func(xyz11)
+            energy1m1  = energy_func(xyz1m1)
+            energym11  = energy_func(xyzm11)
+            energym1m1 = energy_func(xyzm1m1)
+
+            hessian[j, i] = (energy11 - energy1m1 - energym11 + energym1m1) / (4.0 * delta**2)
+
+            xyz11[:]   = coords
+            xyz1m1[:]  = coords
+            xyzm11[:]  = coords
+            xyzm1m1[:] = coords
+
+    return hessian
 
 
 
@@ -112,7 +118,6 @@ def test_numerical_gradient():
     _, _, xyz_start, _ = readin_xyz(path2) 
     analytical_gradient = ff.get_gradient(xyz_start)
     num_gradient = numerical_gradient(angstrom2bohr(convert_xyz_to_fortranstyle(ff.nat, xyz_start)), ff)
-
     np.testing.assert_allclose(analytical_gradient, num_gradient, rtol=1e-6)
 
 def test_numerical_hessian():
@@ -123,16 +128,21 @@ def test_numerical_hessian():
     )
     path2 = os.path.join(os.getcwd(), 
         'tests/examples/small_single_molecule',
-        'struc1.xyz'
+        'struc2.xyz'
     )
     ff = ForceField(NAT, path, readff=True, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
     _, _, xyz_start, _ = readin_xyz(path2) 
-    analytical_hessian = ff.get_hessian(xyz_start)
+    xyz = angstrom2bohr(convert_xyz_to_fortranstyle(7, xyz_start))
+    analytical_hessian = ff.get_hessian(xyz)
     # num_hessian = numerical_hessian(angstrom2bohr(convert_xyz_to_fortranstyle(ff.nat, xyz_start)), ff, delta=1e-7)
-    num_hessian = numerical_hessian(ff.get_energy, xyz_start, h=1e-4)
-    # print(num_hessian)
-    # print(analytical_hessian)
-    np.testing.assert_allclose(analytical_hessian, num_hessian, rtol=1e-3)
+    num_hessian = numerical_hessian(7, ff.get_energy, xyz, delta=1e-4)
+    for i in range(21):
+        for j in range(21):
+            print(f'{i}, {j}, {analytical_hessian[i,j]}, {num_hessian[i,j]}')
+    assert calculate_hessian_rmsd(analytical_hessian, num_hessian, 3*ff.nat) < 0.006
+    np.testing.assert_allclose(analytical_hessian, num_hessian,rtol=2, atol=1e-7, verbose=True) # TODO noch nicht so richtig tief ggf noch mal einzelte Teile checken
+    assert False
+    
 
 def test_energy_ff():
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)

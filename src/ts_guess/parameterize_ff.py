@@ -225,7 +225,7 @@ def derivative_c_second_atomwise(nat: int, geometry_ff: np.ndarray, val_ref: flo
     deriv = 0.0
 
     if (atom3 is not None) and (atom4 is not None):
-        fb.get_single_dihedral_hessian(geometry_ff, np.array([atom1, atom2, atom3, atom4]), val_ref, c, hess_ff_single)
+        fb.get_single_dihedral_hessian(geometry_ff, np.array([atom1, atom2, atom3, atom4]), val_ref, c**2, hess_ff_single)
         deriv = get_sum_second_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
         deriv = get_sum_second_c_deriv(c, atom1, atom3, hess_ff, hess_ref, hess_ff_single, deriv)
         deriv = get_sum_second_c_deriv(c, atom1, atom4, hess_ff, hess_ref, hess_ff_single, deriv)
@@ -235,7 +235,7 @@ def derivative_c_second_atomwise(nat: int, geometry_ff: np.ndarray, val_ref: flo
         return deriv * 2.0  # hessian symmetry factor
 
     elif (atom3 is not None) and (atom4 is None):
-        fb.get_single_angle_hessian(geometry_ff, np.array([atom1, atom2, atom3]), val_ref, c, hess_ff_single)
+        fb.get_single_angle_hessian(geometry_ff, np.array([atom1, atom2, atom3]), val_ref, c**2, hess_ff_single)
         deriv = get_sum_second_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
         deriv = get_sum_second_c_deriv(c, atom1, atom3, hess_ff, hess_ref, hess_ff_single, deriv)
         deriv = get_sum_second_c_deriv(c, atom2, atom3, hess_ff, hess_ref, hess_ff_single, deriv)
@@ -243,7 +243,7 @@ def derivative_c_second_atomwise(nat: int, geometry_ff: np.ndarray, val_ref: flo
 
     else:
         # bond case
-        fb.get_single_bond_hessian(geometry_ff, np.array([atom1, atom2]), val_ref, c, hess_ff_single)
+        fb.get_single_bond_hessian(geometry_ff, np.array([atom1, atom2]), val_ref, c**2, hess_ff_single)
         deriv = get_sum_second_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
         return deriv * 2.0
 
@@ -258,7 +258,7 @@ def derivative_c_first_atomwise(nat: int, geometry_ff: np.ndarray, val_ref: floa
     hess_ff_single = np.zeros((3 * nat, 3 * nat), dtype=np.float64, order='F')
     deriv = 0.0
     if (atom3 is not None) and (atom4 is not None):
-        fb.get_single_dihedral_hessian(geometry_ff, np.array([atom1, atom2, atom3, atom4]), val_ref, c, hess_ff_single)
+        fb.get_single_dihedral_hessian(geometry_ff, np.array([atom1, atom2, atom3, atom4]), val_ref, c**2, hess_ff_single)
         deriv = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
         deriv = get_sum_first_c_deriv(c, atom1, atom3, hess_ff, hess_ref, hess_ff_single, deriv)
         deriv = get_sum_first_c_deriv(c, atom1, atom4, hess_ff, hess_ref, hess_ff_single, deriv)
@@ -268,14 +268,14 @@ def derivative_c_first_atomwise(nat: int, geometry_ff: np.ndarray, val_ref: floa
         return deriv
 
     elif (atom3 is not None) and (atom4 is None):
-        fb.get_single_angle_hessian(geometry_ff, np.array([atom1, atom2, atom3]), val_ref, c, hess_ff_single)
+        fb.get_single_angle_hessian(geometry_ff, np.array([atom1, atom2, atom3]), val_ref, c**2, hess_ff_single)
         deriv = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
         deriv = get_sum_first_c_deriv(c, atom1, atom3, hess_ff, hess_ref, hess_ff_single, deriv)
         deriv = get_sum_first_c_deriv(c, atom2, atom3, hess_ff, hess_ref, hess_ff_single, deriv)
         return deriv
 
     else:
-        fb.get_single_bond_hessian(geometry_ff, [atom1, atom2], val_ref, c, hess_ff_single)
+        fb.get_single_bond_hessian(geometry_ff, [atom1, atom2], val_ref, c**2, hess_ff_single)
         deriv = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
         return deriv
 
@@ -290,7 +290,9 @@ def get_sum_first_c_deriv(c: float, atom1: int, atom2: int,
     sl_i = _atom_slice(atom1)
     sl_j = _atom_slice(atom2)
     block_diff = hess_ff[sl_i, sl_j] - hess_ref[sl_i, sl_j]
+    # print(block_diff)
     block_single = hess_ff_single[sl_i, sl_j]
+    print(hess_ff_single[sl_i, sl_j])
     # element-wise sum
     acc += np.sum((block_diff * 4.0 * block_single) / c)
     return acc
@@ -320,7 +322,7 @@ def repulsive_derivative_c_first_atomwise(nat: int, geometry_ff: np.ndarray, sig
     
     hess_ff_single = np.zeros((3 * nat, 3 * nat), dtype=np.float64, order='F')
 
-    fb.get_single_repulsive_hessian(geometry_ff, np.array([atom1, atom2]), c, sigma, hess_ff_single)
+    fb.get_single_repulsive_hessian(geometry_ff, np.array([atom1, atom2]), c**2, sigma, hess_ff_single)
     deriv = 0.0
     deriv = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
     return deriv
@@ -332,7 +334,7 @@ def repulsive_derivative_c_second_atomwise(nat: int, geometry_ff: np.ndarray, si
     
     hess_ff_single = np.zeros((3 * nat, 3 * nat), dtype=np.float64, order='F')
 
-    fb.get_single_repulsive_hessian(geometry_ff, np.array([atom1, atom2]), c, sigma, hess_ff_single)
+    fb.get_single_repulsive_hessian(geometry_ff, np.array([atom1, atom2]), c**2, sigma, hess_ff_single)
     deriv = 0.0
     deriv = get_sum_second_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
-    return deriv * 2.0
+    return deriv * 2
