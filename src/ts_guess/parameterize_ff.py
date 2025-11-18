@@ -292,6 +292,7 @@ def get_sum_first_c_deriv(c: float, atom1: int, atom2: int,
     block_diff = hess_ff[sl_i, sl_j] - hess_ref[sl_i, sl_j]
     # print(block_diff)
     block_single = hess_ff_single[sl_i, sl_j]
+    print(f'({atom1}, {atom2})')
     print(hess_ff_single[sl_i, sl_j])
     # element-wise sum
     acc += np.sum((block_diff * 4.0 * block_single) / c)
@@ -321,8 +322,7 @@ def repulsive_derivative_c_first_atomwise(nat: int, geometry_ff: np.ndarray, sig
                                    atom1: int, atom2: int, c: float) -> float:
     
     hess_ff_single = np.zeros((3 * nat, 3 * nat), dtype=np.float64, order='F')
-
-    fb.get_single_repulsive_hessian(geometry_ff, np.array([atom1, atom2]), c**2, sigma, hess_ff_single)
+    fb.get_single_repulsive_hessian(geometry_ff, np.array([atom1, atom2]), sigma, c**2,  hess_ff_single)
     deriv = 0.0
     deriv = get_sum_first_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
     return deriv
@@ -334,7 +334,7 @@ def repulsive_derivative_c_second_atomwise(nat: int, geometry_ff: np.ndarray, si
     
     hess_ff_single = np.zeros((3 * nat, 3 * nat), dtype=np.float64, order='F')
 
-    fb.get_single_repulsive_hessian(geometry_ff, np.array([atom1, atom2]), c**2, sigma, hess_ff_single)
+    fb.get_single_repulsive_hessian(geometry_ff, np.array([atom1, atom2]), sigma, c**2, hess_ff_single)
     deriv = 0.0
     deriv = get_sum_second_c_deriv(c, atom1, atom2, hess_ff, hess_ref, hess_ff_single, deriv)
     return deriv * 2

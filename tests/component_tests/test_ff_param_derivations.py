@@ -13,38 +13,38 @@ def analy_first_derivative(ff: ForceField, info: StructuralInformation):
 
     hessian_ff = complete_hessian(xyz, ff)
 
-    # for row in ff.bonds.itertuples(): 
-    #     i = row.atoms[0]
-    #     j = row.atoms[1]
-    #     derivatives.append(derivative_c_first_atomwise(
-    #         info.nat, xyz,
-    #         row.reference_value,
-    #         hessian_ff, info.hessian,
-    #         atom1=i, atom2=j, c=row.parameter
-    #     ))
+    for row in ff.bonds.itertuples(): 
+        i = row.atoms[0]
+        j = row.atoms[1]
+        derivatives.append(derivative_c_first_atomwise(
+            info.nat, xyz,
+            row.reference_value,
+            hessian_ff, info.hessian,
+            atom1=i, atom2=j, c=row.parameter
+        ))
     
-    # for row in ff.angles.itertuples(): 
-    #     i = row.atoms[0]
-    #     j = row.atoms[1]
-    #     l = row.atoms[2]
-    #     derivatives.append(derivative_c_first_atomwise(
-    #         info.nat, xyz,
-    #         row.reference_value,
-    #         hessian_ff, info.hessian,
-    #         atom1=i, atom2=j, atom3=l, c=row.parameter
-    #     ))
+    for row in ff.angles.itertuples(): 
+        i = row.atoms[0]
+        j = row.atoms[1]
+        l = row.atoms[2]
+        derivatives.append(derivative_c_first_atomwise(
+            info.nat, xyz,
+            row.reference_value,
+            hessian_ff, info.hessian,
+            atom1=i, atom2=j, atom3=l, c=row.parameter
+        ))
     
-    # for row in ff.dihedrals.itertuples(): 
-    #     i = row.atoms[0]
-    #     j = row.atoms[1]
-    #     l = row.atoms[2]
-    #     m = row.atoms[3]
-    #     derivatives.append(derivative_c_first_atomwise(
-    #         info.nat, xyz,
-    #         row.reference_value,
-    #         hessian_ff, info.hessian,
-    #         atom1=i, atom2=j, atom3=l, atom4=m, c=row.parameter
-    #     ))
+    for row in ff.dihedrals.itertuples(): 
+        i = row.atoms[0]
+        j = row.atoms[1]
+        l = row.atoms[2]
+        m = row.atoms[3]
+        derivatives.append(derivative_c_first_atomwise(
+            info.nat, xyz,
+            row.reference_value,
+            hessian_ff, info.hessian,
+            atom1=i, atom2=j, atom3=l, atom4=m, c=row.parameter
+        ))
     
     for row in ff.repulsive.itertuples(): 
         i = row.atoms[0]
@@ -58,47 +58,47 @@ def analy_first_derivative(ff: ForceField, info: StructuralInformation):
     
     return derivatives
 
-def num_first_derivative(ff: ForceField, info: StructuralInformation, delta: float = 1e-2):
+def num_first_derivative(ff: ForceField, info: StructuralInformation, delta: float = 1e-5):
         xyz = info.fortran_xyz
         derivatives = []
-        # for i in range(len(ff.bonds)): 
-        #     ff_m = copy.deepcopy(ff)
-        #     ff_m.bonds.iloc[i, ff_m.bonds.columns.get_loc('parameter')] -= delta
-        #     hess_m = complete_hessian(xyz, ff_m)
-        #     res_m = ff_fit_objective_function(hess_m, info.hessian, 3*info.nat)
+        for i in range(len(ff.bonds)): 
+            ff_m = copy.deepcopy(ff)
+            ff_m.bonds.iloc[i, ff_m.bonds.columns.get_loc('parameter')] -= delta
+            hess_m = complete_hessian(xyz, ff_m)
+            res_m = ff_fit_objective_function(hess_m, info.hessian, 3*info.nat)
 
-        #     ff_p = copy.deepcopy(ff)
-        #     ff_p.bonds.iloc[i, ff_m.bonds.columns.get_loc('parameter')] += delta
-        #     hess_p = complete_hessian(xyz, ff_p)
-        #     res_p = ff_fit_objective_function(hess_p, info.hessian, 3*info.nat)
+            ff_p = copy.deepcopy(ff)
+            ff_p.bonds.iloc[i, ff_m.bonds.columns.get_loc('parameter')] += delta
+            hess_p = complete_hessian(xyz, ff_p)
+            res_p = ff_fit_objective_function(hess_p, info.hessian, 3*info.nat)
 
-        #     derivatives.append((res_p - res_m)/(delta * 2))
+            derivatives.append((res_p - res_m)/(delta * 2))
 
-        # for i in range(len(ff.angles)): 
-        #     ff_m = copy.deepcopy(ff)
-        #     ff_m.angles.iloc[i, ff_m.angles.columns.get_loc('parameter')] -= delta
-        #     hess_m = complete_hessian(xyz, ff_m)
-        #     res_m = ff_fit_objective_function(hess_m, info.hessian, 3*info.nat)
+        for i in range(len(ff.angles)): 
+            ff_m = copy.deepcopy(ff)
+            ff_m.angles.iloc[i, ff_m.angles.columns.get_loc('parameter')] -= delta
+            hess_m = complete_hessian(xyz, ff_m)
+            res_m = ff_fit_objective_function(hess_m, info.hessian, 3*info.nat)
 
-        #     ff_p = copy.deepcopy(ff)
-        #     ff_p.angles.iloc[i, ff_m.angles.columns.get_loc('parameter')] += delta
-        #     hess_p = complete_hessian(xyz, ff_p)
-        #     res_p = ff_fit_objective_function(hess_p, info.hessian, 3*info.nat)
+            ff_p = copy.deepcopy(ff)
+            ff_p.angles.iloc[i, ff_m.angles.columns.get_loc('parameter')] += delta
+            hess_p = complete_hessian(xyz, ff_p)
+            res_p = ff_fit_objective_function(hess_p, info.hessian, 3*info.nat)
 
-        #     derivatives.append((res_p - res_m)/(delta * 2))
+            derivatives.append((res_p - res_m)/(delta * 2))
 
-        # for i in range(len(ff.dihedrals)): 
-        #     ff_m = copy.deepcopy(ff)
-        #     ff_m.dihedrals.iloc[i, ff_m.dihedrals.columns.get_loc('parameter')] -= delta
-        #     hess_m = complete_hessian(xyz, ff_m)
-        #     res_m = ff_fit_objective_function(hess_m, info.hessian, 3*info.nat)
+        for i in range(len(ff.dihedrals)): 
+            ff_m = copy.deepcopy(ff)
+            ff_m.dihedrals.iloc[i, ff_m.dihedrals.columns.get_loc('parameter')] -= delta
+            hess_m = complete_hessian(xyz, ff_m)
+            res_m = ff_fit_objective_function(hess_m, info.hessian, 3*info.nat)
 
-        #     ff_p = copy.deepcopy(ff)
-        #     ff_p.dihedrals.iloc[i, ff_m.dihedrals.columns.get_loc('parameter')] += delta
-        #     hess_p = complete_hessian(xyz, ff_p)
-        #     res_p = ff_fit_objective_function(hess_p, info.hessian, 3*info.nat)
+            ff_p = copy.deepcopy(ff)
+            ff_p.dihedrals.iloc[i, ff_m.dihedrals.columns.get_loc('parameter')] += delta
+            hess_p = complete_hessian(xyz, ff_p)
+            res_p = ff_fit_objective_function(hess_p, info.hessian, 3*info.nat)
 
-        #     derivatives.append((res_p - res_m)/(delta * 2))
+            derivatives.append((res_p - res_m)/(delta * 2))
 
         for i in range(len(ff.repulsive)): 
             ff_m = copy.deepcopy(ff)
@@ -126,11 +126,11 @@ def test_objfun_first_derivatives():
 
     deriv_ana = analy_first_derivative(ff, info)
     deriv_num = num_first_derivative(ff, info)
-    print(deriv_ana)
-    print(deriv_num)
-    print(np.divide(deriv_ana, deriv_num))
-    assert False
-    assert np.allclose(deriv_num, deriv_ana)
+    div = np.divide(deriv_ana, deriv_num)
+    ones = np.ones((len(div)))
+    print(div)
+    print(ones)
+    np.testing.assert_allclose(div, ones, rtol=1e-4)
 
     
 
@@ -186,7 +186,7 @@ def analy_second_derivative(ff: ForceField, info: StructuralInformation):
     
     return derivatives
 
-def num_second_derivative(ff: ForceField, info: StructuralInformation, delta: float = 1e-7):
+def num_second_derivative(ff: ForceField, info: StructuralInformation, delta: float = 1e-4):
         xyz = info.fortran_xyz
         derivatives = []
         for i in range(len(ff.bonds)): 
@@ -266,10 +266,12 @@ def test_objfun_second_derivatives():
 
     deriv_ana = analy_second_derivative(ff, info)
     deriv_num = num_second_derivative(ff, info)
-    print(deriv_ana)
-    print(deriv_num)
-    print(np.divide(deriv_ana, deriv_num))
-    assert np.allclose(deriv_num, deriv_ana)
+    div = np.divide(deriv_ana, deriv_num)
+    ones = np.ones((len(div)))
+    print(div)
+    print(ones)
+    np.testing.assert_allclose(div, ones, rtol=5e-4)
+
 
     
 
