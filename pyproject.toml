@@ -1,0 +1,52 @@
+[build-system]
+requires = [
+  "setuptools>=70",
+  "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ffits"
+version = "0.8.0a"
+description = "Force Field-interpolated Transition States"
+authors = [
+  { name = "Daria Babushkina", email = "babushkina@pc.rwth-aachen.de" },
+  { name = "Christoph Bannwarth", email = "bannwarth@pc.rwth-aachen.de" }
+]
+requires-python = ">=3.9"
+dependencies = [
+  "numpy",
+  "networkx",
+  "pandas"
+]
+
+readme = "README.md"
+license = { text = "MIT" }
+keywords = ["force-field", "transition-state", "chemistry"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+ffits = "ffits.main:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ffits*"]
+
+[tool.setuptools.package-data]
+"ffits" = [
+  "data/*",
+  "data/**/*",
+  "forcefield/fortran/*.so",
+  "forcefield/python_interface/*.py",
+  "forcefield/python_interface/**/*.py"
+]

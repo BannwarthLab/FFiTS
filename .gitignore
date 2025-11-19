@@ -6,3 +6,19 @@ _skbuild
 _manual_test/
 src/forcefield/fortran_energy/.nfs000000000028a8ea00010c34
 **/__pycache__/
+
+# Build and distribution artifacts
+build/
+dist/
+*.egg-info/
+*.egg/
+*.whl
+.eggs/
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store

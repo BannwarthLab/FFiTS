@@ -100,22 +100,22 @@ message(STATUS "F2PY included from: ${F2PY_INCLUDE_DIR}")
 # Create the F2PY module of complete forcefield. Only needed if I want to call all parts with f2py
 set(f2py_module_name "fortran_forcefield")
 set(fortran_src_files
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/fortran_helper.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/a_angle_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/b_angle_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/c_angle_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/a_dihedral_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/b_dihedral_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/c_dihedral_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/d_dihedral_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/inv_rij_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/bond_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/angle_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/dihedral_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/repulsion_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/analytical_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/energy.f90
-    ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/lj_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/fortran_helper.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/a_angle_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/b_angle_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/c_angle_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/a_dihedral_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/b_dihedral_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/c_dihedral_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/d_dihedral_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/inv_rij_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/bond_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/angle_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/dihedral_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/repulsion_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/analytical_derivatives.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/energy.f90
+    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/lj_derivatives.f90
 )
 set(generated_module_file ${f2py_module_name}${PYTHON_EXTENSION_MODULE_SUFFIX})
 
@@ -162,9 +162,9 @@ endif()
 message('hi')
 
 if (SKBUILD)
-  install(TARGETS ${generated_module_file} DESTINATION src/forcefield/fortran/)
+  install(TARGETS ${generated_module_file} DESTINATION ffits/forcefield/fortran/)
 else()
-  install(TARGETS ${generated_module_file} DESTINATION src/forcefield/fortran/)
+  install(TARGETS ${generated_module_file} DESTINATION ffits/forcefield/fortran/)
 endif()
 
 message( "F2PY_INCLUDE_DIR ${F2PY_INCLUDE_DIR}")
@@ -177,6 +177,6 @@ message( "CMAKE_CURRENT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}")
 add_custom_command(TARGET ${generated_module_file} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
         $<TARGET_FILE:${generated_module_file}>
-        ${CMAKE_SOURCE_DIR}/src/forcefield/fortran/
+        ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/
     COMMENT "Copying generated module to source directory"
 )
