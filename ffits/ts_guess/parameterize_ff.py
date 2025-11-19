@@ -292,8 +292,6 @@ def get_sum_first_c_deriv(c: float, atom1: int, atom2: int,
     block_diff = hess_ff[sl_i, sl_j] - hess_ref[sl_i, sl_j]
     # print(block_diff)
     block_single = hess_ff_single[sl_i, sl_j]
-    print(f'({atom1}, {atom2})')
-    print(hess_ff_single[sl_i, sl_j])
     # element-wise sum
     acc += np.sum((block_diff * 4.0 * block_single) / c)
     return acc
