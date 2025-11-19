@@ -4,10 +4,10 @@ import networkx as nx
 import copy
 import numpy as np
 import os
-from src.datatype.structure_data import Structure, ForceField
-from src.datatype.calculation_data import Reaction, CalculationParameters
-from src.calculation import GeometryOptimization, HessianCalculation
-from src.io.exceptions import ConvergenceError
+from ffits.datatype.structure_data import Structure, ForceField
+from ffits.datatype.calculation_data import Reaction, CalculationParameters
+from ffits.calculation import GeometryOptimization, HessianCalculation
+from ffits.io.exceptions import ConvergenceError
 
 
 def get_connecting_pair(reaction: Reaction, struc: Structure, forbidden_pair=[[-1,-1]]):

@@ -1,7 +1,7 @@
-from src.datatype.structure_data import ForceField, StructuralInformation, Structure
-from src.forcefield.python_interface.ff_energy import complete_hessian
-import src.forcefield.python_interface.fortran_bindings as fb
-from src.io.print.details import print_ff_fitting
+from ffits.datatype.structure_data import ForceField, StructuralInformation, Structure
+from ffits.forcefield.python_interface.ff_energy import complete_hessian
+import ffits.forcefield.python_interface.fortran_bindings as fb
+from ffits.io.print.details import print_ff_fitting
 from typing import Optional
 import numpy as np
 import warnings

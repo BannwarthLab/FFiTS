@@ -2,7 +2,7 @@ import os
 import pytest
 import numpy as np
 from tempfile import TemporaryDirectory
-from src.io.reader import read_hessian  # replace with your actual module name
+from ffits.io.reader import read_hessian  # replace with your actual module name
 
 
 def write_file(path: str, content: str):

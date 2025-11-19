@@ -1,12 +1,12 @@
-from src.io.xtb import *
-from src.datatype.calculation_data import *
-from src.datatype.structure_data import *
-from src.external.input_library import *
-from src.io.crest import *
+from ffits.io.xtb import *
+from ffits.datatype.calculation_data import *
+from ffits.datatype.structure_data import *
+from ffits.external.input_library import *
+from ffits.io.crest import *
 import copy
 import shutil
 import os
-from src.io.exceptions import ConvergenceError
+from ffits.io.exceptions import ConvergenceError
 import subprocess
 
 # @dataclass

@@ -1,13 +1,13 @@
-from src.forcefield.python_interface.fortran_bindings import get_single_bond_gradient
-from src.forcefield.python_interface.ff_energy import *
+from ffits.forcefield.python_interface.fortran_bindings import get_single_bond_gradient
+from ffits.forcefield.python_interface.ff_energy import *
 # from tests.component_tests.static_data import XYZ, WBO, ATOM_TYPES
-from src.datatype.structure_data import StructuralInformation, ForceField, angstrom2bohr, convert_xyz_to_fortranstyle
-from src.utils.geometry_calc import bondlength
-from src.io.reader import readin_xyz
+from ffits.datatype.structure_data import StructuralInformation, ForceField, angstrom2bohr, convert_xyz_to_fortranstyle
+from ffits.utils.geometry_calc import bondlength
+from ffits.io.reader import readin_xyz
 import scipy as sc
 import numpy as np
-from src.ts_guess.parameterize_ff import calculate_hessian_rmsd
-from src.forcefield.python_interface.ff_energy import * 
+from ffits.ts_guess.parameterize_ff import calculate_hessian_rmsd
+from ffits.forcefield.python_interface.ff_energy import * 
 import os
 
 XYZ = np.array([

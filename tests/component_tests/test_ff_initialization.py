@@ -1,11 +1,11 @@
-from src.datatype.structure_data import ForceField, StructuralInformation, get_vander_matrix, angstrom2bohr
+from ffits.datatype.structure_data import ForceField, StructuralInformation, get_vander_matrix, angstrom2bohr
 import numpy as np
 import pandas as pd
 import os
 import tempfile
-from src.ts_guess.define_starting_parameters import fill_ff
-from src.utils.geometry_calc import angle, bondlength, dihedral_angle
-from src.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
+from ffits.ts_guess.define_starting_parameters import fill_ff
+from ffits.utils.geometry_calc import angle, bondlength, dihedral_angle
+from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
 # to not rely on other functions, data is given statically
 
 XYZ = np.array([

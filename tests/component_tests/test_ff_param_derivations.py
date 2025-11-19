@@ -1,10 +1,10 @@
 import numpy as np
 import os
-from src.datatype.structure_data import ForceField, StructuralInformation, Structure, StructurePath
-from src.ts_guess.parameterize_ff import derivative_c_first_atomwise, derivative_c_second_atomwise, ff_fit_objective_function, repulsive_derivative_c_first_atomwise, fit_ff_to_hessian, repulsive_derivative_c_second_atomwise
-from src.forcefield.python_interface.ff_energy import complete_hessian
-from src.io.reader import readin_xyz, read_wbo_file, read_hessian
-from src.ts_guess.define_starting_parameters import fill_ff
+from ffits.datatype.structure_data import ForceField, StructuralInformation, Structure, StructurePath
+from ffits.ts_guess.parameterize_ff import derivative_c_first_atomwise, derivative_c_second_atomwise, ff_fit_objective_function, repulsive_derivative_c_first_atomwise, fit_ff_to_hessian, repulsive_derivative_c_second_atomwise
+from ffits.forcefield.python_interface.ff_energy import complete_hessian
+from ffits.io.reader import readin_xyz, read_wbo_file, read_hessian
+from ffits.ts_guess.define_starting_parameters import fill_ff
 import copy
 
 def analy_first_derivative(ff: ForceField, info: StructuralInformation):

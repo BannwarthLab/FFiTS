@@ -2,15 +2,15 @@
 import time
 import os
 import copy
-from src.datatype.calculation_data import CalculationData
-from src.io.toml_parser import load_calculation_data, overwrite_from_commandline
-from src.io.commandline_parser import parse_args
-from src.setup.structure_preparatation import get_preliminary_information
-from src.ts_guess.define_starting_parameters import fill_ff
-from src.ts_guess.parameterize_ff import fit_ff_to_hessian
-from src.ts_guess.guess import get_ts_guess
-from src.io.print.config import print_calculation_data, print_setup
-from src.io.print.header import print_program_header
+from ffits.datatype.calculation_data import CalculationData
+from ffits.io.toml_parser import load_calculation_data, overwrite_from_commandline
+from ffits.io.commandline_parser import parse_args
+from ffits.setup.structure_preparatation import get_preliminary_information
+from ffits.ts_guess.define_starting_parameters import fill_ff
+from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
+from ffits.ts_guess.guess import get_ts_guess
+from ffits.io.print.config import print_calculation_data, print_setup
+from ffits.io.print.header import print_program_header
 
 def main():
     # read commandline arguments and get calculation data from given config file

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from src.utils.geometry_calc import bondlength, angle, dihedral_angle
-from src.datatype.structure_data import ForceField, StructuralInformation
+from ffits.utils.geometry_calc import bondlength, angle, dihedral_angle
+from ffits.datatype.structure_data import ForceField, StructuralInformation
 
 def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation) -> ForceField:
 

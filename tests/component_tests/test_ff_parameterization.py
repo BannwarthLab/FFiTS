@@ -3,11 +3,11 @@ import numpy as np
 import copy
 import pandas as pd
 import pytest
-from src.datatype.structure_data import ForceField, StructuralInformation
-from src.ts_guess.parameterize_ff import update_bond, update_angle, update_dihedral, update_repulsive, fit_ff_to_hessian
-from src.io.reader import read_hessian
-from src.forcefield.python_interface.ff_energy import complete_hessian
-from src.ts_guess.define_starting_parameters import fill_ff
+from ffits.datatype.structure_data import ForceField, StructuralInformation
+from ffits.ts_guess.parameterize_ff import update_bond, update_angle, update_dihedral, update_repulsive, fit_ff_to_hessian
+from ffits.io.reader import read_hessian
+from ffits.forcefield.python_interface.ff_energy import complete_hessian
+from ffits.ts_guess.define_starting_parameters import fill_ff
 
 XYZ = np.array([
     [-2.33287094, 3.31176687, 0.20110100],

@@ -2,7 +2,7 @@
 
 import subprocess
 import os
-from src.io.reader import read_wbo_file, read_hessian, readin_xyz
+from ffits.io.reader import read_wbo_file, read_hessian, readin_xyz
 import subprocess
 import tempfile
 import shutil

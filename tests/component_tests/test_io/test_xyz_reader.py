@@ -2,7 +2,7 @@ import os
 import pytest
 import numpy as np
 from tempfile import TemporaryDirectory
-from src.io.reader import readin_xyz  
+from ffits.io.reader import readin_xyz  
 
 
 def write_file(path: str, content: str):

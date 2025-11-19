@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from src.datatype.structure_data import ForceField, StructuralInformation
+from ffits.datatype.structure_data import ForceField, StructuralInformation
 from molbar.utils.optimizer import optimize_geometry 
 from molbar.utils.debug_optimizer import optimize_fragment_scipy_debug
 from scipy.optimize import minimize

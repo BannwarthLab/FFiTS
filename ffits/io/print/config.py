@@ -1,5 +1,5 @@
 
-from src.datatype.calculation_data import CalculationData, PathData, CalculationOptions
+from ffits.datatype.calculation_data import CalculationData, PathData, CalculationOptions
 
 def print_setup():
     

@@ -1,13 +1,13 @@
 #!/bin/python
 
 
-from src.external.input_generator_crest import HeaderBlock 
-from src.external.input_generator_crest import CalcBlock 
-from src.external.input_generator_crest import SsffBlock
-from src.external.input_generator_crest import TsffBlock 
-from src.external.input_generator_crest import generate_input
-from src.datatype.calculation_data import CalculationParameters
-from src.datatype.structure_data import *
+from ffits.external.input_generator_crest import HeaderBlock 
+from ffits.external.input_generator_crest import CalcBlock 
+from ffits.external.input_generator_crest import SsffBlock
+from ffits.external.input_generator_crest import TsffBlock 
+from ffits.external.input_generator_crest import generate_input
+from ffits.datatype.calculation_data import CalculationParameters
+from ffits.datatype.structure_data import *
 
 
 """

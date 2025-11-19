@@ -1,7 +1,7 @@
 import os
 import pytest
 from tempfile import TemporaryDirectory
-from src.io.reader import read_wbo_file  # <-- replace with your actual module name
+from ffits.io.reader import read_wbo_file  # <-- replace with your actual module name
 
 
 def write_file(path: str, content: str):

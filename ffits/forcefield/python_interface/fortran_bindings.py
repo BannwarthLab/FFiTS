@@ -1,4 +1,4 @@
-import src.forcefield.fortran.fortran_forcefield as fortran_ff
+import ffits.forcefield.fortran.fortran_forcefield as fortran_ff
 import numpy as np
 
 def get_single_bond_gradient(xyz: np.ndarray, bond_atoms: np.ndarray, bondlength: float, c: float, gradient: np.ndarray):    

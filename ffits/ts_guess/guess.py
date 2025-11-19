@@ -3,11 +3,11 @@ import pandas as pd
 import numpy as np
 import sys
 from collections.abc import Callable
-from src.ts_guess.mix_ff import create_tsff
-from src.datatype.structure_data import ForceField, StructuralInformation, Structure
-from src.external.molbar_optimizer import anc_optimizer, scipy_optimizer, failed_anc_opt, write_last_valid_xyz
-from src.forcefield.python_interface.ff_energy import energy_ff, complete_gradient,complete_hessian
-from src.io.print.details import print_optimization_end, print_optimization_start
+from ffits.ts_guess.mix_ff import create_tsff
+from ffits.datatype.structure_data import ForceField, StructuralInformation, Structure
+from ffits.external.molbar_optimizer import anc_optimizer, scipy_optimizer, failed_anc_opt, write_last_valid_xyz
+from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient,complete_hessian
+from ffits.io.print.details import print_optimization_end, print_optimization_start
 
 
 def get_ts_guess(struc1: Structure, struc2: Structure, optimizer: Callable = anc_optimizer):

@@ -1,5 +1,5 @@
 import os
-from src.datatype.calculation_data import CalculationData
+from ffits.datatype.calculation_data import CalculationData
 import argparse
 
 # For Python 3.11+, tomllib is built in.

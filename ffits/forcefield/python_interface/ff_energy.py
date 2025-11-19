@@ -1,6 +1,6 @@
-import src.forcefield.python_interface.fortran_bindings as fb
-from src.datatype.structure_data import ForceField
-from src.utils.geometry_calc import angle, bondlength, dihedral_angle
+import ffits.forcefield.python_interface.fortran_bindings as fb
+from ffits.datatype.structure_data import ForceField
+from ffits.utils.geometry_calc import angle, bondlength, dihedral_angle
 import numpy as np
 
 def energy_ff(xyz_displaced, ff: ForceField):

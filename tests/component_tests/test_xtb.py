@@ -5,8 +5,8 @@ import tempfile
 import os
 import numpy as np
 
-import src.io.reader as reader
-from src.external.xtb import Xtb  # adjust import to your actual module path
+import ffits.io.reader as reader
+from ffits.external.xtb import Xtb  # adjust import to your actual module path
 
 
 # ---------------------------------------------------------------------

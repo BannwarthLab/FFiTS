@@ -1,9 +1,9 @@
-from src.io.toml_parser import load_config, load_calculation_data
+from ffits.io.toml_parser import load_config, load_calculation_data
 import pytest
 import os
-from src.datatype.calculation_data import CalculationData
-from src.io.toml_parser import load_calculation_data, overwrite_from_commandline
-from src.io.commandline_parser import parse_args
+from ffits.datatype.calculation_data import CalculationData
+from ffits.io.toml_parser import load_calculation_data, overwrite_from_commandline
+from ffits.io.commandline_parser import parse_args
 
 def test_load_config_no_second_file():
     config = load_config()
