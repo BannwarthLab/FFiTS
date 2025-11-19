@@ -137,7 +137,7 @@ def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0
 
     # ============================================================
     # Assemble ForceField DataFrames
-    # ===== =======================================================
+    # =============================================================
 
     ff.bonds = pd.DataFrame({
         "type": "bonds",
