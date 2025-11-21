@@ -85,6 +85,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     cd.reactant_calc.ff_parameterization = react_calc.get("ff_parameterization", cd.reactant_calc.ff_parameterization)
     cd.reactant_calc.test_parameterization = react_calc.get("test_parameterization", cd.reactant_calc.test_parameterization)
     cd.reactant_calc.ff_parameterization_maxiteration = react_calc.get("ff_parameterization_maxiteration", cd.reactant_calc.ff_parameterization_maxiteration)
+    cd.reactant_calc.ff_parameter_repulsion = react_calc.get("ff_parameter_repulsion", cd.reactant_calc.ff_parameter_repulsion)
     cd.reactant_calc.ff_parameterization_stepsize = react_calc.get("ff_parameterization_stepsize", cd.reactant_calc.ff_parameterization_stepsize)
     cd.reactant_calc.ff_parameterization_threshold = react_calc.get("ff_parameterization_threshold", cd.reactant_calc.ff_parameterization_threshold)
     cd.reactant_calc.ff_parameterization_constant_repulsion = react_calc.get("ff_parameterization_constant_repulsion", cd.reactant_calc.ff_parameterization_constant_repulsion)
