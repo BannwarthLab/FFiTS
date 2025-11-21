@@ -6,7 +6,7 @@ import numpy as np
 import os
 from ffits.datatype.structure_data import Structure, ForceField
 from ffits.datatype.calculation_data import Reaction, CalculationParameters
-from ffits.calculation import GeometryOptimization, HessianCalculation
+from ffits.external.calculation import GeometryOptimization, HessianCalculation
 from ffits.io.exceptions import ConvergenceError
 
 
