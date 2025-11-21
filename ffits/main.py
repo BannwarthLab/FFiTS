@@ -25,10 +25,10 @@ def main():
     print_header_setup()
     struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path, 1, calcdata.system.charge, calcdata.system.multiplicity)
     struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system.charge, calcdata.system.multiplicity)
-    #    TODO add repulsive start and bo threshold in calcdata
+    #    TODO add bo threshold in calcdata
     
-    fill_ff(struc1.ff, struc1.info, repulsive_start_external=calcdata.reactant_calc.ff_parameter_repulsion) 
-    fill_ff(struc2.ff, struc2.info, repulsive_start_external=calcdata.product_calc.ff_parameter_repulsion) 
+    fill_ff(struc1.ff, struc1.info, repulsive_start=calcdata.reactant_calc.ff_parameter_repulsion) 
+    fill_ff(struc2.ff, struc2.info, repulsive_start=calcdata.product_calc.ff_parameter_repulsion) 
 
     fit_ff_to_hessian(struc1,
                       maxit=calcdata.reactant_calc.ff_parameterization_maxiteration,
