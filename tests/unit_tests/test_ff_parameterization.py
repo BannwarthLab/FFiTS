@@ -3,7 +3,7 @@ import numpy as np
 import copy
 import pandas as pd
 import pytest
-from ffits.datatype.structure_data import ForceField, StructuralInformation
+from ffits.datatype.structure_data import ForceField, StructuralInformation, StructurePath, Structure
 from ffits.ts_guess.parameterize_ff import update_bond, update_angle, update_dihedral, update_repulsive, fit_ff_to_hessian
 from ffits.io.reader import read_hessian
 from ffits.forcefield.python_interface.ff_energy import complete_hessian
@@ -47,7 +47,7 @@ def test_fit_ff_to_hessian():
     ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
     fill_ff(ff, info)
 
-    result = fit_ff_to_hessian(ff, info, stepsize=0.05, threshold=0.001)
+    result = fit_ff_to_hessian(Structure(StructurePath('d','d','d','d'),ff, info), stepsize=0.05, threshold=0.001)
     print(ff.bonds)
     print(ff.angles)
     print(ff.dihedrals)
@@ -69,7 +69,7 @@ def test_fit_ff_to_hessian_with_repulsion():
     ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
     fill_ff(ff, info)
 
-    result = fit_ff_to_hessian(ff, info, constant_repulsion=False, stepsize=0.05, threshold=0.001)
+    result = fit_ff_to_hessian(Structure(StructurePath('d','d','d','d'),ff, info), constant_repulsion=False, stepsize=0.05, threshold=0.001)
     print(ff.bonds)
     print(ff.angles)
     print(ff.dihedrals)

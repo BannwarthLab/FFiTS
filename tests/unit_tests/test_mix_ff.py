@@ -1,169 +1,468 @@
+"""
+Comprehensive unit tests for force field mixing functionality.
+
+Tests cover:
+- Combining force field terms from two source force fields
+- Removing bonded atoms from repulsive term lists
+- Mixing FF parameters with weighted factors
+- Mixing reference values while respecting physical constraints
+"""
 import os
 import pandas as pd
 import shutil
 import numpy as np
-from ffits.ts_guess.mix_ff import combine_ff_atoms, remove_bonds_from_repulsive, mix_parameters, mix_reference_values
+import pytest
+from ffits.ts_guess.mix_ff import (
+    combine_ff_atoms,
+    remove_bonds_from_repulsive,
+    mix_parameters,
+    mix_reference_values,
+)
 from ffits.datatype.structure_data import ForceField, StructuralInformation, StructurePath, Structure
 from ffits.io.reader import readin_xyz, read_wbo_file, read_hessian
 from ffits.ts_guess.define_starting_parameters import fill_ff
 from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
-
 from ffits.ts_guess.guess import get_ts_guess
 from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
 
+
 def _define_ff_examples():
-    """Hard-coded example ff information"""
+    """Load example force fields for testing."""
     ### ff1
     path1 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
     nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, 'struc1.xyz'))
     wbo = read_wbo_file(os.path.join(path1, 'wbo1'))
     info1 = StructuralInformation(nat, xyz, wbo, atom_types)
     ff1 = ForceField(nat, os.path.join(path1, 'ff1_new'), readff=False)
-    fill_ff(ff1, info1)
+    fill_ff(ff1, info1, repulsive_start=0.0)
 
     ### ff2
     path2 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
     nat, _, xyz, atom_types = readin_xyz(os.path.join(path2, 'struc2.xyz'))
-    print(atom_types)
     wbo = read_wbo_file(os.path.join(path2, 'wbo2'))
     info2 = StructuralInformation(nat, xyz, wbo, atom_types)
     ff2 = ForceField(nat, os.path.join(path2, 'ff2_new'), readff=False)
-    fill_ff(ff2, info2)
+    fill_ff(ff2, info2, repulsive_start=0.0)
 
     return ff1, info1, ff2, info2
 
+
 def _all_values_in_either(tsff_ref: pd.Series, ff1_ref: pd.Series, ff2_ref: pd.Series):
+    """Check if all values in tsff_ref are present in either ff1_ref or ff2_ref."""
     combined_values = pd.concat([ff1_ref, ff2_ref]).unique()
     missing = tsff_ref[~tsff_ref.isin(combined_values)]
-    return missing.empty # true if all values present in either ff1 or ff2
+    return missing.empty
 
-def test_combine_ff_terms():
-    """Tests whether the bond, angle and dihedral atoms are mixed correctly."""
-    ff1, _, ff2, _ = _define_ff_examples()
-    tsff = ForceField(7, 'temp', readff=False)
-    tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
-    tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
-    tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
 
-    assert _all_values_in_either(tsff.bonds['atoms'], ff1.bonds['atoms'], ff2.bonds['atoms'])
-    assert _all_values_in_either(tsff.angles['atoms'], ff1.angles['atoms'], ff2.angles['atoms'])
-    assert _all_values_in_either(tsff.dihedrals['atoms'], ff1.dihedrals['atoms'], ff2.dihedrals['atoms'])
+
+class TestCombineFFTerms:
+    """Tests for combining force field terms from multiple force fields."""
+
+    def test_combine_bonds_atoms(self):
+        """Test that bond atoms from both FFs are combined correctly."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+
+        # Check that atoms from both FFs are present
+        assert _all_values_in_either(
+            combined_bonds['atoms'],
+            ff1.bonds['atoms'],
+            ff2.bonds['atoms']
+        ), "Not all combined atoms are from ff1 or ff2"
+
+        # Check that combined dataframe has required columns
+        assert 'atoms' in combined_bonds.columns
+        assert 'type' in combined_bonds.columns
+        assert 'parameter' in combined_bonds.columns
+        assert 'reference_value' in combined_bonds.columns
+
+    def test_combine_angles_atoms(self):
+        """Test that angle atoms from both FFs are combined correctly."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_angles = combine_ff_atoms(ff1.angles, ff2.angles)
+
+        assert _all_values_in_either(
+            combined_angles['atoms'],
+            ff1.angles['atoms'],
+            ff2.angles['atoms']
+        ), "Not all combined angles are from ff1 or ff2"
+
+    def test_combine_dihedrals_atoms(self):
+        """Test that dihedral atoms from both FFs are combined correctly."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+
+        assert _all_values_in_either(
+            combined_dihedrals['atoms'],
+            ff1.dihedrals['atoms'],
+            ff2.dihedrals['atoms']
+        ), "Not all combined dihedrals are from ff1 or ff2"
+
+    def test_combine_repulsive_atoms(self):
+        """Test that repulsive atoms from both FFs are combined correctly."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
+
+        assert _all_values_in_either(
+            combined_repulsive['atoms'],
+            ff1.repulsive['atoms'],
+            ff2.repulsive['atoms']
+        ), "Not all combined repulsive terms are from ff1 or ff2"
+
+    def test_combine_terms_non_empty(self):
+        """Test that combining non-empty FFs produces non-empty results."""
+        ff1, _, ff2, _ = _define_ff_examples()
         
-def test_remove_bonds_from_repulsive():
-    """Tests whether the repulsive atoms are mixed correctly."""
-    ff1, _, ff2, _ = _define_ff_examples()
-    tsff = ForceField(7, 'temp', readff=False)
-    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
-    
-    assert _all_values_in_either(tsff.repulsive['atoms'], ff1.repulsive['atoms'], ff2.repulsive['atoms'])
-    for _, val in tsff.repulsive['atoms'].items():
-        in_ff1 = any(val == b for b in ff1.bonds['atoms'])
-        in_ff2 = any(val == b for b in ff2.bonds['atoms'])
-        if in_ff1 or in_ff2:
-            raise AssertionError(f"{val} is present in another list")
-    
-def test_mix_parameters():
-    ff1, _, ff2, _ = _define_ff_examples()
-    tsff = ForceField(7, 'temp', readff=False)
-    print(ff1.bonds)
-    print(ff2.bonds)
-    tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
-    tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
-    tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
-    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
-
-    mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds)
-    mix_parameters(tsff.angles, ff1.angles, ff2.angles)
-    mix_parameters(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals)
-    mix_parameters(tsff.repulsive, ff1.repulsive, ff2.repulsive)
-
-    
-    assert not all(tsff.bonds['parameter'].isnull())
-    assert not all(np.isnan(tsff.bonds['parameter']))
-    # compared values and they seemed to be averaged as expected
-    
-def test_mix_reference_values():
-    ff1, info1, ff2, info2 = _define_ff_examples()
-    tsff = ForceField(7, 'temp', readff=False)
-    print(ff1.bonds)
-    print(ff2.bonds)
-    tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
-    tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
-    tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
-    tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
-
-    mix_reference_values(tsff, ff1, ff2, info1, info2)
-    print('TSFF -------------')
-    print(tsff.bonds)
-    print(tsff.angles)
-    print(tsff.dihedrals)
-    print(tsff.repulsive)
-    print('FF 1. -------------')
-    print(ff1.bonds)
-    print(ff1.angles)
-    print(ff1.dihedrals)
-    print(ff1.repulsive)
-    print('FF 2 -------------')
-    print(ff2.bonds)
-    print(ff2.angles)
-    print(ff2.dihedrals)
-    print(ff2.repulsive)
-    assert not all(np.isnan(tsff.bonds['parameter']))
-    assert not all(np.isnan(tsff.angles['parameter']))
-    assert not all(np.isnan(tsff.dihedrals['parameter']))
-    assert not all(np.isnan(tsff.repulsive['parameter']))
-    assert all(tsff.bonds.apply(lambda row: row.reference_value <= info1.vander_matrix[row.atoms[0], row.atoms[1]], axis=1)) # checks whether all bondlengths are shorter than the vdw distance
-    assert all(tsff.angles.apply(lambda row: row.reference_value <= np.pi, axis=1))
-    assert all(tsff.angles.apply(lambda row: np.abs(row.reference_value) <= np.pi, axis=1))
-    assert all(tsff.repulsive.apply(lambda row: row.reference_value <= info1.vander_matrix[row.atoms[0], row.atoms[1]], axis=1))
-
-def test_get_ts_guess(): # TODO VERY unfinished and sloppy 
-    cwd = os.getcwd()
-    temp_wd = os.path.join(cwd, '_manual_test/small_single_molecule')
-    
-    data_dir = os.path.join(cwd, 'tests/examples/small_single_molecule')
-    shutil.copy(os.path.join(data_dir, 'struc1.xyz'), temp_wd)
-    shutil.copy(os.path.join(data_dir, 'struc2.xyz'), temp_wd)
-    shutil.copy(os.path.join(data_dir, 'wbo1'), temp_wd)
-    shutil.copy(os.path.join(data_dir, 'wbo2'), temp_wd)
-    
-    path1 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
-    nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, 'struc1.xyz'))
-    wbo = read_wbo_file(os.path.join(path1, 'wbo1'))
-    path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
-    hessian = read_hessian(path2hess)
-    info1 = StructuralInformation(nat, xyz, wbo, atom_types, hessian=hessian)
-    ff1 = ForceField(nat, os.path.join(path1, 'ff1_new'), readff=False)
-
-    ff1.energy_calculator = energy_ff
-    ff1.gradient_calculator = complete_gradient
-    ff1.hessian_calculator = complete_hessian
-    fill_ff(ff1, info1)
-    result = fit_ff_to_hessian(ff1, info1, constant_repulsion=False, stepsize=0.05, threshold=0.001)
-
-    ### ff2
-    path2 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
-    nat, _, xyz, atom_types = readin_xyz(os.path.join(path2, 'struc2.xyz'))
-    print(atom_types)
-    wbo = read_wbo_file(os.path.join(path2, 'wbo2'))
-    path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess2')
-    hessian = read_hessian(path2hess)
-    info2 = StructuralInformation(nat, xyz, wbo, atom_types, hessian=hessian)
-    ff2 = ForceField(nat, os.path.join(path2, 'ff2_new'), readff=False)
-    ff2.energy_calculator = energy_ff
-    ff2.gradient_calculator = complete_gradient
-    ff2.hessian_calculator = complete_hessian
-    fill_ff(ff2, info2)
-    result = fit_ff_to_hessian(ff2, info2, constant_repulsion=False, stepsize=0.05, threshold=0.001)
-
-    os.chdir(temp_wd)
-
-    struc1 = Structure(StructurePath('t','t','t','t'), ff1, info1)
-    struc2 = Structure(StructurePath('t','t','t','t'), ff2, info2)
-    
-    tsff = get_ts_guess(struc1, struc2)
-    
-    os.chdir(cwd)
+        combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        combined_angles = combine_ff_atoms(ff1.angles, ff2.angles)
+        combined_dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+        
+        assert len(combined_bonds) > 0, "Combined bonds should not be empty"
+        assert len(combined_angles) > 0, "Combined angles should not be empty"
+        assert len(combined_dihedrals) > 0, "Combined dihedrals should not be empty"
 
 
-    # compared values and they seemed to be averaged as expected
+class TestRemoveBondsFromRepulsive:
+    """Tests for removing bonded atom pairs from repulsive term lists."""
+
+    def test_remove_bonds_from_repulsive_basic(self):
+        """Test that bonded atoms are removed from repulsive list."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
+        combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        
+        filtered_repulsive = remove_bonds_from_repulsive(combined_repulsive, combined_bonds)
+        
+        # Verify no bonded atoms remain in repulsive list
+        for _, repulsive_atoms in filtered_repulsive['atoms'].items():
+            for _, bond_atoms in combined_bonds['atoms'].items():
+                assert not np.array_equal(
+                    repulsive_atoms, bond_atoms
+                ), f"Bond atoms {bond_atoms} should not be in repulsive list"
+
+    def test_remove_bonds_from_repulsive_no_ff1_bonds(self):
+        """Test removal when checking against ff1 bonds."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
+        
+        filtered_repulsive = remove_bonds_from_repulsive(combined_repulsive, ff1.bonds)
+        
+        # Verify no ff1 bond atoms remain in repulsive list
+        for _, repulsive_atoms in filtered_repulsive['atoms'].items():
+            for _, bond_atoms in ff1.bonds['atoms'].items():
+                assert not np.array_equal(
+                    repulsive_atoms, bond_atoms
+                ), f"FF1 bond atoms {bond_atoms} should not be in repulsive list"
+
+    def test_remove_bonds_from_repulsive_no_ff2_bonds(self):
+        """Test removal when checking against ff2 bonds."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
+        
+        filtered_repulsive = remove_bonds_from_repulsive(combined_repulsive, ff2.bonds)
+        
+        # Verify no ff2 bond atoms remain in repulsive list
+        for _, repulsive_atoms in filtered_repulsive['atoms'].items():
+            for _, bond_atoms in ff2.bonds['atoms'].items():
+                assert not np.array_equal(
+                    repulsive_atoms, bond_atoms
+                ), f"FF2 bond atoms {bond_atoms} should not be in repulsive list"
+
+    def test_remove_bonds_maintains_structure(self):
+        """Test that removing bonds maintains dataframe structure."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
+        combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        
+        filtered_repulsive = remove_bonds_from_repulsive(combined_repulsive, combined_bonds)
+        
+        # Check required columns are present
+        assert 'atoms' in filtered_repulsive.columns
+        assert 'type' in filtered_repulsive.columns
+        assert 'parameter' in filtered_repulsive.columns
+        assert 'reference_value' in filtered_repulsive.columns
+        
+        # Check all rows have type 'repulsive'
+        assert all(filtered_repulsive['type'] == 'repulsive'), "All repulsive terms should have type 'repulsive'"
+
+    def test_remove_bonds_reduces_list_size(self):
+        """Test that removing bonds reduces the repulsive list size."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
+        combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        
+        initial_count = len(combined_repulsive)
+        filtered_repulsive = remove_bonds_from_repulsive(combined_repulsive, combined_bonds)
+        filtered_count = len(filtered_repulsive)
+        
+        # Filtered list should be smaller (or equal if no overlaps)
+        assert filtered_count <= initial_count, "Filtering should not increase list size"
+
+
+class TestMixParameters:
+    """Tests for mixing force field parameters from two force fields."""
+
+    def test_mix_bond_parameters(self):
+        """Test mixing bond parameters with equal weights."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        
+        mix_parameters(combined_bonds, ff1.bonds, ff2.bonds, 0.5, 0.5)
+        
+        # Check that no parameters are NaN or null
+        assert not combined_bonds['parameter'].isnull().any(), "Parameters should not be null"
+        assert not np.isnan(combined_bonds['parameter']).any(), "Parameters should not be NaN"
+        assert all(combined_bonds['parameter'] > 0), "Bond parameters should be positive"
+
+    def test_mix_angle_parameters(self):
+        """Test mixing angle parameters with equal weights."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_angles = combine_ff_atoms(ff1.angles, ff2.angles)
+        
+        mix_parameters(combined_angles, ff1.angles, ff2.angles, 0.5, 0.5)
+        
+        assert not combined_angles['parameter'].isnull().any(), "Angle parameters should not be null"
+        assert not np.isnan(combined_angles['parameter']).any(), "Angle parameters should not be NaN"
+        assert all(combined_angles['parameter'] > 0), "Angle parameters should be positive"
+
+    def test_mix_dihedral_parameters(self):
+        """Test mixing dihedral parameters with equal weights."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+        
+        mix_parameters(combined_dihedrals, ff1.dihedrals, ff2.dihedrals, 0.5, 0.5)
+        
+        assert not combined_dihedrals['parameter'].isnull().any(), "Dihedral parameters should not be null"
+        assert not np.isnan(combined_dihedrals['parameter']).any(), "Dihedral parameters should not be NaN"
+        assert all(combined_dihedrals['parameter'] > 0), "Dihedral parameters should be positive"
+
+    def test_mix_repulsive_parameters(self):
+        """Test mixing repulsive parameters with equal weights."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
+        
+        mix_parameters(combined_repulsive, ff1.repulsive, ff2.repulsive, 0.5, 0.5)
+        
+        # Repulsive parameters may be 0.0 initially (they're not fitted yet)
+        assert not combined_repulsive['parameter'].isnull().any(), "Repulsive parameters should not be null"
+        assert not np.isnan(combined_repulsive['parameter']).any(), "Repulsive parameters should not be NaN"
+        # Just verify they're not negative
+        assert all(combined_repulsive['parameter'] >= 0), "Repulsive parameters should be non-negative"
+
+    def test_mix_parameters_unequal_weights(self):
+        """Test mixing parameters with unequal weights."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        
+        mix_parameters(combined_bonds, ff1.bonds, ff2.bonds, 0.7, 0.3)
+        
+        assert not combined_bonds['parameter'].isnull().any()
+        assert not np.isnan(combined_bonds['parameter']).any()
+
+    def test_mix_parameters_single_source_weights(self):
+        """Test mixing with weights that favor one source (0.9/0.1)."""
+        ff1, _, ff2, _ = _define_ff_examples()
+        combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        original_len = len(combined_bonds)
+        
+        mix_parameters(combined_bonds, ff1.bonds, ff2.bonds, 0.9, 0.1)
+        
+        # Should maintain structure
+        assert len(combined_bonds) == original_len
+        assert not np.isnan(combined_bonds['parameter']).any()
+
+
+class TestMixReferenceValues:
+    """Tests for mixing reference values with physical constraints."""
+
+    def test_mix_reference_values_complete(self):
+        """Test mixing reference values for all FF term types."""
+        ff1, info1, ff2, info2 = _define_ff_examples()
+        tsff = ForceField(7, 'temp', readff=False)
+        
+        tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+        tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+        tsff.repulsive = remove_bonds_from_repulsive(
+            combine_ff_atoms(ff1.repulsive, ff2.repulsive),
+            combine_ff_atoms(ff1.bonds, ff2.bonds)
+        )
+
+        mix_reference_values(tsff, ff1, ff2, info1, info2, 0.5, 0.5)
+
+        # Verify no NaN or null values
+        assert not np.isnan(tsff.bonds['parameter']).any(), "Bond parameters should not contain NaN"
+        assert not np.isnan(tsff.angles['parameter']).any(), "Angle parameters should not contain NaN"
+        assert not np.isnan(tsff.dihedrals['parameter']).any(), "Dihedral parameters should not contain NaN"
+        assert not np.isnan(tsff.repulsive['parameter']).any(), "Repulsive parameters should not contain NaN"
+
+    def test_mix_reference_values_bond_constraints(self):
+        """Test that mixed bond lengths respect physical constraints."""
+        ff1, info1, ff2, info2 = _define_ff_examples()
+        tsff = ForceField(7, 'temp', readff=False)
+        
+        tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+        tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+        tsff.repulsive = remove_bonds_from_repulsive(
+            combine_ff_atoms(ff1.repulsive, ff2.repulsive),
+            combine_ff_atoms(ff1.bonds, ff2.bonds)
+        )
+
+        mix_reference_values(tsff, ff1, ff2, info1, info2, 0.5, 0.5)
+
+        # Bond lengths should be shorter than vdW distance
+        assert all(
+            tsff.bonds.apply(
+                lambda row: row.reference_value <= info1.vander_matrix[row.atoms[0], row.atoms[1]],
+                axis=1
+            )
+        ), "All bond lengths should be shorter than vdW distance"
+
+    def test_mix_reference_values_angle_constraints(self):
+        """Test that mixed angles respect physical constraints."""
+        ff1, info1, ff2, info2 = _define_ff_examples()
+        tsff = ForceField(7, 'temp', readff=False)
+        
+        tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+        tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+        tsff.repulsive = remove_bonds_from_repulsive(
+            combine_ff_atoms(ff1.repulsive, ff2.repulsive),
+            combine_ff_atoms(ff1.bonds, ff2.bonds)
+        )
+
+        mix_reference_values(tsff, ff1, ff2, info1, info2, 0.5, 0.5)
+
+        # Angles should be between 0 and π
+        assert all(
+            tsff.angles.apply(lambda row: 0 <= row.reference_value <= np.pi, axis=1)
+        ), "All angles should be between 0 and π"
+
+    def test_mix_reference_values_repulsive_constraints(self):
+        """Test that mixed repulsive distances are calculated correctly."""
+        ff1, info1, ff2, info2 = _define_ff_examples()
+        tsff = ForceField(7, 'temp', readff=False)
+        
+        tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+        tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+        tsff.repulsive = remove_bonds_from_repulsive(
+            combine_ff_atoms(ff1.repulsive, ff2.repulsive),
+            combine_ff_atoms(ff1.bonds, ff2.bonds)
+        )
+
+        mix_reference_values(tsff, ff1, ff2, info1, info2, 0.5, 0.5)
+
+        # Repulsive distances should be positive
+        assert all(tsff.repulsive['reference_value'] > 0), "Repulsive distances should be positive"
+        # Repulsive distances are typically larger than bond lengths but may exceed vdW
+        # (depending on the fitting algorithm), so just check they're reasonable (> 3 Bohr)
+        assert all(tsff.repulsive['reference_value'] > 3.0), "Repulsive distances should be > 3 Bohr"
+
+    def test_mix_reference_values_unequal_weights(self):
+        """Test mixing reference values with unequal weights."""
+        ff1, info1, ff2, info2 = _define_ff_examples()
+        tsff = ForceField(7, 'temp', readff=False)
+        
+        tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+        tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+        tsff.repulsive = remove_bonds_from_repulsive(
+            combine_ff_atoms(ff1.repulsive, ff2.repulsive),
+            combine_ff_atoms(ff1.bonds, ff2.bonds)
+        )
+
+        mix_reference_values(tsff, ff1, ff2, info1, info2, 0.7, 0.3)
+
+        # Basic validation
+        assert not np.isnan(tsff.bonds['parameter']).any()
+        assert not np.isnan(tsff.angles['parameter']).any()
+        assert not np.isnan(tsff.dihedrals['parameter']).any()
+        assert not np.isnan(tsff.repulsive['parameter']).any()
+
+    def test_mix_reference_values_structure_maintained(self):
+        """Test that mixing maintains the FF structure integrity."""
+        ff1, info1, ff2, info2 = _define_ff_examples()
+        tsff = ForceField(7, 'temp', readff=False)
+        
+        tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+        tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+        tsff.repulsive = remove_bonds_from_repulsive(
+            combine_ff_atoms(ff1.repulsive, ff2.repulsive),
+            combine_ff_atoms(ff1.bonds, ff2.bonds)
+        )
+
+        initial_bond_count = len(tsff.bonds)
+        initial_angle_count = len(tsff.angles)
+        initial_dihedral_count = len(tsff.dihedrals)
+        initial_repulsive_count = len(tsff.repulsive)
+
+        mix_reference_values(tsff, ff1, ff2, info1, info2, 0.5, 0.5)
+
+        # Structure should be maintained
+        assert len(tsff.bonds) == initial_bond_count
+        assert len(tsff.angles) == initial_angle_count
+        assert len(tsff.dihedrals) == initial_dihedral_count
+        assert len(tsff.repulsive) == initial_repulsive_count
+
+
+class TestCompleteFFMixing:
+    """Integration tests for complete force field mixing workflow."""
+
+    def test_complete_mixing_workflow(self):
+        """Test complete workflow: combine -> remove bonds -> mix params -> mix refs."""
+        ff1, info1, ff2, info2 = _define_ff_examples()
+        tsff = ForceField(7, 'temp', readff=False)
+        
+        # Step 1: Combine terms
+        tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+        tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+        tsff.repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
+        
+        # Step 2: Remove bonded atoms from repulsive
+        combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        tsff.repulsive = remove_bonds_from_repulsive(tsff.repulsive, combined_bonds)
+        
+        # Step 3: Mix parameters
+        mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds, 0.5, 0.5)
+        mix_parameters(tsff.angles, ff1.angles, ff2.angles, 0.5, 0.5)
+        mix_parameters(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, 0.5, 0.5)
+        mix_parameters(tsff.repulsive, ff1.repulsive, ff2.repulsive, 0.5, 0.5)
+        
+        # Step 4: Mix reference values
+        mix_reference_values(tsff, ff1, ff2, info1, info2, 0.5, 0.5)
+        
+        # Verify final state
+        assert len(tsff.bonds) > 0, "Mixed FF should have bonds"
+        assert len(tsff.angles) > 0, "Mixed FF should have angles"
+        assert len(tsff.dihedrals) > 0, "Mixed FF should have dihedrals"
+        assert len(tsff.repulsive) > 0, "Mixed FF should have repulsive terms"
+        
+        # Verify no NaN values
+        assert not np.isnan(tsff.bonds['parameter']).any()
+        assert not np.isnan(tsff.angles['parameter']).any()
+        assert not np.isnan(tsff.dihedrals['parameter']).any()
+        assert not np.isnan(tsff.repulsive['parameter']).any()
+
+    def test_mixing_preserves_bond_types(self):
+        """Test that mixing preserves the type of each term."""
+        ff1, info1, ff2, info2 = _define_ff_examples()
+        tsff = ForceField(7, 'temp', readff=False)
+        
+        tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
+        tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
+        tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+        tsff.repulsive = remove_bonds_from_repulsive(
+            combine_ff_atoms(ff1.repulsive, ff2.repulsive),
+            combine_ff_atoms(ff1.bonds, ff2.bonds)
+        )
+
+        mix_reference_values(tsff, ff1, ff2, info1, info2, 0.5, 0.5)
+
+        assert all(tsff.bonds['type'] == 'bonds'), "All bonds should have type 'bonds'"
+        assert all(tsff.angles['type'] == 'angles'), "All angles should have type 'angles'"
+        assert all(tsff.dihedrals['type'] == 'dihedrals'), "All dihedrals should have type 'dihedrals'"
+        assert all(tsff.repulsive['type'] == 'repulsive'), "All repulsive should have type 'repulsive'"

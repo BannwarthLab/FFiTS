@@ -57,14 +57,14 @@ def test_check_xtb_loaded_success(dummy_xyz):
     xtb = Xtb(chrg=0, mult=1, xtb_path="xtb")
     assert xtb.xtb_path == "xtb"
     assert xtb.chrg == 0
-    assert xtb.mult == 1
+    assert xtb.uhf == 0
 
 
 def test_get_command(dummy_xyz):
     xtb = Xtb(chrg=1, mult=2)
     cmd = xtb._get_command(dummy_xyz, "--opt")
     assert "--opt" in cmd
-    assert "--uhf 2" in cmd
+    assert "--uhf 1" in cmd
     assert "--chrg 1" in cmd
 
 
