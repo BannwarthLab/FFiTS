@@ -84,6 +84,10 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     cd.reactant_calc.hessian_calc = react_calc.get("hessian_calc", cd.reactant_calc.hessian_calc)
     cd.reactant_calc.ff_parameterization = react_calc.get("ff_parameterization", cd.reactant_calc.ff_parameterization)
     cd.reactant_calc.test_parameterization = react_calc.get("test_parameterization", cd.reactant_calc.test_parameterization)
+    cd.reactant_calc.ff_parameterization_maxiteration = react_calc.get("ff_parameterization_maxiteration", cd.reactant_calc.ff_parameterization_maxiteration)
+    cd.reactant_calc.ff_parameterization_stepsize = react_calc.get("ff_parameterization_stepsize", cd.reactant_calc.ff_parameterization_stepsize)
+    cd.reactant_calc.ff_parameterization_threshold = react_calc.get("ff_parameterization_threshold", cd.reactant_calc.ff_parameterization_threshold)
+    cd.reactant_calc.ff_parameterization_constant_repulsion = react_calc.get("ff_parameterization_constant_repulsion", cd.reactant_calc.ff_parameterization_constant_repulsion)
 
     # =======================
     # Product
@@ -104,6 +108,10 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     cd.product_calc.hessian_calc = prod_calc.get("hessian_calc", cd.product_calc.hessian_calc)
     cd.product_calc.ff_parameterization = prod_calc.get("ff_parameterization", cd.product_calc.ff_parameterization)
     cd.product_calc.test_parameterization = prod_calc.get("test_parameterization", cd.product_calc.test_parameterization)
+    cd.product_calc.ff_parameterization_maxiteration = prod_calc.get("ff_parameterization_maxiteration", cd.product_calc.ff_parameterization_maxiteration)
+    cd.product_calc.ff_parameterization_stepsize = prod_calc.get("ff_parameterization_stepsize", cd.product_calc.ff_parameterization_stepsize)
+    cd.product_calc.ff_parameterization_threshold = prod_calc.get("ff_parameterization_threshold", cd.product_calc.ff_parameterization_threshold)
+    cd.product_calc.ff_parameterization_constant_repulsion = prod_calc.get("ff_parameterization_constant_repulsion", cd.product_calc.ff_parameterization_constant_repulsion)
 
     # =======================
     # TS Guess calculation
@@ -123,6 +131,10 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
         "energy_threshold_two_optimizations", cd.ts_calc.energy_threshold_two_optimizations
     )
     cd.ts_calc.perform_two_optimizations = ts_calc.get("perform_two_optimizations", cd.ts_calc.perform_two_optimizations)
+    cd.ts_calc.molbar_optimizer_e_tol = ts_calc.get("molbar_optimizer_e_tol", cd.ts_calc.molbar_optimizer_e_tol)
+    cd.ts_calc.molbar_optimizer_g_tol = ts_calc.get("molbar_optimizer_g_tol", cd.ts_calc.molbar_optimizer_g_tol)
+    cd.ts_calc.molbar_optimizer_x_tol = ts_calc.get("molbar_optimizer_x_tol", cd.ts_calc.molbar_optimizer_x_tol)
+    cd.ts_calc.molbar_optimizer_max_micro_steps = ts_calc.get("molbar_optimizer_max_micro_steps", cd.ts_calc.molbar_optimizer_max_micro_steps)
 
     # =======================
     # Postprocessing

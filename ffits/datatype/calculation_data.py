@@ -20,6 +20,13 @@ class CalculationOptions:
     hessian_calc: bool = True
     ff_parameterization: bool = False
     test_parameterization: bool = False
+    ff_parameterization_maxiteration: int = 1000
+    ff_parameterization_stepsize: float = 0.15
+    ff_parameterization_threshold: float = 0.0005 
+    # the lower the threshold, the more prone to overfitting the model becomes, the higher the less precize it gets
+    ff_parameterization_constant_repulsion: bool = True
+    # If set to true, the ff parameters of the repulsive terms are not changed during fitting
+
 
 
 @dataclass
@@ -29,6 +36,11 @@ class TSCalculationOptions:
     optimizer: str = "molbar-optimizer"
     energy_threshold_two_optimizations: float = 0.15
     perform_two_optimizations: bool = False
+    molbar_optimizer_e_tol: float = 1e-8
+    molbar_optimizer_g_tol: float = 1e-2
+    molbar_optimizer_x_tol: float = 1e-3
+    molbar_optimizer_max_micro_steps: int = 1
+    energy_threshold_two_optimizations: float = 0.15
 
 
 @dataclass

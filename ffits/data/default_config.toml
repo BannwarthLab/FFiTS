@@ -24,6 +24,15 @@ ff_parameterization = false
 test_parameterization = false
 # If true, the parameterized FF is used to optimize the input structure and
 # the RMSD between reactant and FF-optimized reactant is printed.
+#
+## some parameters for the FF parameterization
+ff_parameterization_maxiteration = 1000
+ff_parameterization_stepsize = 0.15
+ff_parameterization_threshold = 0.0005 
+# the lower the threshold, the more prone to overfitting the model becomes, the higher the less precize it gets
+ff_parameterization_constant_repulsion = true
+# If set to true, the ff parameters of the repulsive terms are not changed during fitting
+
 
 # ============================
 # Product configuration
@@ -41,6 +50,14 @@ wbo_calc = true
 hessian_calc = true
 ff_parameterization = false
 test_parameterization = false
+## some parameters for the FF parameterization
+ff_parameterization_maxiteration = 1000
+ff_parameterization_stepsize = 0.15
+ff_parameterization_threshold = 0.0005 
+# the lower the threshold, the more prone to overfitting the model becomes, the higher the less precize it gets
+ff_parameterization_constant_repulsion = true
+# If set to true, the ff parameters of the repulsive terms are not changed during fitting
+
 
 # ============================
 # TS Guess calculation
@@ -54,6 +71,10 @@ factor_reactant = 0.5
 factor_product = 0.5
 optimizer = "molbar-optimizer"
 # Other option: "scipy-optimizer" 
+molbar_optimizer_e_tol = 1e-8
+molbar_optimizer_g_tol = 1e-2
+molbar_optimizer_x_tol = 1e-3
+molbar_optimizer_max_micro_steps = 1
 energy_threshold_two_optimizations = 0.15
 # the energy threshold for to repeat the optimization from the product if started at reactant was to high. 
 perform_two_optimizations = false 
