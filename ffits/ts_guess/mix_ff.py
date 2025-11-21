@@ -3,7 +3,7 @@ import pandas as pd
 from ffits.utils.geometry_calc import bondlength, angle, dihedral_angle
 from ffits.datatype.structure_data import ForceField, StructuralInformation
 
-def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation) -> ForceField:
+def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation, fact1: float, fact2: float) -> ForceField:
 
     # TODO add parameter transfer for averaging and add that in printout too
     tsff = ForceField(ff1.nat, 'tsff', readff=False)
@@ -12,12 +12,12 @@ def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, 
     tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
     tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
 
-    mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds)
-    mix_parameters(tsff.angles, ff1.angles, ff2.angles)
-    mix_parameters(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals)
-    mix_parameters(tsff.repulsive, ff1.repulsive, ff2.repulsive)
+    mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds, fact1, fact2)
+    mix_parameters(tsff.angles, ff1.angles, ff2.angles, fact1, fact2)
+    mix_parameters(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, fact1, fact2)
+    mix_parameters(tsff.repulsive, ff1.repulsive, ff2.repulsive, fact1, fact2)
     
-    mix_reference_values(tsff, ff1, ff2, info1, info2)
+    mix_reference_values(tsff, ff1, ff2, info1, info2, fact1, fact2)
     print(f'[INFO] TS FF generation finished.')
     tsff.write()
     return tsff
@@ -105,7 +105,7 @@ def remove_bonds_from_repulsive(df_source: pd.DataFrame, df_reference: pd.DataFr
     return df_source[mask].copy().reset_index(drop=True)
 
 
-def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame):
+def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, fact1: float, fact2: float):
     """
     Fill tsff_df['parameter'] with the average of corresponding parameters
     found in ff1_df and ff2_df where 'atoms' entries match.
@@ -119,7 +119,7 @@ def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
         c1 = c1_series.squeeze() if not c1_series.empty else c2_series.squeeze() # TODO ggf hier das es dann der wert einzeln ist anstatt mit 0 geaveraged
         c2 = c2_series.squeeze() if not c2_series.empty else c1_series.squeeze()
 
-        new_val = _average_c(c1, c2)
+        new_val = _average_c(c1, c2, fact1, fact2)
         new_params.append((idx, new_val))
 
     for idx, val in new_params:
@@ -127,20 +127,20 @@ def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
 
 
 
-def _average_c(c1: float, c2: float, c1_factor: float = 0.5, c2_factor: float = 0.5) -> float:
+def _average_c(c1: float, c2: float, c1_factor: float, c2_factor: float) -> float:
     if round(c1_factor + c2_factor, 2) != 1.00:
         raise ValueError(f'c1 factor {c1_factor} + c2 factor {c2_factor} needs to be 1')
     return round(c1 * c1_factor + c2 * c2_factor, 8)
 
 
-def mix_reference_values(tsff: ForceField, ff1: ForceField, ff2: ForceField, info1: StructuralInformation, info2: StructuralInformation):
+def mix_reference_values(tsff: ForceField, ff1: ForceField, ff2: ForceField, info1: StructuralInformation, info2: StructuralInformation, fact1: float, fact2: float):
 
-    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info1, info2, 'bonds')
-    _mix_reference(tsff.angles, ff1.angles, ff2.angles, info1, info2, 'angles')
-    _mix_reference(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, info1, info2, 'dihedrals')
-    _mix_reference(tsff.repulsive, ff1.repulsive, ff2.repulsive, info1, info2, 'repulsive')
+    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info1, info2, 'bonds', fact1, fact2)
+    _mix_reference(tsff.angles, ff1.angles, ff2.angles, info1, info2, 'angles', fact1, fact2)
+    _mix_reference(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, info1, info2, 'dihedrals', fact1, fact2)
+    _mix_reference(tsff.repulsive, ff1.repulsive, ff2.repulsive, info1, info2, 'repulsive', fact1, fact2)
 
-def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info1: StructuralInformation, info2: StructuralInformation, calctype: str, fact1: float = 0.5, fact2: float = 0.5):
+def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info1: StructuralInformation, info2: StructuralInformation, calctype: str, fact1: float, fact2: float):
     new_params = []
     for idx, row in tsff_df.iterrows():
         val1_series = ff1_df.loc[ff1_df['atoms'].apply(lambda x: x == row['atoms']), 'reference_value']
@@ -181,12 +181,12 @@ def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
         tsff_df.at[idx, 'reference_value'] = val
 
 
-def _average_single_bond(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
+def _average_single_bond(val1, val2, fact1: float, fact2: float):
     return round(val1 * fact1 + val2 * fact2, 8)
-def _average_single_angle(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
+def _average_single_angle(val1, val2, fact1: float, fact2: float):
     return round(val1 * fact1 + val2 * fact2, 8)
 
-def _average_single_dihedral(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
+def _average_single_dihedral(val1, val2, fact1: float, fact2: float):
     pi = np.pi
     
     temp1 = abs(val1 - val2)
@@ -212,5 +212,5 @@ def _average_single_dihedral(val1, val2, fact1: float = 0.5, fact2: float = 0.5)
 
     return round(phi_avg, 8)
 
-def _average_single_repulsive(val1, val2, fact1: float = 0.5, fact2: float = 0.5):
+def _average_single_repulsive(val1, val2, fact1: float, fact2: float):
     return round(val1 * fact1 + val2 * fact2, 8)

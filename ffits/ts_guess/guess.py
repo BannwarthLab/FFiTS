@@ -15,13 +15,21 @@ def get_ts_guess(struc1: Structure, struc2: Structure, calcoptions: TSCalculatio
     trajectory_filename: str = 'trajectory.xyz'
     final_geometry_filename: str = 'optimized.xyz'
     print_optimization_start()
-    tsff = create_tsff(struc1.ff, struc1.info, struc2.ff, struc2.info)
+
+    #### ------- Create TS Force Field by mixing reactant and product FFs ------- ####
+    tsff = create_tsff(ff1 = struc1.ff, 
+                       info1 = struc1.info, 
+                       ff2 = struc2.ff, 
+                       info2 = struc2.info, 
+                       fact1 = calcoptions.factor_reactant, 
+                       fact2 = calcoptions.factor_product)
     tsff.energy_calculator = energy_ff
     tsff.gradient_calculator = complete_gradient
     tsff.hessian_calculator = complete_hessian
     
     # TODO add time and also return it
 
+    #### ------- TS Optimization with generated FF as potential ------- ####
     opt_stdout_filename = 'ts_optimization.out'
     orig_stdout = sys.stdout
     f = open(opt_stdout_filename, 'w')
@@ -40,6 +48,7 @@ def get_ts_guess(struc1: Structure, struc2: Structure, calcoptions: TSCalculatio
             )
         sys.stdout = orig_stdout
         f.close()
+
     elif optimizer == scipy_optimizer:
         result = scipy_optimizer(struc1.info.xyz, tsff, struc1)
         sys.stdout = orig_stdout
