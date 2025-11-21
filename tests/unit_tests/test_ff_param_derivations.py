@@ -261,7 +261,6 @@ def test_objfun_second_derivatives():
     info = StructuralInformation(nat, xyz, wbo, atom_types, read_hessian(os.path.join(path1, 'hess1')))
     ff = ForceField(nat, os.path.join(path1, 'ff1_new'), readff=False,hessian_calculator=complete_hessian)
     fill_ff(ff, info)
-    #fit_ff_to_hessian(Structure(StructurePath('d','d','d','d'),ff, info))
     print(info.fortran_xyz)
 
     deriv_ana = analy_second_derivative(ff, info)
