@@ -44,7 +44,7 @@ The second part is necessary as the molbar optimizer is used, which is in the de
 
 ## Configuration file
 
-Configuration is done via a TOML file (default: `config.toml`). The configuration file is optional; if not provided, default values will be used.
+Configuration is done via a TOML file (default: `config.toml`). The configuration file is optional; if not provided, default values will be used. Please keep in mind, that while a lot of (optimization) parameters can be changed, not all of them should be changed recklessly.
 
 ### Using a configuration file
 
@@ -95,6 +95,7 @@ multiplicity = 1
 | `ff_parameterization_stepsize` | float | 0.15 | Step size for FF parameterization optimization |
 | `ff_parameterization_threshold` | float | 0.0005 | Convergence threshold for FF parameterization (lower = more prone to overfitting) |
 | `ff_parameterization_constant_repulsion` | bool | true | If true, do not change repulsive term parameters during fitting |
+| `ff_parameter_repulsion` | float | 0.01 | The FF parameter for repulsive all repulsive terms |
 
 **Example:**
 ```toml

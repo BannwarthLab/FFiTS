@@ -1,7 +1,7 @@
 
 from ffits.datatype.calculation_data import CalculationData, PathData, CalculationOptions
 
-def print_setup():
+def print_header_setup():
     
     print("\n" +"\n" + "=" * 60)
     print(" SETUP ")

@@ -20,6 +20,7 @@ class CalculationOptions:
     hessian_calc: bool = True
     ff_parameterization: bool = False
     test_parameterization: bool = False
+    ff_parameter_repulsion: float = 0.01
     ff_parameterization_maxiteration: int = 1000
     ff_parameterization_stepsize: float = 0.15
     ff_parameterization_threshold: float = 0.0005 

@@ -27,13 +27,13 @@ def canonical_dihedral(i, j, l, m):
 #     get_c_tables(ff, info)
 #     return ff
 
-def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0.0, repulsive_start_ex: float = None):
+def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0.0, repulsive_start_external: float = None):
     """
     Build and fill ForceField DataFrames (bonds, angles, dihedrals, repulsive)
     with 0-based atom indices, reference values, and parameters.
 
     """
-    repulsive_start = 0.01 if repulsive_start_ex is None else repulsive_start_ex
+    repulsive_start = 0.01 if repulsive_start_external is None else repulsive_start_external
     n = ff.nat
     wbo = info.bo_matrix
 
