@@ -48,7 +48,7 @@ Pass a configuration file using the `--input` flag:
 ```bash
 ffits reactant.xyz product.xyz --input config.toml
 ```
-
+Similarly charge and multiplicity can be changed via command line `--charge` and `--multiplicity`.
 ### Configuration Parameters
 
 #### **System Settings** (`[system]`)
