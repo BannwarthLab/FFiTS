@@ -57,6 +57,7 @@ def get_ts_guess(struc1: Structure, struc2: Structure, calcoptions: TSCalculatio
     else:
         raise Exception(f'Optimizer {optimizer} not recognized.')
 
+
     if failed_anc_opt(opt_stdout_filename): 
         print(f'[WARNING] The last valid structure of the optimization trajectory is written to {final_geometry_filename}.')
         write_last_valid_xyz()
