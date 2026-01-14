@@ -41,7 +41,7 @@ def main():
                       threshold=calcdata.product_calc.ff_parameterization_threshold,
                       constant_repulsion=calcdata.product_calc.ff_parameterization_constant_repulsion)
 
-    get_ts_guess(struc1, struc2, calcoptions=calcdata.ts_calc, optimizer=calcdata.ts_calc.optimizer)
+    get_ts_guess(struc1, struc2, calcoptions=calcdata.ts_calc)#, optimizer=calcdata.ts_calc.optimizer)
 
 
 

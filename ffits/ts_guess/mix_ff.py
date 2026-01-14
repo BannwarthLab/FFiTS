@@ -205,6 +205,8 @@ def _average_single_dihedral(val1, val2, fact1: float, fact2: float):
 
     phi_avg = np.arctan2(sinphi0, cosphi0)
 
+    # phi_avg = 0.5* (val1 + val2 + 2.0 * pi)  # Alternative: simple average
+
     if phi_avg > pi:
         phi_avg -= 2.0 * pi
     elif phi_avg <= -pi:
