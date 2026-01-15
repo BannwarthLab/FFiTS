@@ -11,6 +11,7 @@ from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
 from ffits.ts_guess.guess import get_ts_guess
 from ffits.io.print.config import print_calculation_data, print_header_setup
 from ffits.io.print.header import print_program_header
+from ffits.io.file_writer import write_hessian_to_orcahessfile
 
 def main():
     # read commandline arguments and get calculation data from given config file
@@ -41,7 +42,8 @@ def main():
                       threshold=calcdata.product_calc.ff_parameterization_threshold,
                       constant_repulsion=calcdata.product_calc.ff_parameterization_constant_repulsion)
 
-    get_ts_guess(struc1, struc2, calcoptions=calcdata.ts_calc)#, optimizer=calcdata.ts_calc.optimizer)
+    tsff, converged, energy, final_geom = get_ts_guess(struc1, struc2, calcoptions=calcdata.ts_calc)#, optimizer=calcdata.ts_calc.optimizer)
+
 
 
 
