@@ -9,7 +9,8 @@ from ffits.datatype.calculation_data import CalculationData, TSCalculationOption
 from ffits.external.molbar_optimizer import anc_optimizer, scipy_optimizer, failed_anc_opt, write_last_valid_xyz
 from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient,complete_hessian
 from ffits.io.print.details import print_optimization_end, print_optimization_start
-
+from ffits.io.file_writer import write_hessian_to_orcahessfile
+from ffits.data.elements import element_to_weight
 
 def get_ts_guess(struc1: Structure, struc2: Structure, calcoptions: TSCalculationOptions, optimizer: Callable = anc_optimizer):
     trajectory_filename: str = 'trajectory.xyz'
@@ -65,4 +66,15 @@ def get_ts_guess(struc1: Structure, struc2: Structure, calcoptions: TSCalculatio
     
     print_optimization_end(converged, energy, final_geom, steps, time, message)
 
-    return converged, energy, final_geom 
+    final_hessian = tsff.get_hessian(final_geom)
+    geom_with_masses = []
+    for i in range(tsff.nat):
+        element = struc1.info.atom_types[i]
+        mass = element_to_weight(element)
+        x, y, z = final_geom[i]
+        geom_with_masses.append(f"{element} {mass} {x} {y} {z}")
+
+
+    write_hessian_to_orcahessfile(tsff.nat, final_hessian, geom_with_masses, "ts.hess")
+
+    return tsff, converged, energy, final_geom 
