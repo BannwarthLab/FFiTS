@@ -174,7 +174,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
 
     return cd
 
-def overwrite_from_commandline(calcdata: CalculationData, multiplicity: int | None, charge: int | None):
+def overwrite_from_commandline(calcdata: CalculationData, multiplicity: int | None, charge: int | None, structures: list | None = None):
     '''overwrites information in CalculationData object if given via commandline'''
     if multiplicity:
         if multiplicity != calcdata.system.multiplicity:
@@ -184,3 +184,13 @@ def overwrite_from_commandline(calcdata: CalculationData, multiplicity: int | No
         if charge != calcdata.system.charge:
             print(f"[INFO] Charge of {calcdata.system.charge} is being overwritten by {charge}.")
         calcdata.system.charge = charge
+    if structures:
+        if len(structures) >= 1:
+            calcdata.reactant_path.xyz_filename = structures[0]
+            print(f"[INFO] Reactant XYZ file set to: {structures[0]}")
+        if len(structures) >= 2:
+            calcdata.product_path.xyz_filename = structures[1]
+            print(f"[INFO] Product XYZ file set to: {structures[1]}")
+        if len(structures) > 2:
+            print(f"[WARNING] More than 2 structure files provided. Only the first two will be used.")
+
