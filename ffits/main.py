@@ -19,7 +19,9 @@ def run_optimizer_mode(args):
     Usage: ffits structure.xyz --opt ff
     """
     print("[INFO] Running in optimizer mode")
-    # Optimizer functionality to be implemented
+    # read in FF and define energy terms
+    # run optimizer as with calculation of TS guess through TS FF 
+    # return structure 
 
 
 def run_normal_mode(args):
