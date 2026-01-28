@@ -13,15 +13,22 @@ from ffits.io.print.config import print_calculation_data, print_header_setup
 from ffits.io.print.header import print_program_header
 from ffits.io.file_writer import write_hessian_to_orcahessfile
 
-def main():
-    # read commandline arguments and get calculation data from given config file
-    
-    print_program_header()
-    args = parse_args()
+def run_optimizer_mode(args):
+    """
+    Run in optimizer mode: takes a single structure and optimizes it using the specified optimizer.
+    Usage: ffits structure.xyz --opt ff
+    """
+    print("[INFO] Running in optimizer mode")
+    # Optimizer functionality to be implemented
+
+
+def run_normal_mode(args):
+    """
+    Normal mode: processes reactant and product structures through the TS guess pipeline.
+    """
     calcdata = load_calculation_data(args["input_file"])
     overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"])
     print_calculation_data(calcdata)
-
 
     print_header_setup()
     struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path, 1, calcdata.system.charge, calcdata.system.multiplicity)
@@ -43,6 +50,16 @@ def main():
                       constant_repulsion=calcdata.product_calc.ff_parameterization_constant_repulsion)
 
     tsff, converged, energy, final_geom = get_ts_guess(struc1, struc2, calcoptions=calcdata.ts_calc)#, optimizer=calcdata.ts_calc.optimizer)
+
+
+def main():
+    print_program_header()
+    args = parse_args()
+    
+    if args["opt_mode"] is not None:
+        run_optimizer_mode(args)
+    else:
+        run_normal_mode(args)
 
 
 
