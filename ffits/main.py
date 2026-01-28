@@ -29,7 +29,7 @@ def run_normal_mode(args):
     Normal mode: processes reactant and product structures through the TS guess pipeline.
     """
     calcdata = load_calculation_data(args["input_file"])
-    overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"])
+    overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"], args["structures"])
     print_calculation_data(calcdata)
 
     print_header_setup()
