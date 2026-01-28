@@ -11,7 +11,9 @@ from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
 from ffits.ts_guess.guess import get_ts_guess
 from ffits.io.print.config import print_calculation_data, print_header_setup
 from ffits.io.print.header import print_program_header
+from ffits.forcefield.python_interface.optimization import optimize_xyz_with_forcefield
 from ffits.io.file_writer import write_hessian_to_orcahessfile
+from ffits.external.molbar_optimizer import anc_optimizer
 
 def run_optimizer_mode(args):
     """
@@ -19,6 +21,12 @@ def run_optimizer_mode(args):
     Usage: ffits structure.xyz --opt ff
     """
     print("[INFO] Running in optimizer mode")
+
+    calcdata: CalculationData = load_calculation_data(args["input_file"])
+    overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"], args["structures"])
+    # print_calculation_data(calcdata)
+
+    optimize_xyz_with_forcefield(args['structures'][0], args['optff'], calcdata.ts_calc, anc_optimizer)
     # read in FF and define energy terms
     # run optimizer as with calculation of TS guess through TS FF 
     # return structure 
@@ -58,7 +66,7 @@ def main():
     print_program_header()
     args = parse_args()
     
-    if args["opt_mode"] is not None:
+    if args["optff"] is not None:
         run_optimizer_mode(args)
     else:
         run_normal_mode(args)

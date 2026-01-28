@@ -39,7 +39,7 @@ def parse_args():
         "--opt",
         type=str,
         default=None,
-        help="Run optimizer mode with specified optimizer type (e.g., 'ff')."
+        help="Run optimizer mode with specified csv ff."
     )
 
     args = parser.parse_args() 
@@ -65,6 +65,6 @@ def parse_args():
         "input_file": args.input,
         "charge": args.charge,
         "multiplicity": args.multiplicity,
-        "opt_mode": args.opt
+        "optff": args.opt
     }
 
