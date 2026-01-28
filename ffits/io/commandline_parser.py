@@ -34,7 +34,13 @@ def parse_args():
         type=int,
         default=None,
         help="Multiplicity of the system (default: 1)."
-    )  
+    )
+    parser.add_argument(
+        "--opt",
+        type=str,
+        default=None,
+        help="Run optimizer mode with specified optimizer type (e.g., 'ff')."
+    )
 
     args = parser.parse_args() 
 
@@ -58,6 +64,7 @@ def parse_args():
         "structures": args.structures,
         "input_file": args.input,
         "charge": args.charge,
-        "multiplicity": args.multiplicity
+        "multiplicity": args.multiplicity,
+        "opt_mode": args.opt
     }
 
