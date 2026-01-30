@@ -1,0 +1,28 @@
+Bootstrap: docker
+From: rockylinux:9
+
+%post
+    # Update system and install necessary packages
+    export DEBIAN_FRONTEND=noninteractive
+    export TZ=Europe/Berlin
+
+    # Update package index
+    dnf -y update
+
+    # Install development tools and utilities
+    dnf groupinstall -y "Development Tools"
+    dnf install -y wget git gcc-gfortran python3-pip
+
+    # Enable EPEL repository for additional packages
+    dnf install -y epel-release
+
+    # Install Python
+    dnf install -y python3.11 python3.11-devel python3.11-pip
+
+    # Clean up cache to reduce image size
+    dnf clean all
+    rm -rf /var/cache/dnf
+
+%environment
+    # Add local Python binaries to PATH
+    export PATH=~/.local/bin:$PATH
