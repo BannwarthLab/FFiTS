@@ -9,8 +9,8 @@ multiplicity = 1
 [reactant.path]
 xyz_filename = "struc1.xyz"
 wbo_filename = "wbo1"
-hessian_filename = "hess1"
-ff_filename = "ff1"
+hessian_filename = "struc1.hess"
+ff_filename = "ff1.csv"
 
 [reactant.calculation]
 geometry_optimization = false
@@ -42,8 +42,8 @@ ff_parameter_repulsion = 0.01 # starting parameter for the repulsive term in FF
 [product.path]
 xyz_filename = "struc2.xyz"
 wbo_filename = "wbo2"
-hessian_filename = "hess2"
-ff_filename = "ff2"
+hessian_filename = "struc2.hess"
+ff_filename = "ff2.csv"
 
 [product.calculation]
 geometry_optimization = false
@@ -66,7 +66,8 @@ ff_parameter_repulsion = 0.01 # starting parameter for the repulsive term in FF
 # ============================
 
 [ts_guess_calculation.path]
-ff_filename = "tsff"
+ff_filename = "tsff.csv"
+hessian_filename = "ts.hess"
 
 [ts_guess_calculation.calculation]
 factor_reactant = 0.5

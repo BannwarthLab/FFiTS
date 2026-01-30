@@ -349,7 +349,7 @@ def create_mock_structure_path(
     """
     return StructurePath(
         xyz_filename=f"{base_dir}/{name}.xyz",
-        hess_filename=f"{base_dir}/{name}.hess",
+        hessian_filename=f"{base_dir}/{name}.hess",
         wbo_filename=f"{base_dir}/{name}.wbo",
         ff_filename=f"{base_dir}/{name}_ff.csv"
     )
@@ -620,29 +620,6 @@ class MockXtb:
     def hessian_calc(self, xyz_filename: str) -> np.ndarray:
         """Mock Hessian calculation."""
         return create_mock_hessian(nat=3)
-
-
-class MockCrest:
-    """Mock CREST wrapper for testing."""
-    
-    def __init__(self, crest_path: str = "crest"):
-        self.crest_path = crest_path
-    
-    def check_convergence(self, filepath: str, keyword: str = "geometry successfully optimized") -> bool:
-        """Mock convergence check."""
-        return True
-    
-    def get_rmsd(self, xyz1: str, xyz2: str) -> float:
-        """Mock RMSD calculation."""
-        return np.random.uniform(0.001, 0.1)
-    
-    def write_input2file(self, input_str: str, filename: str) -> None:
-        """Mock input file writing."""
-        pass
-    
-    def run_input(self, input_file: str, job_name: str) -> int:
-        """Mock CREST job execution."""
-        return 0
 
 
 class MockGeometryOptimization:

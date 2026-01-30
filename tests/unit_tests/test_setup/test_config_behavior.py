@@ -5,6 +5,8 @@ in main calculation functions.
 import pytest
 import tempfile
 import os
+import subprocess
+from pathlib import Path
 from unittest.mock import patch, MagicMock, call
 from ffits.io.toml_parser import load_calculation_data
 from ffits.datatype.structure_data import Structure, ForceField, StructuralInformation
@@ -363,3 +365,285 @@ multiplicity = 3
             assert calcdata.system.multiplicity == 3
         finally:
             os.unlink(temp_path)
+
+
+class TestFilenamesAffectBehavior:
+    """Test that different filenames in config are correctly used in calculations."""
+
+    def test_reactant_xyz_filename_from_config(self):
+        """Verify that reactant XYZ filename from config is used."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[reactant.path]
+xyz_filename = "custom_reactant_structure.xyz"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            assert calcdata.reactant_path.xyz_filename == "custom_reactant_structure.xyz"
+        finally:
+            os.unlink(temp_path)
+
+    def test_product_xyz_filename_from_config(self):
+        """Verify that product XYZ filename from config is used."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[product.path]
+xyz_filename = "my_product.xyz"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            assert calcdata.product_path.xyz_filename == "my_product.xyz"
+        finally:
+            os.unlink(temp_path)
+
+    def test_reactant_wbo_filename_from_config(self):
+        """Verify that reactant WBO filename from config is used."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[reactant.path]
+wbo_filename = "reactant_custom.wbo"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            assert calcdata.reactant_path.wbo_filename == "reactant_custom.wbo"
+        finally:
+            os.unlink(temp_path)
+
+    def test_product_wbo_filename_from_config(self):
+        """Verify that product WBO filename from config is used."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[product.path]
+wbo_filename = "product_bonds.wbo"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            assert calcdata.product_path.wbo_filename == "product_bonds.wbo"
+        finally:
+            os.unlink(temp_path)
+
+    def test_reactant_hessian_filename_from_config(self):
+        """Verify that reactant Hessian filename from config is used."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[reactant.path]
+hessian_filename = "reactant_hessian_matrix.hess"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            assert calcdata.reactant_path.hessian_filename == "reactant_hessian_matrix.hess"
+        finally:
+            os.unlink(temp_path)
+
+    def test_product_hessian_filename_from_config(self):
+        """Verify that product Hessian filename from config is used."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[product.path]
+hessian_filename = "product.hess"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            assert calcdata.product_path.hessian_filename == "product.hess"
+        finally:
+            os.unlink(temp_path)
+
+    def test_reactant_forcefield_filename_from_config(self):
+        """Verify that reactant force field filename from config is used."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[reactant.path]
+ff_filename = "reactant_force_field_params.csv"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            assert calcdata.reactant_path.ff_filename == "reactant_force_field_params.csv"
+        finally:
+            os.unlink(temp_path)
+
+    def test_product_forcefield_filename_from_config(self):
+        """Verify that product force field filename from config is used."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[product.path]
+ff_filename = "product_ff.csv"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            assert calcdata.product_path.ff_filename == "product_ff.csv"
+        finally:
+            os.unlink(temp_path)
+
+    def test_ts_hessian_filename_from_config(self):
+        """Verify that TS Hessian filename from config is used."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[ts_guess_calculation.path]
+hessian_filename = "ts_hessian.hess"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            assert calcdata.ts_path.hessian_filename == "ts_hessian.hess"
+        finally:
+            os.unlink(temp_path)
+
+    def test_ts_forcefield_filename_from_config(self):
+        """Verify that TS force field filename from config is used."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[ts_guess_calculation.path]
+ff_filename = "ts_forcefield.csv"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            assert calcdata.ts_path.ff_filename == "ts_forcefield.csv"
+        finally:
+            os.unlink(temp_path)
+
+    def test_all_filenames_different(self):
+        """Verify that different filenames can be used for different structures."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[reactant.path]
+xyz_filename = "reactant.xyz"
+wbo_filename = "reactant.wbo"
+hessian_filename = "reactant.hess"
+ff_filename = "reactant_ff.csv"
+
+[product.path]
+xyz_filename = "product.xyz"
+wbo_filename = "product.wbo"
+hessian_filename = "product.hess"
+ff_filename = "product_ff.csv"
+
+[ts_guess_calculation.path]
+hessian_filename = "ts.hess"
+ff_filename = "ts_ff.csv"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            # Reactant filenames
+            assert calcdata.reactant_path.xyz_filename == "reactant.xyz"
+            assert calcdata.reactant_path.wbo_filename == "reactant.wbo"
+            assert calcdata.reactant_path.hessian_filename == "reactant.hess"
+            assert calcdata.reactant_path.ff_filename == "reactant_ff.csv"
+            
+            # Product filenames
+            assert calcdata.product_path.xyz_filename == "product.xyz"
+            assert calcdata.product_path.wbo_filename == "product.wbo"
+            assert calcdata.product_path.hessian_filename == "product.hess"
+            assert calcdata.product_path.ff_filename == "product_ff.csv"
+            
+            # TS filenames
+            assert calcdata.ts_path.hessian_filename == "ts.hess"
+            assert calcdata.ts_path.ff_filename == "ts_ff.csv"
+            
+            # All should be different
+            all_filenames = [
+                calcdata.reactant_path.xyz_filename,
+                calcdata.product_path.xyz_filename,
+                calcdata.ts_path.xyz_filename,
+            ]
+            assert len(set(all_filenames)) == 3  # All different
+        finally:
+            os.unlink(temp_path)
+
+    def test_custom_directory_paths_in_filenames(self):
+        """Verify that custom directory paths in filenames are preserved."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[reactant.path]
+xyz_filename = "data/reactants/structure.xyz"
+wbo_filename = "data/reactants/bonds.wbo"
+hessian_filename = "data/reactants/hessian.hess"
+ff_filename = "data/reactants/forcefield.csv"
+
+[product.path]
+xyz_filename = "data/products/structure.xyz"
+wbo_filename = "data/products/bonds.wbo"
+hessian_filename = "data/products/hessian.hess"
+ff_filename = "data/products/forcefield.csv"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            calcdata = load_calculation_data(temp_path)
+            
+            # Check that directory paths are preserved
+            assert "data/reactants/" in calcdata.reactant_path.xyz_filename
+            assert "data/products/" in calcdata.product_path.xyz_filename
+            
+            assert calcdata.reactant_path.xyz_filename == "data/reactants/structure.xyz"
+            assert calcdata.product_path.xyz_filename == "data/products/structure.xyz"
+        finally:
+            os.unlink(temp_path)
+
