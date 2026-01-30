@@ -21,9 +21,9 @@ def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData,
     nat, _, xyz, atom_types = readin_xyz(path.xyz_filename)
     
     if calcopt.hessian_calc:
-        hessian = xtbrunner.hesscalc(path.xyz_filename, path.hess_filename)
+        hessian = xtbrunner.hesscalc(path.xyz_filename, path.hessian_filename)
     else:
-        hessian = read_hessian(path.hess_filename)
+        hessian = read_hessian(path.hessian_filename)
     
     if calcopt.wbo_calc:
         wbo = xtbrunner.wbocalc(path.xyz_filename, path.wbo_filename)

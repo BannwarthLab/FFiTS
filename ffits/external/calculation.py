@@ -69,9 +69,9 @@ class HessianCalculation:
     def with_xtb(input_structure: StructurePath, xtb_path='xtb'):
         input_xyz = input_structure.xyz_filename
         xtb = Xtb(xtb_path=xtb_path)
-        xtb.hesscalc(input_structure.hess_filename, input_xyz)
+        xtb.hesscalc(input_structure.hessian_filename, input_xyz)
         print(f'> xTB Hessian calculation for {input_xyz} finished.')
-        print(f'> Hessian is written to {input_structure.hess_filename}.')
+        print(f'> Hessian is written to {input_structure.hessian_filename}.')
 
 
 class WboCalculation:

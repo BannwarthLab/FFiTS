@@ -120,7 +120,7 @@ class StructurePath:
     Paths/Filenames and ID for a given structure.
     """
     xyz_filename: str 
-    hess_filename: str 
+    hessian_filename: str 
     wbo_filename: str 
     ff_filename: str
 
