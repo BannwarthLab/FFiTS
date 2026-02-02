@@ -31,7 +31,7 @@ def get_ts_guess(struc1: Structure, struc2: Structure, calcoptions: TSCalculatio
     
 
     ### ---------- optimization ------------ ###
-    converged, energy, final_geom = optimize_with_forcefield(struc1, 
+    converged, energy, final_geom = optimize_with_forcefield(struc1.info, 
                                                                    tsff, 
                                                                    optimizer, 
                                                                    calcoptions,

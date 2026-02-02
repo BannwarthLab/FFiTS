@@ -98,39 +98,27 @@ class TestForceFieldObjectCreation:
         """Test that bonds dataframe has correct structure."""
         path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1_new')
         ff = ForceField(TEST_NAT, path2ff)
-
-        # Check bonds dataframe columns
         required_columns = ['type', 'atoms', 'reference_value', 'parameter']
         for col in required_columns:
             assert col in ff.bonds.columns, f"Missing column '{col}' in bonds dataframe"
-
-        # Check that all entries have type "bonds"
         assert all(ff.bonds['type'] == 'bonds')
 
     def test_ff_object_angles_structure(self):
         """Test that angles dataframe has correct structure."""
         path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1_new')
         ff = ForceField(TEST_NAT, path2ff)
-
-        # Check angles dataframe columns
         required_columns = ['type', 'atoms', 'reference_value', 'parameter']
         for col in required_columns:
             assert col in ff.angles.columns, f"Missing column '{col}' in angles dataframe"
-
-        # Check that all entries have type "angles"
         assert all(ff.angles['type'] == 'angles')
 
     def test_ff_object_dihedrals_structure(self):
         """Test that dihedrals dataframe has correct structure."""
         path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1_new')
         ff = ForceField(TEST_NAT, path2ff)
-
-        # Check dihedrals dataframe columns
         required_columns = ['type', 'atoms', 'reference_value', 'parameter']
         for col in required_columns:
             assert col in ff.dihedrals.columns, f"Missing column '{col}' in dihedrals dataframe"
-
-        # Check that all entries have type "dihedrals"
         assert all(ff.dihedrals['type'] == 'dihedrals')
 
 

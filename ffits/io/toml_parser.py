@@ -122,6 +122,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     # TS path
     ts_path = ts_guess.get("path", {})
     cd.ts_path.ff_filename = ts_path.get("ff_filename", cd.ts_path.ff_filename)
+    cd.ts_path.hessian_filename = ts_path.get("hessian_filename", cd.ts_path.hessian_filename)
 
     # TS calculation
     ts_calc = ts_guess.get("calculation", {})
