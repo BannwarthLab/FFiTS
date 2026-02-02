@@ -2,7 +2,6 @@ import numpy as np
 import os
 from ffits.datatype.structure_data import ForceField, StructuralInformation
 from molbar.utils.optimizer import optimize_geometry 
-from molbar.utils.debug_optimizer import optimize_fragment_scipy_debug
 from scipy.optimize import minimize
 
 
@@ -24,7 +23,6 @@ def anc_optimizer(xyz_start: np.ndarray, ff: ForceField, atom_types: np.ndarray,
         hessian_func=ff.get_hessian,
         masses=None,  # Optional: provide atomic masses
         trust_radius=0.1,
-        g_tol=g_tol,
         e_tol=e_tol,
         x_tol=x_tol,
         max_steps=1000,

@@ -23,6 +23,7 @@ From: rockylinux:9
     dnf clean all
     rm -rf /var/cache/dnf
 
+
 %environment
     # Add local Python binaries to PATH
     export PATH=~/.local/bin:$PATH
