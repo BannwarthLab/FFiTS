@@ -184,7 +184,7 @@ class TestANCOptimizer:
         # Test with loose tolerance
         converged, energy, _, _, _, _ = anc_optimizer(
             xyz_start, ff, struc.atom_types,
-            g_tol=1e-1, e_tol=1e-3, x_tol=1e-2,
+            e_tol=1e-3, x_tol=1e-2,
             max_micro_steps=5
         )
 
