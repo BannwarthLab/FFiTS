@@ -5,7 +5,7 @@ import sys
 from collections.abc import Callable
 from ffits.ts_guess.mix_ff import create_tsff
 from ffits.datatype.structure_data import  Structure
-from ffits.datatype.calculation_data import CalculationData, TSCalculationOptions
+from ffits.datatype.calculation_data import TSCalculationOptions
 from ffits.external.molbar_optimizer import anc_optimizer
 from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient,complete_hessian
 from ffits.io.print.details import print_ts_optimization_start
