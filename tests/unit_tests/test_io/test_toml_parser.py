@@ -342,7 +342,6 @@ hessian_calc = true
 factor_reactant = 0.6
 factor_product = 0.4
 molbar_optimizer_e_tol = 1e-6
-molbar_optimizer_g_tol = 1e-5
 """
             )
             f.flush()
@@ -353,7 +352,6 @@ molbar_optimizer_g_tol = 1e-5
             assert cd.ts_calc.factor_reactant == 0.6
             assert cd.ts_calc.factor_product == 0.4
             assert cd.ts_calc.molbar_optimizer_e_tol == 1e-6
-            assert cd.ts_calc.molbar_optimizer_g_tol == 1e-5
         finally:
             os.unlink(temp_path)
 

@@ -162,7 +162,6 @@ ff_parameterization = true
 | `factor_product` | float | 0.5 | Weight of product in TS interpolation (0.0-1.0). Must sum to 1.0 with factor_reactant |
 | `optimizer` | string | "molbar-optimizer" | Which optimizer to use. Options: `"molbar-optimizer"`, `"scipy-optimizer"` |
 | `molbar_optimizer_e_tol` | float | 1e-8 | Energy tolerance for molbar optimizer |
-| `molbar_optimizer_g_tol` | float | 1e-2 | Gradient tolerance for molbar optimizer |
 | `molbar_optimizer_x_tol` | float | 1e-3 | Step size tolerance for molbar optimizer |
 | `molbar_optimizer_max_micro_steps` | int | 1 | Maximum micro-steps in molbar optimizer |
 | `energy_threshold_two_optimizations` | float | 0.15 | Energy threshold for repeating optimization from product if reactant path is too high |
@@ -246,7 +245,6 @@ factor_reactant = 0.5
 factor_product = 0.5
 optimizer = "molbar-optimizer"
 molbar_optimizer_e_tol = 1e-8
-molbar_optimizer_g_tol = 1e-2
 molbar_optimizer_x_tol = 1e-3
 molbar_optimizer_max_micro_steps = 1
 energy_threshold_two_optimizations = 0.15

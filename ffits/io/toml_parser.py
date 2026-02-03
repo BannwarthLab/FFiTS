@@ -134,7 +134,6 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     )
     cd.ts_calc.perform_two_optimizations = ts_calc.get("perform_two_optimizations", cd.ts_calc.perform_two_optimizations)
     cd.ts_calc.molbar_optimizer_e_tol = ts_calc.get("molbar_optimizer_e_tol", cd.ts_calc.molbar_optimizer_e_tol)
-    cd.ts_calc.molbar_optimizer_g_tol = ts_calc.get("molbar_optimizer_g_tol", cd.ts_calc.molbar_optimizer_g_tol)
     cd.ts_calc.molbar_optimizer_x_tol = ts_calc.get("molbar_optimizer_x_tol", cd.ts_calc.molbar_optimizer_x_tol)
     cd.ts_calc.molbar_optimizer_max_micro_steps = ts_calc.get("molbar_optimizer_max_micro_steps", cd.ts_calc.molbar_optimizer_max_micro_steps)
 

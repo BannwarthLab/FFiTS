@@ -156,7 +156,6 @@ factor_product = 0.7
                 """
 [ts_guess_calculation.calculation]
 molbar_optimizer_e_tol = 1e-5
-molbar_optimizer_g_tol = 1e-4
 molbar_optimizer_x_tol = 1e-5
 molbar_optimizer_max_micro_steps = 10
 """
@@ -169,7 +168,6 @@ molbar_optimizer_max_micro_steps = 10
             
             # These tolerances should be passed to the optimizer
             assert calcdata.ts_calc.molbar_optimizer_e_tol == 1e-5
-            assert calcdata.ts_calc.molbar_optimizer_g_tol == 1e-4
             assert calcdata.ts_calc.molbar_optimizer_x_tol == 1e-5
             assert calcdata.ts_calc.molbar_optimizer_max_micro_steps == 10
         finally:
