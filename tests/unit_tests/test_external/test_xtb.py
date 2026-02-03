@@ -102,4 +102,4 @@ def test_wbocalc_reads_wbo(dummy_xyz, tmp_path, mock_run_xtb):
 #     xtb = Xtb(0, 1)
 #     result = xtb.geomopt_with_topology_check(str(dummy_xyz), tmp_path / "geo")
 #     assert result is str( tmp_path / "geo")
-
+    
