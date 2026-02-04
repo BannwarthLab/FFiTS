@@ -44,6 +44,7 @@ test:
     - export PYTHON=python3.11
     - export CFLAGS="$(python3.11-config --cflags)"
     - export LDFLAGS="$(python3.11-config --ldflags)"
+    - git submodule update --init --recursive
     - make install-dev
     - pip list
     # Run tests
