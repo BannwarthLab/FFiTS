@@ -33,19 +33,9 @@ git clone git@git.rwth-aachen.de:bannwarthlab/ffits.git
 cd ffits 
 python3.11 -m venv venv
 source venv/bin/activate
-pip install -r requirements-dev.txt 
-python setup.py build_ext --inplace
-pip install -e .
-cd ..
-
-git clone git@git.rwth-aachen.de:bannwarthlab/molbar.git	
-cd molbar
-git fetch
 git checkout dev
 make install-dev 
-make install
 ```
-The second part is necessary as the molbar optimizer is used, which is in the dev branch of molbar. 
 
 
 ## Configuration file

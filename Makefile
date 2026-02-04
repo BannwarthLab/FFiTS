@@ -32,6 +32,7 @@ help:
 
 # installing molbar and all the dependencies 
 install-dev:
+	git submodule update --init --recursive
 	pip install -r requirements-dev.txt
 	cd submodules/molbar && make install-dev && make install && cd ../../
 	rm -rf _skbuild/ ffits.egg-info/ 
