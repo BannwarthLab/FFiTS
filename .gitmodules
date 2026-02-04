@@ -2,3 +2,6 @@
 	path = submodules/molbar
 	url = https://git.rwth-aachen.de/bannwarthlab/molbar.git
 	branch = dev
+[submodule "submodules/xtb"]
+	path = submodules/xtb
+	url = https://github.com/grimme-lab/xtb.git

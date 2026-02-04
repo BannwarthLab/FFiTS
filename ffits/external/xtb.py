@@ -7,6 +7,17 @@ import subprocess
 import tempfile
 import shutil
 from pathlib import Path
+from importlib import resources
+from pathlib import Path
+
+def get_xtb_path() -> Path:
+    """
+    Returns a filesystem path to the xtb binary inside the package.
+    Safe for pip-installed packages, wheels, or editable installs.
+    """
+    xtb_file = resources.files("ffits") / "bin" / "xtb"
+    with resources.as_file(xtb_file) as path:
+        return path
 
 
 class Xtb:
@@ -19,7 +30,8 @@ class Xtb:
         self.xtb_path = xtb_path
         self.chrg = chrg
         self.uhf = mult - 1 # multiplicity = number of unpaired electrons + 1
-        self._check_xtb_loaded()
+        self.xtb_path = get_xtb_path()
+        # self._check_xtb_loaded()
         print(f"[INFO] xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
 
     # ------------------------------------------------------------------

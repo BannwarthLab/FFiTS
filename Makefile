@@ -3,7 +3,6 @@
 # Configuration
 PYTHON_VERSIONS := 3.11 
 DIST_DIR := dist
-BUILD_DIR := build
 
 # Default target
 help:
