@@ -38,20 +38,12 @@ test:
   tags:
     - cpu
   script:
-    # Install development dependencies (includes build dependencies)
-    - python3.11 -m pip install -r requirements-dev.txt
-    # Build Fortran extensions in-place
-    - python3.11 setup.py build_ext --inplace
     # Install package in editable mode
     # Install molbar optimizer from dev branch
     - export PYTHON=python3.11
     - export CFLAGS="$(python3.11-config --cflags)"
     - export LDFLAGS="$(python3.11-config --ldflags)"
-    - export currdir="$(pwd)"
-    - mkdir ./tmp_molbar 
-    - cd ./tmp_molbar && git clone https://git.rwth-aachen.de/bannwarthlab/molbar.git
-    - cd molbar && git fetch && git checkout dev && make install-dev && make install && cd $currdir
-    - python3.11 -m pip install .
+    - make install-dev
     - pip list
     # Run tests
     - pytest tests/
