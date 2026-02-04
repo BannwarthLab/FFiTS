@@ -33,10 +33,9 @@ help:
 # installing molbar and all the dependencies 
 install-dev:
 	pip install -r requirements-dev.txt
-    git submodule update --init --recursive
 	cd submodules/molbar && make install-dev && make install && cd ../../
 	rm -rf _skbuild/ ffits.egg-info/ 
-	python setup.py build_ext --inplace 
+	python3.11 setup.py build_ext --inplace 
 	pip install .
 # Run tests with coverage
 test:
