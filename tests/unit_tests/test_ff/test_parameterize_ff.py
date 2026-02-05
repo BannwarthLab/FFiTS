@@ -25,7 +25,7 @@ from ffits.ts_guess.parameterize_ff import (
     get_sum_second_c_deriv,
 )
 from ffits.forcefield.python_interface.ff_energy import complete_hessian
-from ffits.io.reader import readin_xyz, read_wbo_file, read_hessian
+from ffits.io.reader import readin_xyz, read_wbo_file, read_xtb_hessian
 from ffits.ts_guess.define_starting_parameters import fill_ff
 
 
@@ -39,7 +39,7 @@ def test_molecule_data():
     path1 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
     nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, 'struc1.xyz'))
     wbo = read_wbo_file(os.path.join(path1, 'wbo1'))
-    hessian = read_hessian(os.path.join(path1, 'hess1'))
+    hessian = read_xtb_hessian(os.path.join(path1, 'hess1'))
     
     info = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
     ff = ForceField(nat, os.path.join(path1, 'ff1_new'), readff=False, hessian_calculator=complete_hessian)

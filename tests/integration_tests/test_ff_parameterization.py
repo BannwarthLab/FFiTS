@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from ffits.datatype.structure_data import ForceField, StructuralInformation, StructurePath, Structure
 from ffits.ts_guess.parameterize_ff import update_bond, update_angle, update_dihedral, update_repulsive, fit_ff_to_hessian
-from ffits.io.reader import read_hessian
+from ffits.io.reader import read_xtb_hessian
 from ffits.forcefield.python_interface.ff_energy import complete_hessian
 from ffits.ts_guess.define_starting_parameters import fill_ff
 
@@ -41,7 +41,7 @@ def test_fit_ff_to_hessian():
         'ff1_newi'
     )
     path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
-    hessian = read_hessian(path2hess)
+    hessian = read_xtb_hessian(path2hess)
 
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
     ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
@@ -63,7 +63,7 @@ def test_fit_ff_to_hessian_with_repulsion():
         'ff1_newi'
     )
     path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
-    hessian = read_hessian(path2hess)
+    hessian = read_xtb_hessian(path2hess)
 
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
     ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
@@ -88,7 +88,7 @@ def test_update_bond():
         'ff1_newi'
     )
     path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
-    hessian = read_hessian(path2hess)
+    hessian = read_xtb_hessian(path2hess)
 
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
     ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
@@ -119,7 +119,7 @@ def test_update_angle():
         'ff1_newi'
     )
     path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
-    hessian = read_hessian(path2hess)
+    hessian = read_xtb_hessian(path2hess)
 
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
     ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
@@ -150,7 +150,7 @@ def test_update_dihedral():
         'ff1_newi'
     )
     path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
-    hessian = read_hessian(path2hess)
+    hessian = read_xtb_hessian(path2hess)
 
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
     ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
@@ -182,7 +182,7 @@ def test_update_repulsive():
         'ff1_newi'
     )
     path2hess = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/hess1')
-    hessian = read_hessian(path2hess)
+    hessian = read_xtb_hessian(path2hess)
 
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
     ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian) 
