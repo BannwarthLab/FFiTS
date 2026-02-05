@@ -35,7 +35,7 @@ install-dev:
 	pip install -r requirements-dev.txt
 	cd submodules/molbar && make install-dev && make install && cd ../../
 	rm -rf _skbuild/ ffits.egg-info/ 
-	python3.11 setup.py build_ext --inplace 
+	python setup.py build_ext --inplace 
 	pip install .
 # Run tests with coverage
 test:
