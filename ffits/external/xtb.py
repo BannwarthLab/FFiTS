@@ -8,7 +8,8 @@ import tempfile
 import shutil
 from pathlib import Path
 from importlib import resources
-from pathlib import Path
+from typing import Tuple, List, Dict
+import numpy as np
 
 def get_xtb_path() -> Path:
     """
@@ -73,13 +74,16 @@ class Xtb:
             shutil.copy(tmp / "xtb.out", f"{output_name}_singlepoint.out")
             return energy
 
-    def geomopt(self, input_xyz: str, output_filename: str, output_dir: str | None = None) -> str:
+    def geomopt(self, input_xyz: str, output_filename: str, output_dir: str | None = None) -> Tuple[int, str, np.ndarray, List[str]]:
         """
         Run xTB geometry optimization and save optimized geometry.
         If output_dir is provided, save output there, otherwise use a temporary directory.
-        input_xyz: path to input geometry file (xyz format)
-        output_filename: name of the optimized geometry file to be saved in the current directory 
-        output_dir: optional directory to save all xtb output files (including trajectory and logs)
+        input:
+            input_xyz: path to input geometry file (xyz format)
+            output_filename: name of the optimized geometry file to be saved
+            output_dir: optional directory to save all xtb output files (including trajectory and logs)
+        returns:
+            tuple containing optimized geometry data and a dictionary of bond orders
         """
         with tempfile.TemporaryDirectory(dir=".") as tmpdir:
             tmp = Path(tmpdir)
@@ -97,8 +101,8 @@ class Xtb:
             output_path = Path(output_filename)
             shutil.copy(optimized_xyz, output_path)
 
-            traj_path = output_path.parent / f"trj_{output_path.name}"
-            shutil.copy(optimized_log, traj_path)
+            trj_path = f"trj_{output_path.name}"
+            shutil.copy(optimized_log, trj_path)
 
             # copy whole temp directory to output_dir if specified
             if output_dir is not None:
@@ -109,8 +113,17 @@ class Xtb:
 
             return readin_xyz(f"{output_filename}")
 
-    def hesscalc(self, input_xyz: str, output_name: str):
-        """Run xTB Hessian calculation."""
+    def hesscalc(self, input_xyz: str, output_name: str, output_dir: str | None = None):
+        """
+        Run xTB hessian calculation and save hessian.
+        If output_dir is provided, save output there, otherwise use a temporary directory.
+        input:
+            input_xyz: path to input geometry file (xyz format)
+            output_filename: name of the hessian file to be saved
+            output_dir: optional directory to save all xtb output files 
+        returns: 
+            parsed Hessian matrix as a numpy array
+        """
         with tempfile.TemporaryDirectory(dir=".") as tmpdir:
             tmp = Path(tmpdir)
             shutil.copy(input_xyz, tmp / Path(input_xyz).name)
@@ -121,11 +134,24 @@ class Xtb:
             if not hess_file.exists():
                 raise RuntimeError("No Hessian file generated.")
             shutil.copy(hess_file, f"{output_name}")
+            # copy whole temp directory to output_dir if specified
+            if output_dir is not None:
+                shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
+
             print(f'[INFO] Hessian calculation for {input_xyz} finished successfully.')
             return read_xtb_hessian(f"{output_name}")
 
-    def wbocalc(self, input_xyz: str, output_name: str):
-        """Run xTB WBO calculation and return parsed WBO data."""
+    def wbocalc(self, input_xyz: str, output_name: str, output_dir: str | None = None)  -> Dict[Tuple[int, int], float]:
+        """
+        Run xTB geometry optimization and save optimized geometry.
+        If output_dir is provided, save output there, otherwise use a temporary directory.
+        input:
+            input_xyz: path to input geometry file (xyz format)
+            output_name: name of the WBO file to be saved
+            output_dir: optional directory to save all xtb output files 
+        returns: 
+            parsed WBO data as a dictionary with keys as tuples of atom indices and values as WBOs
+        """
         with tempfile.TemporaryDirectory(dir=".") as tmpdir:
             tmp = Path(tmpdir)
             shutil.copy(input_xyz, tmp / Path(input_xyz).name)
@@ -133,6 +159,8 @@ class Xtb:
             self._run_xtb(command, tmp)
 
             wbo_file = tmp / "wbo"
+            if not wbo_file.exists():
+                raise RuntimeError("No WBO file generated.")
             if not wbo_file.exists():
                 raise RuntimeError("No WBO file generated.")
             shutil.copy(wbo_file, f"{output_name}")
