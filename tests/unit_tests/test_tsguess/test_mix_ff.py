@@ -19,7 +19,7 @@ from ffits.ts_guess.mix_ff import (
     mix_reference_values,
 )
 from ffits.datatype.structure_data import ForceField, StructuralInformation, StructurePath, Structure
-from ffits.io.reader import readin_xyz, read_wbo_file, read_hessian
+from ffits.io.reader import readin_xyz, read_wbo_file, read_xtb_hessian
 from ffits.ts_guess.define_starting_parameters import fill_ff
 from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
 from ffits.ts_guess.guess import get_ts_guess
