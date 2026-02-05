@@ -48,7 +48,7 @@ test:
     - make install-dev
     - pip list
     # Run tests
-    - pytest tests/
+    - python3.11 -m pytest tests/
   artifacts:
     when: on_failure
     paths:

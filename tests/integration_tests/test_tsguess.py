@@ -9,6 +9,7 @@ from pathlib import Path
 # Code which calls ffits as a subprocess
 def run_ffits_as_subprocess(args):
     command = 'ffits ' + ' '.join(args)
+    print(command)
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     return result.stdout, result.stderr, result.returncode
 
@@ -37,7 +38,7 @@ def test_ffits_creates_optimized_xyz():
             
             optimized_file = temp_path / "optimized.xyz"
             assert optimized_file.exists(), f"optimized.xyz was not created in {temp_path}"
-            
+            assert False
         finally:
             # Change back to the original directory
             os.chdir(original_cwd)
