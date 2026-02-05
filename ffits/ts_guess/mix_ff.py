@@ -2,11 +2,12 @@ import numpy as np
 import pandas as pd
 from ffits.utils.geometry_calc import bondlength, angle, dihedral_angle
 from ffits.datatype.structure_data import ForceField, StructuralInformation
+from ffits.datatype.calculation_data import CalculationData
 
-def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation, fact1: float, fact2: float) -> ForceField:
+def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation, fact1: float, fact2: float, calcdata: CalculationData) -> ForceField:
 
     # TODO add parameter transfer for averaging and add that in printout too
-    tsff = ForceField(ff1.nat, 'tsff', readff=False)
+    tsff = ForceField(ff1.nat, calcdata.ts_path.ff_filename, readff=False)
     tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
     tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
     tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)

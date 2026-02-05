@@ -66,7 +66,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
 
     # Reactant path
     react_path = reactant.get("path", {})
-    cd.reactant_path.xyz_filename = react_path.get("xyz_filename", cd.reactant_path.xyz_filename)
+    cd.reactant_path.xyz_filename = '' # will be set from commandline
     cd.reactant_path.wbo_filename = react_path.get("wbo_filename", cd.reactant_path.wbo_filename)
     cd.reactant_path.hessian_filename = react_path.get("hessian_filename", cd.reactant_path.hessian_filename)
     cd.reactant_path.ff_filename = react_path.get("ff_filename", cd.reactant_path.ff_filename)
@@ -91,7 +91,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
 
     # Product path
     prod_path = product.get("path", {})
-    cd.product_path.xyz_filename = prod_path.get("xyz_filename", cd.product_path.xyz_filename)
+    cd.product_path.xyz_filename = '' # will be set from commandline
     cd.product_path.wbo_filename = prod_path.get("wbo_filename", cd.product_path.wbo_filename)
     cd.product_path.hessian_filename = prod_path.get("hessian_filename", cd.product_path.hessian_filename)
     cd.product_path.ff_filename = prod_path.get("ff_filename", cd.product_path.ff_filename)

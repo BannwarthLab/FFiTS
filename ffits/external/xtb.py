@@ -158,6 +158,8 @@ class Xtb:
             shutil.copy(input_xyz, tmp / Path(input_xyz).name)
             command = self._get_command(Path(input_xyz).name, "--wbo")
             self._run_xtb(command, tmp)
+            if output_dir is not None:
+                shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
 
             wbo_file = tmp / "wbo"
             if not wbo_file.exists():

@@ -261,8 +261,9 @@ relaxation = "invalid-relaxation"
             f.write(
                 """
 [reactant.path]
-xyz_filename = "custom_reactant.xyz"
-wbo_filename = "custom_reactant.wbo"
+wbo_filename = "wbooo1"
+hessian_filename = "struc1test.hess"
+ff_filename = "ff1test.csv"
 """
             )
             f.flush()
@@ -270,8 +271,9 @@ wbo_filename = "custom_reactant.wbo"
 
         try:
             cd = load_calculation_data(temp_path)
-            assert cd.reactant_path.xyz_filename == "custom_reactant.xyz"
-            assert cd.reactant_path.wbo_filename == "custom_reactant.wbo"
+            assert cd.reactant_path.wbo_filename == "wbooo1"
+            assert cd.reactant_path.hessian_filename == "struc1test.hess"
+            assert cd.reactant_path.ff_filename == "ff1test.csv"
         finally:
             os.unlink(temp_path)
 
@@ -281,7 +283,9 @@ wbo_filename = "custom_reactant.wbo"
             f.write(
                 """
 [product.path]
-xyz_filename = "custom_product.xyz"
+wbo_filename = "wbooo1"
+hessian_filename = "struc1test.hess"
+ff_filename = "ff1test.csv"
 """
             )
             f.flush()
@@ -289,7 +293,9 @@ xyz_filename = "custom_product.xyz"
 
         try:
             cd = load_calculation_data(temp_path)
-            assert cd.product_path.xyz_filename == "custom_product.xyz"
+            assert cd.product_path.wbo_filename == "wbooo1"
+            assert cd.product_path.hessian_filename == "struc1test.hess"
+            assert cd.product_path.ff_filename == "ff1test.csv"
         finally:
             os.unlink(temp_path)
 

@@ -18,19 +18,19 @@ def parse_args():
 
     # Optional arguments
     parser.add_argument(
-        "--input", "-i",
+        "--config", "-c",
         type=str,
         default=None,
-        help="Path to the input TOML file (optional)."
+        help="Path to the config TOML file (optional)."
     )
     parser.add_argument(
-        "--charge", "-c",
+        "--charge", "-chrg",
         type=int,
         default=None,
         help="Charge for the system (default: 0)."
     )
     parser.add_argument(
-        "--multiplicity", "-m",
+        "--multiplicity", "-mult",
         type=int,
         default=None,
         help="Multiplicity of the system (default: 1)."
@@ -49,20 +49,20 @@ def parse_args():
         if not os.path.exists(f):
             raise FileNotFoundError(f"Structure file not found: {f}")
 
-    # Validate input file
-    if args.input is not None:
-        if not os.path.exists(args.input):
-            raise FileNotFoundError(f"Input file not found: {args.input}")
+    # Validate config file
+    if args.config is not None:
+        if not os.path.exists(args.config):
+            raise FileNotFoundError(f"Config file not found: {args.config}")
         
     
-    if args.input is not None and args.multiplicity is not None:
+    if args.config is not None and args.multiplicity is not None:
         print(f'[WARNING] Multiplicity given in the input file differs from command line multiplicity.')
-    if args.input is not None and args.charge is not None:
+    if args.config is not None and args.charge is not None:
         print(f'[WARNING] Charge given in the input file differs from command line charge.')
 
     return {
         "structures": args.structures,
-        "input_file": args.input,
+        "config_file": args.config,
         "charge": args.charge,
         "multiplicity": args.multiplicity,
         "optff": args.opt

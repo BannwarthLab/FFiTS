@@ -22,7 +22,7 @@ def run_optimizer_mode(args):
     """
     print("[INFO] Running in optimizer mode")
 
-    calcdata: CalculationData = load_calculation_data(args["input_file"])
+    calcdata: CalculationData = load_calculation_data(args["config_file"])
     overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"], args["structures"])
     # print_calculation_data(calcdata)
 
@@ -36,7 +36,7 @@ def run_normal_mode(args):
     """
     Normal mode: processes reactant and product structures through the TS guess pipeline.
     """
-    calcdata = load_calculation_data(args["input_file"])
+    calcdata = load_calculation_data(args["config_file"])
     overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"], args["structures"])
     print_calculation_data(calcdata)
 
@@ -59,7 +59,7 @@ def run_normal_mode(args):
                       threshold=calcdata.product_calc.ff_parameterization_threshold,
                       constant_repulsion=calcdata.product_calc.ff_parameterization_constant_repulsion)
 
-    tsff, converged, energy, final_geom = get_ts_guess(struc1, struc2, calcoptions=calcdata.ts_calc)#, optimizer=calcdata.ts_calc.optimizer)
+    tsff, converged, energy, final_geom = get_ts_guess(struc1, struc2, calcdata=calcdata)#, optimizer=calcdata.ts_calc.optimizer)
 
 
 def main():
