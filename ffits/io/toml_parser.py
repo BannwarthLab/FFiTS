@@ -1,13 +1,7 @@
 import os
 from ffits.datatype.calculation_data import CalculationData
 import argparse
-
-# For Python 3.11+, tomllib is built in.
-# For older versions, install tomli (`pip install tomli`)
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
+import tomllib
 
 
 
