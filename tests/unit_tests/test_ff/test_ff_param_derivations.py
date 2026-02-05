@@ -3,7 +3,7 @@ import os
 from ffits.datatype.structure_data import ForceField, StructuralInformation, Structure, StructurePath
 from ffits.ts_guess.parameterize_ff import derivative_c_first_atomwise, derivative_c_second_atomwise, ff_fit_objective_function, repulsive_derivative_c_first_atomwise, fit_ff_to_hessian, repulsive_derivative_c_second_atomwise
 from ffits.forcefield.python_interface.ff_energy import complete_hessian
-from ffits.io.reader import readin_xyz, read_wbo_file, read_hessian
+from ffits.io.reader import readin_xyz, read_wbo_file, read_xtb_hessian
 from ffits.ts_guess.define_starting_parameters import fill_ff
 import copy
 
@@ -118,7 +118,7 @@ def test_objfun_first_derivatives():
     path1 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
     nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, 'struc1.xyz'))
     wbo = read_wbo_file(os.path.join(path1, 'wbo1'))
-    info = StructuralInformation(nat, xyz, wbo, atom_types, read_hessian(os.path.join(path1, 'hess1')))
+    info = StructuralInformation(nat, xyz, wbo, atom_types, read_xtb_hessian(os.path.join(path1, 'hess1')))
     ff = ForceField(nat, os.path.join(path1, 'ff1_new'), readff=False,hessian_calculator=complete_hessian)
     fill_ff(ff, info)
     #fit_ff_to_hessian(Structure(StructurePath('d','d','d','d'),ff, info))
@@ -306,7 +306,7 @@ def test_objfun_second_derivatives():
     path1 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
     nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, 'struc1.xyz'))
     wbo = read_wbo_file(os.path.join(path1, 'wbo1'))
-    info = StructuralInformation(nat, xyz, wbo, atom_types, read_hessian(os.path.join(path1, 'hess1')))
+    info = StructuralInformation(nat, xyz, wbo, atom_types, read_xtb_hessian(os.path.join(path1, 'hess1')))
     ff = ForceField(nat, os.path.join(path1, 'ff1_new'), readff=False,hessian_calculator=complete_hessian)
     fill_ff(ff, info)
     print(info.fortran_xyz)
