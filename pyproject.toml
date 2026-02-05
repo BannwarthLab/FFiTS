@@ -48,5 +48,6 @@ include = ["ffits*"]
   "data/**/*",
   "forcefield/fortran/*.so",
   "forcefield/python_interface/*.py",
-  "forcefield/python_interface/**/*.py"
+  "forcefield/python_interface/**/*.py",
+  "bin/*"  
 ]

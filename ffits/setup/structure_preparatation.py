@@ -1,7 +1,7 @@
 
 from ffits.datatype.calculation_data import CalculationData, CalculationOptions, PathData
 from ffits.datatype.structure_data import Structure,  StructuralInformation, StructurePath, ForceField
-from ffits.io.reader import read_hessian, read_wbo_file, readin_xyz
+from ffits.io.reader import read_xtb_hessian, read_wbo_file, readin_xyz
 from ffits.external.xtb import Xtb
 from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
 
@@ -23,7 +23,7 @@ def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData,
     if calcopt.hessian_calc:
         hessian = xtbrunner.hesscalc(path.xyz_filename, path.hessian_filename)
     else:
-        hessian = read_hessian(path.hessian_filename)
+        hessian = read_xtb_hessian(path.hessian_filename)
     
     if calcopt.wbo_calc:
         wbo = xtbrunner.wbocalc(path.xyz_filename, path.wbo_filename)

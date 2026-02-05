@@ -45,6 +45,7 @@ test:
     - export CFLAGS="$(python3.11-config --cflags)"
     - export LDFLAGS="$(python3.11-config --ldflags)"
     - git submodule update --init --recursive
+    - python3.11 -m venv venv && source venv/bin/activate
     - make install-dev
     - pip list
     # Run tests

@@ -7,7 +7,7 @@ import os
 import pytest
 import numpy as np
 from tempfile import TemporaryDirectory
-from ffits.io.reader import readin_xyz, read_wbo_file, read_hessian
+from ffits.io.reader import readin_xyz, read_wbo_file, read_xtb_hessian
 
 
 def write_file(path, content):
@@ -229,7 +229,7 @@ class TestHessianReader:
             file_path = os.path.join(tmpdir, "hess.txt")
             write_file(file_path, content)
 
-            hess = read_hessian(file_path)
+            hess = read_xtb_hessian(file_path)
             assert hess.shape == (3, 3)
             np.testing.assert_allclose(hess, np.eye(3))
 
@@ -247,7 +247,7 @@ class TestHessianReader:
             file_path = os.path.join(tmpdir, "hess2.txt")
             write_file(file_path, content)
 
-            hess = read_hessian(file_path)
+            hess = read_xtb_hessian(file_path)
             assert hess.shape == (6, 6)
             np.testing.assert_allclose(hess, np.eye(6))
 
@@ -259,7 +259,7 @@ class TestHessianReader:
             write_file(file_path, content)
 
             with pytest.raises(ValueError, match="does not form a square matrix"):
-                read_hessian(file_path)
+                read_xtb_hessian(file_path)
 
     def test_read_hessian_invalid_dimensions_error(self):
         """Test error for Hessian dimensions not divisible by 3."""
@@ -269,7 +269,7 @@ class TestHessianReader:
             write_file(file_path, content)
 
             with pytest.raises(ValueError, match="not divisible by 3"):
-                read_hessian(file_path)
+                read_xtb_hessian(file_path)
 
     def test_read_hessian_symmetric(self):
         """Test that returned Hessian is symmetric."""
@@ -282,7 +282,7 @@ class TestHessianReader:
             file_path = os.path.join(tmpdir, "sym.txt")
             write_file(file_path, content)
 
-            hess = read_hessian(file_path)
+            hess = read_xtb_hessian(file_path)
             np.testing.assert_array_almost_equal(hess, hess.T)
 
     def test_read_hessian_large_molecule(self):
@@ -296,7 +296,7 @@ class TestHessianReader:
             file_path = os.path.join(tmpdir, "large.txt")
             write_file(file_path, content)
 
-            hess = read_hessian(file_path)
+            hess = read_xtb_hessian(file_path)
             assert hess.shape == (21, 21)
 
 
