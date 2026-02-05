@@ -38,7 +38,6 @@ def test_ffits_creates_optimized_xyz():
             
             optimized_file = temp_path / "optimized.xyz"
             assert optimized_file.exists(), f"optimized.xyz was not created in {temp_path}"
-            assert False
         finally:
             # Change back to the original directory
             os.chdir(original_cwd)
