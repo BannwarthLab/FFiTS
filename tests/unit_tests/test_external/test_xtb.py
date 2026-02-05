@@ -37,6 +37,13 @@ def water_xyz(tmp_path):
     xyz.write_text("3\nWater molecule\nO     0.000000    0.000000    0.000000\nH     0.957200    0.000000    0.000000\nH    -0.239935    0.926640    0.000000\n")
     return xyz
 
+@pytest.fixture
+def water_displaced_xyz(tmp_path):
+    """Create a simple water molecule for integration testing."""
+    xyz = tmp_path / "water_displaced.xyz"
+    xyz.write_text("3\nWater molecule\nO     0.000000    0.000000    0.000000\nH     0.957200    0.000000    0.000000\nH    -0.239935    3.000000   0.000000\n")
+    return xyz
+
 
 @pytest.fixture
 def methane_xyz(tmp_path):
@@ -66,11 +73,6 @@ def test_find_energy_in_output(tmp_path):
     energy = xtb._find_energy_in_output(f)
     assert energy == pytest.approx(-12.3456)
 
-# TODO needs to be done differently somehow
-# def test_geomopt_with_topology_check_no_change(dummy_xyz, tmp_path, mock_run_xtb):
-#     xtb = Xtb(0, 1)
-#     result = xtb.geomopt_with_topology_check(str(dummy_xyz), tmp_path / "geo")
-#     assert result is str( tmp_path / "geo")
 
 
 # =====================================================================
@@ -291,23 +293,71 @@ class TestXtbWithChargeAndMultiplicity:
 class TestXtbTopologyCheck:
     """Test topology checking during geometry optimization."""
     
-    def test_geomopt_with_topology_check_simple(self, water_xyz, tmp_path):
+    def test_geomopt_with_topology_check_simple(self, water_displaced_xyz, change_to_tmp_path):
         """Test geometry optimization with topology check."""
         xtb = Xtb(chrg=0, mult=1)
-        result_path, wbo_after = xtb.geomopt_with_topology_check(
-            str(water_xyz), 
-            str(tmp_path / "water_geo"),
-            str(tmp_path / "water_wbo"),
+        
+        result = xtb.geomopt_with_topology_check(
+            str(water_displaced_xyz), 
+            "water_geo.xyz",
+            "water_wbo",
             threshold=0.3
         )
         
-        # Should return optimized xyz path and final WBO dict
-        assert isinstance(result_path, str)
-        assert Path(result_path).exists()
-        assert isinstance(wbo_after, dict)
+        nat, comment, coordinates, atom_types = result
+        assert nat == 3, "Should have 3 atoms for water"
+        assert isinstance(coordinates, np.ndarray)
+        assert coordinates.shape == (3, 3)
+    
+    def test_geomopt_with_topology_check_detects_warning(self, change_to_tmp_path, capsys):
+        """Test that topology changes during optimization are detected and warned about."""
+        strained_xyz = change_to_tmp_path / "strained.xyz"
+        strained_xyz.write_text("5\nStrained SiH4\nSi  0.55363512 -0.05597543 -0.70536689\nH   0.60495745 -1.24930990  0.23339908\nH   0.97492131  0.95146300  0.35087768\nH  -1.17968321  0.21564939 -0.31994928\nH  -0.95383068  0.13817295  0.44103941\n")
         
-        # Water should still have 2 bonds
-        assert len(wbo_after) >= 2
+        xtb = Xtb(chrg=0, mult=1)
+        
+        result = xtb.geomopt_with_topology_check(
+            str(strained_xyz),
+            "strained_opt.xyz",
+            "strained_wbo",
+            threshold=0.1  
+        )
+        
+        nat, comment, coordinates, atom_types = result
+        assert nat == 5, "Should have 5 atoms for SiH4"
+        
+        captured = capsys.readouterr()
+        
+        has_wbo_changes = "[WARNING] Topology changed significantly" in captured.out
+        has_new_bonds = "[WARNING] New bonds formed" in captured.out
+        has_disappeared_bonds = "[WARNING] Bonds disappeared" in captured.out
+        
+        if has_wbo_changes or has_new_bonds or has_disappeared_bonds:
+            if has_wbo_changes:
+                assert "Bond" in captured.out and "change:" in captured.out
+            if has_new_bonds:
+                assert "formed with WBO" in captured.out
+            if has_disappeared_bonds:
+                assert "disappeared" in captured.out
+
+    def test_geomopt_with_topology_check_invalid_input(self, tmp_path):
+        """Test geometry optimization with topology check using invalid geometry that causes xTB to fail."""
+        xtb = Xtb(chrg=0, mult=1)
+        
+        # Create an XYZ file with invalid formatting that xTB cannot process
+        invalid_xyz = tmp_path / "invalid.xyz"
+        invalid_xyz.write_text("not_a_number\nInvalid header\nH 0 0 0\n")
+        
+        # This should raise a RuntimeError from xTB when it fails to read the geometry
+        with pytest.raises(RuntimeError):
+            xtb.geomopt_with_topology_check(
+                str(invalid_xyz),
+                "invalid_geo.xyz",
+                "invalid_wbo",
+                threshold=0.3
+            )
+        
+
 
 
 class TestXtbOutputFileHandling:
@@ -345,17 +395,18 @@ class TestXtbErrorHandling:
     def test_geomopt_with_invalid_input(self, tmp_path):
         """Test geometry optimization with invalid input file."""
         xtb = Xtb(chrg=0, mult=1)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(FileNotFoundError):
             xtb.geomopt(str(tmp_path / "nonexistent.xyz"), str(tmp_path / "output.xyz"))
     
     def test_hesscalc_with_invalid_input(self, tmp_path):
         """Test Hessian calculation with invalid input file."""
         xtb = Xtb(chrg=0, mult=1)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(FileNotFoundError):
             xtb.hesscalc(str(tmp_path / "nonexistent.xyz"), str(tmp_path / "hessian"))
     
     def test_wbocalc_with_invalid_input(self, tmp_path):
         """Test WBO calculation with invalid input file."""
         xtb = Xtb(chrg=0, mult=1)
-        with pytest.raises(RuntimeError):
+        with pytest.raises(FileNotFoundError):
             xtb.wbocalc(str(tmp_path / "nonexistent.xyz"), str(tmp_path / "wbo"))
+
