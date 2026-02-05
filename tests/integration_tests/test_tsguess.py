@@ -31,7 +31,8 @@ def test_ffits_creates_optimized_xyz():
         
         try:
             stdout, stderr, returncode = run_ffits_as_subprocess(['struc1.xyz', 'struc2.xyz'])
-            
+            print("STDOUT:", stdout)
+            print("STDERR:", stderr)
             assert returncode == 0, f"ffits failed with return code {returncode}\nstderr: {stderr}"
             
             optimized_file = temp_path / "optimized.xyz"
