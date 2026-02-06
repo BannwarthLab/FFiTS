@@ -264,7 +264,7 @@ ff_filename = "ff2test.csv"
 
 
 
-# TODO dieser Test wird fertig gemacht, wenn die temporary directories printbar sind 
+# TODO dieser Test wird fertig gemacht, wenn die temporary directories printbar sind (muss in der config geändert werden)
 # def test_ffits_charge_multiplicity_passed_to_xtb():
 #     """
 #     Test that ffits correctly passes charge and multiplicity to xTB

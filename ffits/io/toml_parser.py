@@ -41,7 +41,7 @@ def load_config(user_path: str | None = None) -> dict:
 
     return config
 
-def load_calculation_data(user_path: str | None = None) -> CalculationData:
+def load_calculation_data(user_path: str | None = None, test: bool = False) -> CalculationData:
     """
     Load configuration data from a TOML file (if provided) and fill
     a CalculationData instance with defaults for missing values.
@@ -137,6 +137,9 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     post = data.get("postprocessing", {})
     cd.postprocessing.relaxation = post.get("relaxation", cd.postprocessing.relaxation)
 
+    # for testing purposes, return the CalculationData object without performing sanity checks, to allow testing of error handling in those checks
+    if test:
+        return cd
     # =======================
     # Sanity checks
     # =======================
