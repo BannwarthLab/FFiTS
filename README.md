@@ -61,6 +61,7 @@ Pass a configuration file using the `--config` flag:
 ```bash
 ffits reactant.xyz product.xyz --config config.toml
 ```
+**NOT all optimization parameters work yet, it is wip though.**
 
 ## Configuration Parameters
 
