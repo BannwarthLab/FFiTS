@@ -108,7 +108,7 @@ def test_numerical_gradient():
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
     path = os.path.join(os.getcwd(), 
         'tests/examples/small_single_molecule',
-        'ff1_new'
+        'ff1.csv'
     )    
     path2 = os.path.join(os.getcwd(), 
         'tests/examples/small_single_molecule',
@@ -124,7 +124,7 @@ def test_numerical_hessian():
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
     path = os.path.join(os.getcwd(), 
         'tests/examples/small_single_molecule',
-        'ff1_new'
+        'ff1.csv'
     )
     path2 = os.path.join(os.getcwd(), 
         'tests/examples/small_single_molecule',
@@ -134,7 +134,6 @@ def test_numerical_hessian():
     _, _, xyz_start, _ = readin_xyz(path2) 
     xyz = angstrom2bohr(convert_xyz_to_fortranstyle(7, xyz_start))
     analytical_hessian = ff.get_hessian(xyz)
-    # num_hessian = numerical_hessian(angstrom2bohr(convert_xyz_to_fortranstyle(ff.nat, xyz_start)), ff, delta=1e-7)
     num_hessian = numerical_hessian(7, ff.get_energy, xyz, delta=1e-4)
     for i in range(21):
         for j in range(21):
@@ -147,11 +146,9 @@ def test_energy_ff():
     info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
     path = os.path.join(os.getcwd(), 
         'tests/examples/small_single_molecule',
-        'ff1_new'
+        'ff1.csv'
     )
     ff = ForceField(NAT, path, readff=True)
     energy = energy_ff(info.fortran_xyz*1.01, ff)
     assert energy < 0.01
     
-if __name__ == "__main__":
-    test_numerical_hessian()

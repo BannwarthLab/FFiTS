@@ -101,18 +101,6 @@ class TestLoadConfig:
         assert "system" in config
         assert config["system"]["charge"] == 0
 
-    def test_load_config_with_valid_user_path(self):
-        """Test loading config with user override file."""
-        path = os.path.join(
-            os.getcwd(), "tests", "examples", "small_single_molecule", "testconfig.toml"
-        )
-        if os.path.exists(path):
-            config = load_config(path)
-            assert isinstance(config, dict)
-            assert config["system"]["charge"] == -2
-        else:
-            pytest.skip(f"Test config file not found at {path}")
-
     def test_load_config_with_nonexistent_user_path(self, capsys):
         """Test that nonexistent user path falls back to defaults."""
         config = load_config("/nonexistent/path/config.toml")
@@ -151,18 +139,6 @@ class TestLoadCalculationData:
         assert cd.system.charge == 0
         assert cd.system.multiplicity == 1
         assert cd.postprocessing.relaxation == "None"
-
-    def test_load_calculation_data_with_user_path(self):
-        """Test loading calculation data with user config."""
-        path = os.path.join(
-            os.getcwd(), "tests", "examples", "small_single_molecule", "testconfig.toml"
-        )
-        if os.path.exists(path):
-            cd = load_calculation_data(path)
-            assert isinstance(cd, CalculationData)
-            assert cd.system.charge == -2
-        else:
-            pytest.skip(f"Test config file not found at {path}")
 
     def test_load_calculation_data_invalid_multiplicity_too_high(self):
         """Test that invalid multiplicity (too high) raises ValueError."""
@@ -261,8 +237,9 @@ relaxation = "invalid-relaxation"
             f.write(
                 """
 [reactant.path]
-xyz_filename = "custom_reactant.xyz"
-wbo_filename = "custom_reactant.wbo"
+wbo_filename = "wbooo1"
+hessian_filename = "struc1test.hess"
+ff_filename = "ff1test.csv"
 """
             )
             f.flush()
@@ -270,8 +247,9 @@ wbo_filename = "custom_reactant.wbo"
 
         try:
             cd = load_calculation_data(temp_path)
-            assert cd.reactant_path.xyz_filename == "custom_reactant.xyz"
-            assert cd.reactant_path.wbo_filename == "custom_reactant.wbo"
+            assert cd.reactant_path.wbo_filename == "wbooo1"
+            assert cd.reactant_path.hessian_filename == "struc1test.hess"
+            assert cd.reactant_path.ff_filename == "ff1test.csv"
         finally:
             os.unlink(temp_path)
 
@@ -281,7 +259,9 @@ wbo_filename = "custom_reactant.wbo"
             f.write(
                 """
 [product.path]
-xyz_filename = "custom_product.xyz"
+wbo_filename = "wbooo1"
+hessian_filename = "struc1test.hess"
+ff_filename = "ff1test.csv"
 """
             )
             f.flush()
@@ -289,7 +269,9 @@ xyz_filename = "custom_product.xyz"
 
         try:
             cd = load_calculation_data(temp_path)
-            assert cd.product_path.xyz_filename == "custom_product.xyz"
+            assert cd.product_path.wbo_filename == "wbooo1"
+            assert cd.product_path.hessian_filename == "struc1test.hess"
+            assert cd.product_path.ff_filename == "ff1test.csv"
         finally:
             os.unlink(temp_path)
 

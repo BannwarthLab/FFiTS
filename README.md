@@ -20,7 +20,7 @@ ffits reactant.xyz product.xyz
 ```
 
 Command line keywords are:
---input
+--config
 --multiplicity
 --charge
 
@@ -73,9 +73,8 @@ multiplicity = 1
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `xyz_filename` | string | "struc1.xyz" | Path to reactant structure file (XYZ format) |
 | `wbo_filename` | string | "wbo1" | Path to file with Wiberg Bond Orders for reactant |
-| `hessian_filename` | string | "hess1" | Path to file with Hessian matrix for reactant |
+| `hessian_filename` | string | "struc1.hess" | Path to file with Hessian matrix for reactant |
 | `ff_filename` | string | "ff1" | Path to file with force field parameters for reactant in csv file format |
 
 ##### Reactant Calculations (`[reactant.calculation]`)
@@ -96,7 +95,6 @@ multiplicity = 1
 **Example:**
 ```toml
 [reactant.path]
-xyz_filename = "reactant.xyz"
 wbo_filename = "reactant.wbo"
 
 [reactant.calculation]
@@ -115,7 +113,6 @@ ff_parameterization_threshold = 0.001
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `xyz_filename` | string | "struc2.xyz" | Path to product structure file (XYZ format) |
 | `wbo_filename` | string | "wbo2" | Path to file with Wiberg Bond Orders for product |
 | `hessian_filename` | string | "hess2" | Path to file with Hessian matrix for product |
 | `ff_filename` | string | "ff2" | Path to file with force field parameters for product in csv file format |
@@ -127,7 +124,7 @@ Same as Reactant Calculations (see above). All the same parameters apply to the 
 **Example:**
 ```toml
 [product.path]
-xyz_filename = "product.xyz"
+wbo_filename = "wbo1file"
 
 [product.calculation]
 geometry_optimization = true
@@ -142,7 +139,7 @@ ff_parameterization = true
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `ff_filename` | string | "tsff" | Output path for transition state force field parameters |
+| `ff_filename` | string | "tsff.csv | Output path for transition state force field parameters |
 
 ##### TS Calculations (`[ts_guess_calculation.calculation]`)
 
@@ -194,7 +191,6 @@ charge = 0
 multiplicity = 1
 
 [reactant.path]
-xyz_filename = "reactant.xyz"
 wbo_filename = "reactant.wbo"
 hessian_filename = "reactant.hess"
 ff_filename = "reactant.ff"
@@ -211,7 +207,6 @@ ff_parameterization_threshold = 0.0005
 ff_parameterization_constant_repulsion = true
 
 [product.path]
-xyz_filename = "product.xyz"
 wbo_filename = "product.wbo"
 hessian_filename = "product.hess"
 ff_filename = "product.ff"
@@ -254,5 +249,5 @@ relaxation = "None"
 
 - **Command-line Override**: You can override specific settings using command-line arguments:
   ```bash
-  ffits reactant.xyz product.xyz --input config.toml --charge -1 --multiplicity 2
+  ffits reactant.xyz product.xyz --config config.toml --charge -1 --multiplicity 2
   ```

@@ -41,7 +41,7 @@ def load_config(user_path: str | None = None) -> dict:
 
     return config
 
-def load_calculation_data(user_path: str | None = None) -> CalculationData:
+def load_calculation_data(user_path: str | None = None, test: bool = False) -> CalculationData:
     """
     Load configuration data from a TOML file (if provided) and fill
     a CalculationData instance with defaults for missing values.
@@ -66,7 +66,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
 
     # Reactant path
     react_path = reactant.get("path", {})
-    cd.reactant_path.xyz_filename = react_path.get("xyz_filename", cd.reactant_path.xyz_filename)
+    cd.reactant_path.xyz_filename = '' # will be set from commandline
     cd.reactant_path.wbo_filename = react_path.get("wbo_filename", cd.reactant_path.wbo_filename)
     cd.reactant_path.hessian_filename = react_path.get("hessian_filename", cd.reactant_path.hessian_filename)
     cd.reactant_path.ff_filename = react_path.get("ff_filename", cd.reactant_path.ff_filename)
@@ -91,7 +91,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
 
     # Product path
     prod_path = product.get("path", {})
-    cd.product_path.xyz_filename = prod_path.get("xyz_filename", cd.product_path.xyz_filename)
+    cd.product_path.xyz_filename = '' # will be set from commandline
     cd.product_path.wbo_filename = prod_path.get("wbo_filename", cd.product_path.wbo_filename)
     cd.product_path.hessian_filename = prod_path.get("hessian_filename", cd.product_path.hessian_filename)
     cd.product_path.ff_filename = prod_path.get("ff_filename", cd.product_path.ff_filename)
@@ -137,14 +137,17 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     post = data.get("postprocessing", {})
     cd.postprocessing.relaxation = post.get("relaxation", cd.postprocessing.relaxation)
 
+    # for testing purposes, return the CalculationData object without performing sanity checks, to allow testing of error handling in those checks
+    if test:
+        return cd
     # =======================
     # Sanity checks
     # =======================
-    if not cd.reactant_calc.hessian_calc and os.path.exists(cd.reactant_path.hessian_filename) :
-        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path} not found.')
+    if not cd.reactant_calc.hessian_calc and not os.path.exists(cd.reactant_path.hessian_filename) :
+        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path.hessian_filename} not found.')
     
-    if not cd.product_calc.hessian_calc and os.path.exists(cd.product_calc.hessian_filename) :
-        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path} not found.')
+    if not cd.product_calc.hessian_calc and not os.path.exists(cd.product_path.hessian_filename) :
+        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.product_path.hessian_filename} not found.')
     
     if cd.system.multiplicity > 3 or cd.system.multiplicity < 1:
         raise ValueError(f'Multiplicity of {cd.system.multiplicity} is chemically unreasonable on this theory level.')

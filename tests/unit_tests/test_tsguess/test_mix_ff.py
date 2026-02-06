@@ -33,7 +33,7 @@ def _define_ff_examples():
     nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, 'struc1.xyz'))
     wbo = read_wbo_file(os.path.join(path1, 'wbo1'))
     info1 = StructuralInformation(nat, xyz, wbo, atom_types)
-    ff1 = ForceField(nat, os.path.join(path1, 'ff1_new'), readff=False)
+    ff1 = ForceField(nat, os.path.join(path1, 'ff1.csv'), readff=False)
     fill_ff(ff1, info1, repulsive_start=0.0)
 
     ### ff2

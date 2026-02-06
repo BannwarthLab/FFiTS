@@ -5,14 +5,7 @@ in main calculation functions.
 import pytest
 import tempfile
 import os
-import subprocess
-from pathlib import Path
-from unittest.mock import patch, MagicMock, call
 from ffits.io.toml_parser import load_calculation_data
-from ffits.datatype.structure_data import Structure, ForceField, StructuralInformation
-from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
-from ffits.ts_guess.guess import get_ts_guess
-from ffits.datatype.calculation_data import TSCalculationOptions
 
 
 class TestFFParameterizationBehavior:
@@ -263,7 +256,10 @@ hessian_calc = true
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            with pytest.raises(FileNotFoundError, match="No Hessian calculation requested, but file .* not found."):
+                calcdata = load_calculation_data(temp_path)
+
+            calcdata = load_calculation_data(temp_path, test=True)
             
             # When false, will read from file
             assert calcdata.reactant_calc.hessian_calc is False
@@ -368,44 +364,6 @@ multiplicity = 3
 class TestFilenamesAffectBehavior:
     """Test that different filenames in config are correctly used in calculations."""
 
-    def test_reactant_xyz_filename_from_config(self):
-        """Verify that reactant XYZ filename from config is used."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
-[reactant.path]
-xyz_filename = "custom_reactant_structure.xyz"
-"""
-            )
-            f.flush()
-            temp_path = f.name
-
-        try:
-            calcdata = load_calculation_data(temp_path)
-            
-            assert calcdata.reactant_path.xyz_filename == "custom_reactant_structure.xyz"
-        finally:
-            os.unlink(temp_path)
-
-    def test_product_xyz_filename_from_config(self):
-        """Verify that product XYZ filename from config is used."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
-[product.path]
-xyz_filename = "my_product.xyz"
-"""
-            )
-            f.flush()
-            temp_path = f.name
-
-        try:
-            calcdata = load_calculation_data(temp_path)
-            
-            assert calcdata.product_path.xyz_filename == "my_product.xyz"
-        finally:
-            os.unlink(temp_path)
-
     def test_reactant_wbo_filename_from_config(self):
         """Verify that reactant WBO filename from config is used."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
@@ -438,7 +396,7 @@ wbo_filename = "product_bonds.wbo"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.product_path.wbo_filename == "product_bonds.wbo"
         finally:
@@ -457,7 +415,7 @@ hessian_filename = "reactant_hessian_matrix.hess"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.reactant_path.hessian_filename == "reactant_hessian_matrix.hess"
         finally:
@@ -476,7 +434,7 @@ hessian_filename = "product.hess"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.product_path.hessian_filename == "product.hess"
         finally:
@@ -495,7 +453,7 @@ ff_filename = "reactant_force_field_params.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.reactant_path.ff_filename == "reactant_force_field_params.csv"
         finally:
@@ -514,7 +472,7 @@ ff_filename = "product_ff.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.product_path.ff_filename == "product_ff.csv"
         finally:
@@ -533,7 +491,7 @@ hessian_filename = "ts_hessian.hess"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.ts_path.hessian_filename == "ts_hessian.hess"
         finally:
@@ -552,7 +510,7 @@ ff_filename = "ts_forcefield.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.ts_path.ff_filename == "ts_forcefield.csv"
         finally:
@@ -564,13 +522,11 @@ ff_filename = "ts_forcefield.csv"
             f.write(
                 """
 [reactant.path]
-xyz_filename = "reactant.xyz"
 wbo_filename = "reactant.wbo"
 hessian_filename = "reactant.hess"
 ff_filename = "reactant_ff.csv"
 
 [product.path]
-xyz_filename = "product.xyz"
 wbo_filename = "product.wbo"
 hessian_filename = "product.hess"
 ff_filename = "product_ff.csv"
@@ -584,16 +540,14 @@ ff_filename = "ts_ff.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             # Reactant filenames
-            assert calcdata.reactant_path.xyz_filename == "reactant.xyz"
             assert calcdata.reactant_path.wbo_filename == "reactant.wbo"
             assert calcdata.reactant_path.hessian_filename == "reactant.hess"
             assert calcdata.reactant_path.ff_filename == "reactant_ff.csv"
             
             # Product filenames
-            assert calcdata.product_path.xyz_filename == "product.xyz"
             assert calcdata.product_path.wbo_filename == "product.wbo"
             assert calcdata.product_path.hessian_filename == "product.hess"
             assert calcdata.product_path.ff_filename == "product_ff.csv"
@@ -601,14 +555,6 @@ ff_filename = "ts_ff.csv"
             # TS filenames
             assert calcdata.ts_path.hessian_filename == "ts.hess"
             assert calcdata.ts_path.ff_filename == "ts_ff.csv"
-            
-            # All should be different
-            all_filenames = [
-                calcdata.reactant_path.xyz_filename,
-                calcdata.product_path.xyz_filename,
-                calcdata.ts_path.xyz_filename,
-            ]
-            assert len(set(all_filenames)) == 3  # All different
         finally:
             os.unlink(temp_path)
 
@@ -618,13 +564,11 @@ ff_filename = "ts_ff.csv"
             f.write(
                 """
 [reactant.path]
-xyz_filename = "data/reactants/structure.xyz"
 wbo_filename = "data/reactants/bonds.wbo"
 hessian_filename = "data/reactants/hessian.hess"
 ff_filename = "data/reactants/forcefield.csv"
 
 [product.path]
-xyz_filename = "data/products/structure.xyz"
 wbo_filename = "data/products/bonds.wbo"
 hessian_filename = "data/products/hessian.hess"
 ff_filename = "data/products/forcefield.csv"
@@ -634,14 +578,15 @@ ff_filename = "data/products/forcefield.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             # Check that directory paths are preserved
-            assert "data/reactants/" in calcdata.reactant_path.xyz_filename
-            assert "data/products/" in calcdata.product_path.xyz_filename
-            
-            assert calcdata.reactant_path.xyz_filename == "data/reactants/structure.xyz"
-            assert calcdata.product_path.xyz_filename == "data/products/structure.xyz"
+            assert calcdata.reactant_path.wbo_filename == "data/reactants/bonds.wbo"
+            assert calcdata.product_path.wbo_filename == "data/products/bonds.wbo"
+            assert calcdata.reactant_path.hessian_filename == "data/reactants/hessian.hess"
+            assert calcdata.product_path.hessian_filename == "data/products/hessian.hess"
+            assert calcdata.reactant_path.ff_filename == "data/reactants/forcefield.csv"
+            assert calcdata.product_path.ff_filename == "data/products/forcefield.csv"
         finally:
             os.unlink(temp_path)
 

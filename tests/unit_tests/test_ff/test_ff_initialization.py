@@ -53,7 +53,7 @@ class TestForceFieldObjectCreation:
 
     def test_create_blank_ff_object_from_file(self):
         """Test creating a ForceField object from file with all calculators."""
-        path = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule', 'ff1_new')
+        path = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule', 'ff1.csv')
         ff = ForceField(
             TEST_NAT,
             path,
@@ -67,7 +67,7 @@ class TestForceFieldObjectCreation:
 
     def test_ff_object_has_required_dataframes(self):
         """Test that ForceField object contains all required dataframes."""
-        path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1_new')
+        path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1.csv')
         ff = ForceField(TEST_NAT, path2ff)
 
         # Check all required components exist
@@ -79,7 +79,7 @@ class TestForceFieldObjectCreation:
 
     def test_construct_ff_from_existing_file(self):
         """Test loading ForceField from an existing file and verify structure."""
-        path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1_new')
+        path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1.csv')
         ff = ForceField(TEST_NAT, path2ff, readff=True)
 
         # Verify bonds were loaded correctly (non-zero if file exists and was read)
@@ -96,7 +96,7 @@ class TestForceFieldObjectCreation:
 
     def test_ff_object_bonds_structure(self):
         """Test that bonds dataframe has correct structure."""
-        path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1_new')
+        path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1.csv')
         ff = ForceField(TEST_NAT, path2ff)
         required_columns = ['type', 'atoms', 'reference_value', 'parameter']
         for col in required_columns:
@@ -105,7 +105,7 @@ class TestForceFieldObjectCreation:
 
     def test_ff_object_angles_structure(self):
         """Test that angles dataframe has correct structure."""
-        path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1_new')
+        path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1.csv')
         ff = ForceField(TEST_NAT, path2ff)
         required_columns = ['type', 'atoms', 'reference_value', 'parameter']
         for col in required_columns:
@@ -114,7 +114,7 @@ class TestForceFieldObjectCreation:
 
     def test_ff_object_dihedrals_structure(self):
         """Test that dihedrals dataframe has correct structure."""
-        path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1_new')
+        path2ff = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule/ff1.csv')
         ff = ForceField(TEST_NAT, path2ff)
         required_columns = ['type', 'atoms', 'reference_value', 'parameter']
         for col in required_columns:

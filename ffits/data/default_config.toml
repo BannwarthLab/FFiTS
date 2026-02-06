@@ -7,7 +7,6 @@ multiplicity = 1
 # ============================
 
 [reactant.path]
-xyz_filename = "struc1.xyz"
 wbo_filename = "wbo1"
 hessian_filename = "struc1.hess"
 ff_filename = "ff1.csv"
@@ -40,7 +39,6 @@ ff_parameter_repulsion = 0.01 # starting parameter for the repulsive term in FF
 # ============================
 
 [product.path]
-xyz_filename = "struc2.xyz"
 wbo_filename = "wbo2"
 hessian_filename = "struc2.hess"
 ff_filename = "ff2.csv"
