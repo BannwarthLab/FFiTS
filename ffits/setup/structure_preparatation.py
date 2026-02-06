@@ -23,16 +23,22 @@ def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData,
     if calcopt.hessian_calc:
         hessian = xtbrunner.hesscalc(path.xyz_filename, path.hessian_filename)
     else:
+        print(f"[INFO] Skipping Hessian calculation and reading in {path.hessian_filename}.")
         hessian = read_xtb_hessian(path.hessian_filename)
     
     if calcopt.wbo_calc:
         wbo = xtbrunner.wbocalc(path.xyz_filename, path.wbo_filename)
     else:
+        print(f"[INFO] Skipping WBO calculation and reading in {path.wbo_filename}.")
         wbo = read_wbo_file(path.wbo_filename)
 
     info = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
 
-    ff = ForceField(nat, path.ff_filename, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
+    if calcopt.ff_parameterization:
+        ff = ForceField(nat, path.ff_filename, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
+    else:
+        print(f"[INFO] Skipping FF parameterization and reading in {path.ff_filename}.")
+        ff = ForceField(nat, path.ff_filename, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
     
     return Structure(path, ff, info)
 
