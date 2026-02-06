@@ -263,7 +263,10 @@ hessian_calc = true
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            with pytest.raises(FileNotFoundError, match="No Hessian calculation requested, but file .* not found."):
+                calcdata = load_calculation_data(temp_path)
+
+            calcdata = load_calculation_data(temp_path, test=True)
             
             # When false, will read from file
             assert calcdata.reactant_calc.hessian_calc is False
