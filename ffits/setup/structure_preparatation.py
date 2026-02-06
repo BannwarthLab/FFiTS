@@ -23,11 +23,13 @@ def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData,
     if calcopt.hessian_calc:
         hessian = xtbrunner.hesscalc(path.xyz_filename, path.hessian_filename)
     else:
+        print(f"[INFO] Skipping Hessian calculation and reading in {path.hessian_filename}.")
         hessian = read_xtb_hessian(path.hessian_filename)
     
     if calcopt.wbo_calc:
         wbo = xtbrunner.wbocalc(path.xyz_filename, path.wbo_filename)
     else:
+        print(f"[INFO] Skipping WBO calculation and reading in {path.wbo_filename}.")
         wbo = read_wbo_file(path.wbo_filename)
 
     info = StructuralInformation(nat, xyz, wbo, atom_types, hessian)

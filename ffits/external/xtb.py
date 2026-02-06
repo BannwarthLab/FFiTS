@@ -125,6 +125,7 @@ class Xtb:
         returns: 
             parsed Hessian matrix as a numpy array
         """
+        cwd = Path(input_xyz).parent
         with tempfile.TemporaryDirectory(dir=".") as tmpdir:
             tmp = Path(tmpdir)
             shutil.copy(input_xyz, tmp / Path(input_xyz).name)
@@ -134,13 +135,12 @@ class Xtb:
             hess_file = tmp / "hessian"
             if not hess_file.exists():
                 raise RuntimeError("No Hessian file generated.")
-            shutil.copy(hess_file, f"{output_name}")
             # copy whole temp directory to output_dir if specified
             if output_dir is not None:
                 shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
-
+            shutil.copy(hess_file, cwd / output_name) # copy hessian to original directory for later reading
             print(f'[INFO] Hessian calculation for {input_xyz} finished successfully.')
-            return read_xtb_hessian(f"{output_name}")
+            return read_xtb_hessian(f"{cwd / output_name}")
 
     def wbocalc(self, input_xyz: str, output_name: str, output_dir: str | None = None)  -> Dict[Tuple[int, int], float]:
         """
@@ -153,6 +153,7 @@ class Xtb:
         returns: 
             parsed WBO data as a dictionary with keys as tuples of atom indices and values as WBOs
         """
+        cwd = Path(input_xyz).parent
         with tempfile.TemporaryDirectory(dir=".") as tmpdir:
             tmp = Path(tmpdir)
             shutil.copy(input_xyz, tmp / Path(input_xyz).name)
@@ -166,7 +167,7 @@ class Xtb:
                 raise RuntimeError("No WBO file generated.")
             if not wbo_file.exists():
                 raise RuntimeError("No WBO file generated.")
-            shutil.copy(wbo_file, f"{output_name}")
+            shutil.copy(wbo_file, cwd / output_name)
             print(f'[INFO] WBO calculation for {input_xyz} finished successfully.')
             return read_wbo_file(f"{output_name}")
         

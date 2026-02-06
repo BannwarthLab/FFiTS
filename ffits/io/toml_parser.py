@@ -140,11 +140,11 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     # =======================
     # Sanity checks
     # =======================
-    if not cd.reactant_calc.hessian_calc and os.path.exists(cd.reactant_path.hessian_filename) :
-        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path} not found.')
+    if not cd.reactant_calc.hessian_calc and not os.path.exists(cd.reactant_path.hessian_filename) :
+        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path.hessian_filename} not found.')
     
-    if not cd.product_calc.hessian_calc and os.path.exists(cd.product_calc.hessian_filename) :
-        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path} not found.')
+    if not cd.product_calc.hessian_calc and not os.path.exists(cd.product_path.hessian_filename) :
+        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.product_path.hessian_filename} not found.')
     
     if cd.system.multiplicity > 3 or cd.system.multiplicity < 1:
         raise ValueError(f'Multiplicity of {cd.system.multiplicity} is chemically unreasonable on this theory level.')

@@ -32,7 +32,7 @@ def run_optimizer_mode(args):
     # return structure 
 
 
-def run_normal_mode(args):
+def run_tsguess_mode(args):
     """
     Normal mode: processes reactant and product structures through the TS guess pipeline.
     """
@@ -69,7 +69,7 @@ def main():
     if args["optff"] is not None:
         run_optimizer_mode(args)
     else:
-        run_normal_mode(args)
+        run_tsguess_mode(args)
 
 
 
