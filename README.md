@@ -74,7 +74,7 @@ multiplicity = 1
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `wbo_filename` | string | "wbo1" | Path to file with Wiberg Bond Orders for reactant |
-| `hessian_filename` | string | "hess1" | Path to file with Hessian matrix for reactant |
+| `hessian_filename` | string | "struc1.hess" | Path to file with Hessian matrix for reactant |
 | `ff_filename` | string | "ff1" | Path to file with force field parameters for reactant in csv file format |
 
 ##### Reactant Calculations (`[reactant.calculation]`)
