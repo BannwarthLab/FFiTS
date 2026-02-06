@@ -12,9 +12,8 @@ return value formats, and robustness to different starting geometries.
 import numpy as np
 import os
 import shutil
-import pytest
+import tempfile
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from ffits.external.molbar_optimizer import anc_optimizer, scipy_optimizer
 from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
 from ffits.datatype.structure_data import ForceField, StructuralInformation
@@ -45,142 +44,253 @@ WBO = {
 ATOM_TYPES = ['C', 'C', 'O', 'H', 'H', 'H', 'H']
 
 
-@pytest.fixture
-def setup_test_environment():
-    """Set up test environment with force field files and structural data in temporary directory."""
-    with TemporaryDirectory() as temp_wd:
-        # Get source data directory relative to project root
-        project_root = Path(__file__).parent.parent.parent.parent
-        data_dir = project_root / 'tests' / 'examples' / 'small_single_molecule'
-        
-        ff_src = data_dir / 'ff1.csv'
-        xyz_src = data_dir / 'struc2.xyz'
-        
-        # Copy files to temporary directory if they exist
-        if ff_src.exists():
-            shutil.copy(ff_src, temp_wd)
-        if xyz_src.exists():
-            shutil.copy(xyz_src, temp_wd)
-        
-        yield temp_wd
-
-
-@pytest.fixture
-def forcefield_and_structure(setup_test_environment):
-    """Create ForceField and StructuralInformation objects for testing."""
-    temp_wd = setup_test_environment
-    ff_path = os.path.join(temp_wd, 'ff1.csv')
-    
-    struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
-    ff = ForceField(
-        NAT,
-        ff_path,
-        readff=True,
-        energy_calculator=energy_ff,
-        gradient_calculator=complete_gradient,
-        hessian_calculator=complete_hessian
-    )
-    return ff, struc
-
-
 class TestANCOptimizer:
     """Tests for Approximate Normal Coordinate (ANC) optimizer."""
 
-    def test_anc_optimizer_convergence(self, setup_test_environment, forcefield_and_structure):
+    def test_anc_optimizer_convergence(self):
         """Test that ANC optimizer converges to a minimum."""
-        temp_wd = setup_test_environment
-        ff, struc = forcefield_and_structure
+        project_root = Path(__file__).parent.parent.parent.parent
+        data_dir = project_root / 'tests' / 'examples' / 'small_single_molecule'
+        
+        with tempfile.TemporaryDirectory() as temp_wd:
+            # Copy necessary files
+            ff_src = data_dir / 'ff1.csv'
+            xyz_src = data_dir / 'struc2.xyz'
+            if ff_src.exists():
+                shutil.copy(ff_src, temp_wd)
+            if xyz_src.exists():
+                shutil.copy(xyz_src, temp_wd)
+            
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(temp_wd)
+                
+                # Create objects
+                struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+                ff = ForceField(
+                    NAT,
+                    'ff1.csv',
+                    readff=True,
+                    energy_calculator=energy_ff,
+                    gradient_calculator=complete_gradient,
+                    hessian_calculator=complete_hessian
+                )
+                
+                _, _, xyz_start, _ = readin_xyz('struc2.xyz')
 
-        xyz_path = os.path.join(temp_wd, 'struc2.xyz')
+                converged, energy, final_geom, steps, time, message = anc_optimizer(
+                    xyz_start, ff, struc.atom_types, max_micro_steps=5
+                )
 
-        _, _, xyz_start, _ = readin_xyz(xyz_path)
+                assert converged, "ANC optimizer should converge for valid starting geometry"
+                assert isinstance(energy, (int, float)), "Final energy should be numeric"
+                assert energy >= 0, "Energy should be non-negative after optimization"
+            finally:
+                os.chdir(original_cwd)
 
-        converged, energy, final_geom, steps, time, message = anc_optimizer(
-            xyz_start, ff, struc.atom_types, max_micro_steps=5
-        )
-
-        assert converged, "ANC optimizer should converge for valid starting geometry"
-        assert isinstance(energy, (int, float)), "Final energy should be numeric"
-        assert energy >= 0, "Energy should be non-negative after optimization"
-
-    def test_anc_optimizer_energy_reduction(self, setup_test_environment, forcefield_and_structure):
+    def test_anc_optimizer_energy_reduction(self):
         """Test that final energy is reasonable after optimization."""
-        temp_wd = setup_test_environment
-        ff, struc = forcefield_and_structure
+        project_root = Path(__file__).parent.parent.parent.parent
+        data_dir = project_root / 'tests' / 'examples' / 'small_single_molecule'
+        
+        with tempfile.TemporaryDirectory() as temp_wd:
+            # Copy necessary files
+            ff_src = data_dir / 'ff1.csv'
+            xyz_src = data_dir / 'struc2.xyz'
+            if ff_src.exists():
+                shutil.copy(ff_src, temp_wd)
+            if xyz_src.exists():
+                shutil.copy(xyz_src, temp_wd)
+            
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(temp_wd)
+                
+                # Create objects
+                struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+                ff = ForceField(
+                    NAT,
+                    'ff1.csv',
+                    readff=True,
+                    energy_calculator=energy_ff,
+                    gradient_calculator=complete_gradient,
+                    hessian_calculator=complete_hessian
+                )
+                
+                _, _, xyz_start, _ = readin_xyz('struc2.xyz')
 
-        xyz_path = os.path.join(temp_wd, 'struc2.xyz')
-        _, _, xyz_start, _ = readin_xyz(xyz_path)
+                converged, energy, final_geom, steps, time, message = anc_optimizer(
+                    xyz_start, ff, struc.atom_types, max_micro_steps=5
+                )
 
-        converged, energy, final_geom, steps, time, message = anc_optimizer(
-            xyz_start, ff, struc.atom_types, max_micro_steps=5
-        )
+                assert energy <= 0.5, "Final energy should be reasonably low for converged geometry"
+            finally:
+                os.chdir(original_cwd)
 
-        assert energy <= 0.5, "Final energy should be reasonably low for converged geometry"
-
-    def test_anc_optimizer_return_values(self, setup_test_environment, forcefield_and_structure):
+    def test_anc_optimizer_return_values(self):
         """Test that ANC optimizer returns correctly formatted values."""
-        temp_wd = setup_test_environment
-        ff, struc = forcefield_and_structure
+        project_root = Path(__file__).parent.parent.parent.parent
+        data_dir = project_root / 'tests' / 'examples' / 'small_single_molecule'
+        
+        with tempfile.TemporaryDirectory() as temp_wd:
+            # Copy necessary files
+            ff_src = data_dir / 'ff1.csv'
+            xyz_src = data_dir / 'struc2.xyz'
+            if ff_src.exists():
+                shutil.copy(ff_src, temp_wd)
+            if xyz_src.exists():
+                shutil.copy(xyz_src, temp_wd)
+            
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(temp_wd)
+                
+                # Create objects
+                struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+                ff = ForceField(
+                    NAT,
+                    'ff1.csv',
+                    readff=True,
+                    energy_calculator=energy_ff,
+                    gradient_calculator=complete_gradient,
+                    hessian_calculator=complete_hessian
+                )
+                
+                _, _, xyz_start, _ = readin_xyz('struc2.xyz')
 
-        xyz_path = os.path.join(temp_wd, 'struc2.xyz')
-        _, _, xyz_start, _ = readin_xyz(xyz_path)
+                converged, energy, final_geom, steps, time, message = anc_optimizer(
+                    xyz_start, ff, struc.atom_types, max_micro_steps=5
+                )
 
-        converged, energy, final_geom, steps, time, message = anc_optimizer(
-            xyz_start, ff, struc.atom_types, max_micro_steps=5
-        )
+                assert isinstance(converged, (bool, np.bool_)), "Convergence flag should be boolean"
+                assert isinstance(steps, (int, np.integer)), "Steps should be integer"
+                assert isinstance(time, (int, float, np.number)), "Time should be numeric"
+                assert isinstance(message, str), "Message should be string"
+                assert final_geom is not None, "Final geometry should not be None"
+                assert final_geom.shape == xyz_start.shape, "Final geometry shape should match input"
+            finally:
+                os.chdir(original_cwd)
 
-        assert isinstance(converged, (bool, np.bool_)), "Convergence flag should be boolean"
-        assert isinstance(steps, (int, np.integer)), "Steps should be integer"
-        assert isinstance(time, (int, float, np.number)), "Time should be numeric"
-        assert isinstance(message, str), "Message should be string"
-        assert final_geom is not None, "Final geometry should not be None"
-        assert final_geom.shape == xyz_start.shape, "Final geometry shape should match input"
-
-    def test_anc_optimizer_positive_steps(self, setup_test_environment, forcefield_and_structure):
+    def test_anc_optimizer_positive_steps(self):
         """Test that ANC optimizer takes at least some steps."""
-        temp_wd = setup_test_environment
-        ff, struc = forcefield_and_structure
+        project_root = Path(__file__).parent.parent.parent.parent
+        data_dir = project_root / 'tests' / 'examples' / 'small_single_molecule'
+        
+        with tempfile.TemporaryDirectory() as temp_wd:
+            # Copy necessary files
+            ff_src = data_dir / 'ff1.csv'
+            xyz_src = data_dir / 'struc2.xyz'
+            if ff_src.exists():
+                shutil.copy(ff_src, temp_wd)
+            if xyz_src.exists():
+                shutil.copy(xyz_src, temp_wd)
+            
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(temp_wd)
+                
+                # Create objects
+                struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+                ff = ForceField(
+                    NAT,
+                    'ff1.csv',
+                    readff=True,
+                    energy_calculator=energy_ff,
+                    gradient_calculator=complete_gradient,
+                    hessian_calculator=complete_hessian
+                )
+                
+                _, _, xyz_start, _ = readin_xyz('struc2.xyz')
 
-        xyz_path = os.path.join(temp_wd, 'struc2.xyz')
-        _, _, xyz_start, _ = readin_xyz(xyz_path)
+                converged, energy, final_geom, steps, time, message = anc_optimizer(
+                    xyz_start, ff, struc.atom_types, max_micro_steps=5
+                )
 
-        converged, energy, final_geom, steps, time, message = anc_optimizer(
-            xyz_start, ff, struc.atom_types, max_micro_steps=5
-        )
+                assert steps > 0, "Optimization should take at least one step"
+            finally:
+                os.chdir(original_cwd)
 
-        assert steps > 0, "Optimization should take at least one step"
-
-    def test_anc_optimizer_geometry_validity(self, setup_test_environment, forcefield_and_structure):
+    def test_anc_optimizer_geometry_validity(self):
         """Test that optimized geometry has valid (non-NaN) coordinates."""
-        temp_wd = setup_test_environment
-        ff, struc = forcefield_and_structure
+        project_root = Path(__file__).parent.parent.parent.parent
+        data_dir = project_root / 'tests' / 'examples' / 'small_single_molecule'
+        
+        with tempfile.TemporaryDirectory() as temp_wd:
+            # Copy necessary files
+            ff_src = data_dir / 'ff1.csv'
+            xyz_src = data_dir / 'struc2.xyz'
+            if ff_src.exists():
+                shutil.copy(ff_src, temp_wd)
+            if xyz_src.exists():
+                shutil.copy(xyz_src, temp_wd)
+            
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(temp_wd)
+                
+                # Create objects
+                struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+                ff = ForceField(
+                    NAT,
+                    'ff1.csv',
+                    readff=True,
+                    energy_calculator=energy_ff,
+                    gradient_calculator=complete_gradient,
+                    hessian_calculator=complete_hessian
+                )
+                
+                _, _, xyz_start, _ = readin_xyz('struc2.xyz')
 
-        xyz_path = os.path.join(temp_wd, 'struc2.xyz')
-        _, _, xyz_start, _ = readin_xyz(xyz_path)
+                converged, energy, final_geom, steps, time, message = anc_optimizer(
+                    xyz_start, ff, struc.atom_types, max_micro_steps=5
+                )
 
-        converged, energy, final_geom, steps, time, message = anc_optimizer(
-            xyz_start, ff, struc.atom_types, max_micro_steps=5
-        )
+                assert not np.any(np.isnan(final_geom)), "Final geometry should not contain NaN values"
+                assert not np.any(np.isinf(final_geom)), "Final geometry should not contain inf values"
+            finally:
+                os.chdir(original_cwd)
 
-        assert not np.any(np.isnan(final_geom)), "Final geometry should not contain NaN values"
-        assert not np.any(np.isinf(final_geom)), "Final geometry should not contain inf values"
-
-    def test_anc_optimizer_different_tolerances(self, setup_test_environment, forcefield_and_structure):
+    def test_anc_optimizer_different_tolerances(self):
         """Test ANC optimizer with different convergence tolerances."""
-        temp_wd = setup_test_environment
-        ff, struc = forcefield_and_structure
+        project_root = Path(__file__).parent.parent.parent.parent
+        data_dir = project_root / 'tests' / 'examples' / 'small_single_molecule'
+        
+        with tempfile.TemporaryDirectory() as temp_wd:
+            # Copy necessary files
+            ff_src = data_dir / 'ff1.csv'
+            xyz_src = data_dir / 'struc2.xyz'
+            if ff_src.exists():
+                shutil.copy(ff_src, temp_wd)
+            if xyz_src.exists():
+                shutil.copy(xyz_src, temp_wd)
+            
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(temp_wd)
+                
+                # Create objects
+                struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+                ff = ForceField(
+                    NAT,
+                    'ff1.csv',
+                    readff=True,
+                    energy_calculator=energy_ff,
+                    gradient_calculator=complete_gradient,
+                    hessian_calculator=complete_hessian
+                )
+                
+                _, _, xyz_start, _ = readin_xyz('struc2.xyz')
 
-        xyz_path = os.path.join(temp_wd, 'struc2.xyz')
-        _, _, xyz_start, _ = readin_xyz(xyz_path)
+                # Test with loose tolerance
+                converged, energy, _, _, _, _ = anc_optimizer(
+                    xyz_start, ff, struc.atom_types,
+                    e_tol=1e-3, x_tol=1e-2,
+                    max_micro_steps=5
+                )
 
-        # Test with loose tolerance
-        converged, energy, _, _, _, _ = anc_optimizer(
-            xyz_start, ff, struc.atom_types,
-            e_tol=1e-3, x_tol=1e-2,
-            max_micro_steps=5
-        )
-
-        assert isinstance(converged, (bool, np.bool_)), "Should handle different tolerances"
+                assert isinstance(converged, (bool, np.bool_)), "Should handle different tolerances"
+            finally:
+                os.chdir(original_cwd)
 
 
 # class TestScipyOptimizer:
