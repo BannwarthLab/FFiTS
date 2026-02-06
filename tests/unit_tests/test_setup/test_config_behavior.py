@@ -5,14 +5,7 @@ in main calculation functions.
 import pytest
 import tempfile
 import os
-import subprocess
-from pathlib import Path
-from unittest.mock import patch, MagicMock, call
 from ffits.io.toml_parser import load_calculation_data
-from ffits.datatype.structure_data import Structure, ForceField, StructuralInformation
-from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
-from ffits.ts_guess.guess import get_ts_guess
-from ffits.datatype.calculation_data import TSCalculationOptions
 
 
 class TestFFParameterizationBehavior:
@@ -403,7 +396,7 @@ wbo_filename = "product_bonds.wbo"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.product_path.wbo_filename == "product_bonds.wbo"
         finally:
@@ -422,7 +415,7 @@ hessian_filename = "reactant_hessian_matrix.hess"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.reactant_path.hessian_filename == "reactant_hessian_matrix.hess"
         finally:
@@ -441,7 +434,7 @@ hessian_filename = "product.hess"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.product_path.hessian_filename == "product.hess"
         finally:
@@ -460,7 +453,7 @@ ff_filename = "reactant_force_field_params.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.reactant_path.ff_filename == "reactant_force_field_params.csv"
         finally:
@@ -479,7 +472,7 @@ ff_filename = "product_ff.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.product_path.ff_filename == "product_ff.csv"
         finally:
@@ -498,7 +491,7 @@ hessian_filename = "ts_hessian.hess"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.ts_path.hessian_filename == "ts_hessian.hess"
         finally:
@@ -517,7 +510,7 @@ ff_filename = "ts_forcefield.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             assert calcdata.ts_path.ff_filename == "ts_forcefield.csv"
         finally:
@@ -547,7 +540,7 @@ ff_filename = "ts_ff.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             # Reactant filenames
             assert calcdata.reactant_path.wbo_filename == "reactant.wbo"
@@ -585,7 +578,7 @@ ff_filename = "data/products/forcefield.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = load_calculation_data(temp_path, test=True)
             
             # Check that directory paths are preserved
             assert calcdata.reactant_path.wbo_filename == "data/reactants/bonds.wbo"

@@ -1,213 +1,539 @@
-# """
-# Tests for Structure dataclass.
-# Tests the complete information container for a given structure.
-# """
+import os
+import pytest
+import numpy as np
+import networkx as nx
+from tempfile import TemporaryDirectory
+from pathlib import Path
 
-# import pytest
-# import numpy as np
-# import networkx as nx
-# from ffits.datatype.structure_data import Structure, StructurePath, ForceField, StructuralInformation
-# from tests.unit_tests.mock_functions import (
-#     create_mock_structure,
-#     create_mock_structure_path,
-#     create_mock_forcefield,
-#     create_mock_structural_information,
-#     create_mock_xyz_array,
-#     create_mock_wbo_dict,
-#     create_mock_atom_types,
-# )
+from ffits.datatype.structure_data import (
+    StructurePath,
+    ForceField,
+    StructuralInformation,
+    Structure,
+    Name,
+    get_vander_matrix,
+    atom_symbol_to_number,
+    angstrom2bohr,
+    convert_xyz_to_fortranstyle,
+)
+from ffits.io.reader import readin_xyz, read_wbo_file
+from tests.unit_tests.static_data import XYZ, WBO, ATOM_TYPES, NAT
 
 
-# class TestStructureDataclass:
-#     """Tests for the Structure dataclass consistency and behavior."""
-    
-#     def test_structure_consistency_nat(self):
-#         """Test that all components have consistent nat (number of atoms)."""
-#         nat = 5
-#         structure = create_mock_structure(nat=nat)
+class TestAtomConversionFunctions:
+    """Test utility functions for atomic conversions."""
 
-#         assert structure.ff.nat == nat
-#         assert structure.info.nat == nat
-#         assert structure.info.xyz.shape[0] == nat
-#         assert len(structure.info.atom_types) == nat
-    
-#     def test_structure_hessian_dimensions(self):
-#         """Test that Hessian has correct dimensions (3*nat x 3*nat)."""
-#         for nat in [1, 2, 3, 4, 5]:
-#             structure = create_mock_structure(nat=nat)
-#             expected_dim = 3 * nat
-#             assert structure.info.hessian.shape == (expected_dim, expected_dim)
-    
-#     def test_structure_graph_creation(self):
-#         """Test that Structure creates graph from WBO."""
-#         structure = create_mock_structure(nat=3)
+    def test_atom_symbol_to_number(self):
+        """Test element symbol to atomic number conversion."""
+        assert atom_symbol_to_number("H") == 1
+        assert atom_symbol_to_number("C") == 6
+        assert atom_symbol_to_number("N") == 7
+        assert atom_symbol_to_number("O") == 8
+        assert atom_symbol_to_number("He") == 2
+        assert atom_symbol_to_number("Au") == 79
+
+    def test_atom_symbol_to_number_case_insensitive(self):
+        """Test that symbol conversion is case-insensitive."""
+        assert atom_symbol_to_number("c") == 6
+        assert atom_symbol_to_number("H") == 1
+        assert atom_symbol_to_number("he") == 2
+
+    def test_atom_symbol_to_number_invalid(self):
+        """Test handling of invalid atom symbols."""
+        with pytest.raises(ValueError):
+            atom_symbol_to_number("Xx")
+
+    def test_angstrom2bohr_scalar(self):
+        """Test scalar angstrom to bohr conversion."""
+        result = angstrom2bohr(1.0)
+        expected = 1.0 / (1 / 1.8897259)
+        assert pytest.approx(result) == expected
+
+    def test_angstrom2bohr_array(self):
+        """Test array angstrom to bohr conversion."""
+        arr = np.array([1.0, 2.0, 3.0])
+        result = angstrom2bohr(arr)
+        assert result.shape == arr.shape
+
+    def test_convert_xyz_to_fortranstyle(self):
+        """Test XYZ to Fortran-style column-major conversion."""
+        xyz = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+        result = convert_xyz_to_fortranstyle(2, xyz)
+        expected = np.array([[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]], order='F')
+        np.testing.assert_array_almost_equal(result, expected)
+
+    def test_get_vander_matrix(self):
+        """Test van der Waals matrix generation."""
+        atoms = np.array(['H', 'H', 'C'])
+        vander = get_vander_matrix(atoms)
         
-#         assert hasattr(structure.info, 'complete_graph')
-#         assert hasattr(structure.info, 'seperate_molecule_list')
-#         assert type(structure.info.complete_graph) is nx.Graph
-#         assert structure.info.molecule_count > 0
-    
-#     def test_structure_vander_matrix_shape(self):
-#         """Test that van der Waals matrix has correct shape."""
-#         for nat in [1, 2, 3, 5]:
-#             structure = create_mock_structure(nat=nat)
-#             assert structure.info.vander_matrix.shape == (nat, nat)
-    
-#     def test_structure_different_sizes(self):
-#         """Test Structure consistency with various molecule sizes."""
-#         for nat in [1, 3, 5, 7, 10]:
-#             structure = create_mock_structure(nat=nat)
+        # Should be symmetric
+        np.testing.assert_array_equal(vander, vander.T)
+        
+        # Size should match number of atoms
+        assert vander.shape == (3, 3)
+        
+        # Diagonal should be 2 * radius for same atoms
+        assert vander[0, 0] > 0
+        assert vander[1, 1] > 0
+
+
+class TestName:
+    """Test Name dataclass static methods."""
+
+    def test_modified_ff(self):
+        """Test modified_ff naming."""
+        result = Name.modified_ff("test.ff")
+        assert result == "test.ff"
+
+    def test_fitted_ff(self):
+        """Test fitted_ff naming."""
+        result = Name.fitted_ff("test.ff")
+        assert result == "test.ff"
+
+    def test_optimized_xyz(self):
+        """Test optimized_xyz naming."""
+        result = Name.optimized_xyz("structure.xyz")
+        assert result == "opt_structure.xyz"
+
+    def test_aligned_xyz(self):
+        """Test aligned_xyz naming."""
+        result = Name.aligned_xyz("structure.xyz")
+        assert result == "aligned_structure.xyz"
+
+    def test_original_xyz(self):
+        """Test original_xyz naming."""
+        result = Name.original_xyz("structure.xyz")
+        assert result == "original_structure.xyz"
+
+
+class TestStructurePath:
+    """Test StructurePath dataclass."""
+
+    def test_structurepath_creation(self):
+        """Test creating a StructurePath instance."""
+        path = StructurePath(
+            xyz_filename="structure.xyz",
+            hessian_filename="hessian.hess",
+            wbo_filename="wbo.wbo",
+            ff_filename="ff.ff",
+        )
+        assert path.xyz_filename == "structure.xyz"
+        assert path.hessian_filename == "hessian.hess"
+        assert path.wbo_filename == "wbo.wbo"
+        assert path.ff_filename == "ff.ff"
+
+    def test_structurepath_with_paths(self):
+        """Test StructurePath with full paths."""
+        path = StructurePath(
+            xyz_filename="/home/user/data/mol1.xyz",
+            hessian_filename="/home/user/data/mol1.hess",
+            wbo_filename="/home/user/data/mol1.wbo",
+            ff_filename="/home/user/data/mol1.ff",
+        )
+        assert "/home/user/data" in path.xyz_filename
+
+
+class TestForceField:
+    """Test ForceField class."""
+
+    @pytest.fixture
+    def ff_path(self):
+        """Provide path to example force field."""
+        test_dir = Path(__file__).parent.parent.parent / "examples" / "small_single_molecule"
+        return str(test_dir / "ff1.csv")
+
+    def test_forcefield_initialization_without_read(self):
+        """Test ForceField initialization without reading from file."""
+        ff = ForceField(nat=7, ff_filename="test.ff", readff=False)
+        assert ff.nat == 7
+        assert ff.ff_filename == "test.ff"
+        assert len(ff.bonds) == 0
+        assert len(ff.angles) == 0
+        assert len(ff.dihedrals) == 0
+        assert len(ff.repulsive) == 0
+
+    def test_forcefield_read_from_file(self, ff_path):
+        """Test reading force field from file."""
+        ff = ForceField(nat=7, ff_filename=ff_path, readff=True)
+        assert len(ff.bonds) > 0
+        assert len(ff.angles) > 0
+        assert len(ff.dihedrals) > 0
+        assert len(ff.repulsive) > 0
+
+    def test_forcefield_columns_initialization(self):
+        """Test that force field has correct columns."""
+        ff = ForceField(nat=7, ff_filename="test.ff", readff=False)
+        expected_cols = ['type', 'atoms', 'parameter', 'reference_value']
+        assert list(ff.bonds.columns) == expected_cols
+        assert list(ff.angles.columns) == expected_cols
+        assert list(ff.dihedrals.columns) == expected_cols
+        assert list(ff.repulsive.columns) == expected_cols
+
+    def test_forcefield_write_to_csv(self, ff_path):
+        """Test writing force field to CSV."""
+        ff = ForceField(nat=7, ff_filename=ff_path, readff=True)
+        
+        with TemporaryDirectory() as tmpdir:
+            output_path = os.path.join(tmpdir, "test_ff_output.csv")
+            ff.ff_filename = output_path
+            ff.write()
             
-#             assert structure.info.nat == nat
-#             assert structure.ff.nat == nat
-#             assert structure.info.xyz.shape == (nat, 3)
-    
-#     def test_structure_custom_path_values(self):
-#         """Test Structure with custom path values."""
-#         path = StructurePath(
-#             xyz_filename="custom.xyz",
-#             hessian_filename="custom.hess",
-#             wbo_filename="custom.wbo",
-#             ff_filename="custom_ff.csv"
-#         )
-#         ff = create_mock_forcefield(nat=3)
-#         info = create_mock_structural_information(nat=3)
+            # Check file was created
+            assert os.path.exists(output_path)
+            
+            # Read it back and verify structure
+            ff2 = ForceField(nat=7, ff_filename=output_path, readff=True)
+            assert len(ff2.bonds) == len(ff.bonds)
+            assert len(ff2.angles) == len(ff.angles)
+
+    def test_forcefield_with_calculators(self):
+        """Test ForceField with calculator functions."""
+        def dummy_energy(xyz, ff):
+            return 0.0
         
-#         structure = Structure(path=path, ff=ff, info=info)
+        def dummy_gradient(xyz, ff):
+            return np.zeros(3)
         
-#         assert structure.path.xyz_filename == "custom.xyz"
-#         assert structure.path.hessian_filename == "custom.hess"
-    
-#     def test_structure_bo_matrix_symmetry(self):
-#         """Test that bond order matrix is symmetric."""
-#         structure = create_mock_structure(nat=3)
-#         np.testing.assert_array_equal(structure.info.bo_matrix, structure.info.bo_matrix.T)
-    
-#     def test_structure_hessian_symmetry(self):
-#         """Test that Hessian matrix is symmetric."""
-#         structure = create_mock_structure(nat=3)
+        def dummy_hessian(xyz, ff):
+            return np.zeros((3, 3))
         
-#         np.testing.assert_array_almost_equal(
-#             structure.info.hessian, 
-#             structure.info.hessian.T,
-#             decimal=10
-#         )
-    
-#     def test_structure_hessian_positive_semidefinite(self):
-#         """Test that Hessian is positive semi-definite."""
-#         structure = create_mock_structure(nat=3)
+        ff = ForceField(
+            nat=7,
+            ff_filename="test.ff",
+            readff=False,
+            energy_calculator=dummy_energy,
+            gradient_calculator=dummy_gradient,
+            hessian_calculator=dummy_hessian,
+        )
         
-#         eigenvalues = np.linalg.eigvals(structure.info.hessian)
-#         assert all(eig >= -1e-8 for eig in eigenvalues)
-    
-#     def test_structure_xyz_magnitude(self):
-#         """Test that XYZ coordinates are physically reasonable."""
-#         structure = create_mock_structure(nat=5)
-        
-#         assert np.all(np.abs(structure.info.xyz) < 100)
-#         assert np.any(structure.info.xyz != 0)
-    
-#     def test_structure_wbo_sorted_pairs(self):
-#         """Test that WBO dictionary has sorted atom pairs."""
-#         structure = create_mock_structure(nat=5)
-        
-#         for bond in structure.info.wbo.keys():
-#             assert len(bond) == 2
-#             assert bond[0] < bond[1]
-    
-#     def test_structure_wbo_physical_values(self):
-#         """Test that WBO values are physically reasonable (0 < order <= 3)."""
-#         structure = create_mock_structure(nat=5)
-        
-#         for bond, order in structure.info.wbo.items():
-#             assert order > 0
-#             assert order <= 3.0
-    
-#     def test_structure_molecule_count(self):
-#         """Test that molecule count matches separated molecule list."""
-#         structure = create_mock_structure(nat=7)
-        
-#         assert structure.info.molecule_count >= 1
-#         assert len(structure.info.seperate_molecule_list) == structure.info.molecule_count
-    
-#     def test_structure_fortran_xyz_shape(self):
-#         """Test that Fortran-style XYZ has shape (3, nat)."""
-#         nat = 4
-#         structure = create_mock_structure(nat=nat)
-#         assert structure.info.fortran_xyz.shape == (3, nat)
-    
-#     def test_structure_single_atom(self):
-#         """Test Structure with single atom."""
-#         structure = create_mock_structure(nat=1)
-        
-#         assert structure.info.nat == 1
-#         assert structure.ff.nat == 1
-#         assert structure.info.xyz.shape == (1, 3)
-#         assert structure.info.hessian.shape == (3, 3)
-    
-#     def test_structure_large_molecule(self):
-#         """Test Structure with larger molecule (20 atoms)."""
-#         nat = 20
-#         structure = create_mock_structure(nat=nat)
-        
-#         assert structure.info.nat == nat
-#         assert structure.ff.nat == nat
-#         assert structure.info.hessian.shape == (60, 60)
-    
-#     def test_structure_minimal_wbo(self):
-#         """Test Structure with minimal WBO data (single bond)."""
-#         nat = 2
-#         xyz = create_mock_xyz_array(nat)
-#         wbo = {(1, 2): 1.0}
-#         atom_types = create_mock_atom_types(nat)
-        
-#         info = StructuralInformation(nat=nat, xyz=xyz, wbo_dict=wbo, atom_types=atom_types)
-#         path = create_mock_structure_path()
-#         ff = create_mock_forcefield(nat=nat)
-        
-#         structure = Structure(path=path, ff=ff, info=info)
-        
-#         assert len(structure.info.wbo) == 1
-#         assert structure.info.molecule_count == 1
-    
-#     def test_structure_empty_wbo(self):
-#         """Test Structure with empty WBO data."""
-#         nat = 2
-#         xyz = create_mock_xyz_array(nat)
-#         wbo = {}
-#         atom_types = create_mock_atom_types(nat)
-        
-#         info = StructuralInformation(nat=nat, xyz=xyz, wbo_dict=wbo, atom_types=atom_types)
-#         path = create_mock_structure_path()
-#         ff = create_mock_forcefield(nat=nat)
-        
-#         structure = Structure(path=path, ff=ff, info=info)
-        
-#         assert not hasattr(structure.info, 'molecule_count')
+        assert ff.energy_calculator is not None
+        assert ff.gradient_calculator is not None
+        assert ff.hessian_calculator is not None
 
 
-# class TestStructureIntegration:
-#     """Tests for how Structure components interact."""
-    
-#     def test_info_and_ff_nat_match(self):
-#         """Test that info and FF have matching number of atoms."""
-#         for nat in [1, 3, 5, 8]:
-#             structure = create_mock_structure(nat=nat)
-#             assert structure.info.nat == structure.ff.nat
-    
-#     def test_xyz_and_atom_types_length_match(self):
-#         """Test that XYZ coordinates and atom types have matching lengths."""
-#         structure = create_mock_structure(nat=7)
-#         assert structure.info.xyz.shape[0] == len(structure.info.atom_types)
-    
-#     def test_hessian_and_nat_relationship(self):
-#         """Test that Hessian size is always 3 * nat."""
-#         for nat in [2, 3, 5, 10]:
-#             structure = create_mock_structure(nat=nat)
-#             expected_size = 3 * nat
-#             assert structure.info.hessian.shape[0] == expected_size
-#             assert structure.info.hessian.shape[1] == expected_size
+class TestStructuralInformation:
+    """Test StructuralInformation class."""
+
+    @pytest.fixture
+    def structural_info(self):
+        """Create a StructuralInformation instance for testing."""
+        return StructuralInformation(
+            nat=NAT,
+            xyz=XYZ,
+            wbo_dict=WBO,
+            atom_types=np.array(ATOM_TYPES),
+        )
+
+    def test_structural_information_initialization(self, structural_info):
+        """Test StructuralInformation initialization."""
+        assert structural_info.nat == NAT
+        assert structural_info.atom_types.shape[0] == NAT
+        assert len(structural_info.wbo) == len(WBO)
+
+    def test_structural_information_vander_matrix(self, structural_info):
+        """Test van der Waals matrix creation."""
+        assert structural_info.vander_matrix.shape == (NAT, NAT)
+        # Matrix should be symmetric
+        np.testing.assert_array_equal(
+            structural_info.vander_matrix,
+            structural_info.vander_matrix.T,
+        )
+
+    def test_structural_information_bo_matrix(self, structural_info):
+        """Test bond order matrix creation."""
+        bo_matrix = structural_info.bo_matrix
+        # Should be square and symmetric
+        assert bo_matrix.shape == (NAT, NAT)
+        np.testing.assert_array_equal(bo_matrix, bo_matrix.T)
+        
+        # Check specific bonds from WBO
+        assert bo_matrix[0, 1] == WBO[(1, 2)]  # Atoms 1-2
+        assert bo_matrix[1, 2] == WBO[(2, 3)]  # Atoms 2-3
+
+    def test_structural_information_fortran_xyz(self, structural_info):
+        """Test Fortran-style XYZ coordinates."""
+        # Fortran format should be (3, nat)
+        assert structural_info.fortran_xyz.shape == (3, NAT)
+
+    def test_structural_information_complete_graph(self, structural_info):
+        """Test graph creation from WBO."""
+        graph = structural_info.complete_graph
+        assert isinstance(graph, nx.Graph)
+        # Graph should have edges for bonds with BO > threshold
+        assert graph.number_of_nodes() > 0
+
+    def test_structural_information_molecule_count(self, structural_info):
+        """Test molecule count (connected components)."""
+        # The test structure should be a single molecule
+        assert structural_info.molecule_count >= 1
+
+    def test_structural_information_separate_molecules(self, structural_info):
+        """Test split into separate molecules."""
+        subgraphs = structural_info.seperate_molecule_list
+        assert len(subgraphs) == structural_info.molecule_count
+        assert len(subgraphs) > 0
+
+    def test_structural_information_bo_matrix_symmetry(self, structural_info):
+        """Test that BO matrix is symmetric."""
+        bo_matrix = structural_info.bo_matrix
+        np.testing.assert_array_equal(bo_matrix, bo_matrix.T)
+
+    def test_structuralinfo_angstrom2bohr_method(self, structural_info):
+        """Test angstrom to bohr conversion method."""
+        result = structural_info.angstrom2bohr(1.0)
+        assert isinstance(result, (float, np.ndarray))
+        assert result > 0
+
+    def test_structuralinfo_create_graph_low_bo_threshold(self):
+        """Test that bonds with very low WBO are excluded from graph."""
+        wbo_with_low = {
+            (1, 2): 1.0,  # Strong bond
+            (2, 3): 0.05,  # Very weak bond (below threshold)
+        }
+        info = StructuralInformation(
+            nat=3,
+            xyz=np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]], dtype=float),
+            wbo_dict=wbo_with_low,
+            atom_types=np.array(['C', 'C', 'C']),
+        )
+        graph = info.complete_graph
+        # Only the strong bond should appear
+        assert graph.number_of_edges() == 1
 
 
-# if __name__ == "__main__":
-#     pytest.main([__file__, "-v"])
+class TestStructure:
+    """Test Structure dataclass."""
+
+    @pytest.fixture
+    def example_files(self):
+        """Provide paths to example files."""
+        test_dir = Path(__file__).parent.parent.parent / "examples" / "small_single_molecule"
+        return {
+            'xyz': str(test_dir / "struc1.xyz"),
+            'ff': str(test_dir / "ff1.csv"),
+            'wbo': str(test_dir / "wbo1"),
+        }
+
+    @pytest.fixture
+    def structure(self, example_files):
+        """Create a Structure instance for testing."""
+        # Load data
+        nat, comment, xyz, atom_types = readin_xyz(example_files['xyz'])
+        wbo = read_wbo_file(example_files['wbo'])
+        
+        # Create components
+        path = StructurePath(
+            xyz_filename=example_files['xyz'],
+            hessian_filename="",
+            wbo_filename=example_files['wbo'],
+            ff_filename=example_files['ff'],
+        )
+        
+        ff = ForceField(nat=nat, ff_filename=example_files['ff'], readff=True)
+        
+        info = StructuralInformation(
+            nat=nat,
+            xyz=xyz,
+            wbo_dict=wbo,
+            atom_types=np.array(atom_types),
+        )
+        
+        # Create Structure
+        return Structure(path=path, ff=ff, info=info)
+
+    def test_structure_creation(self, structure):
+        """Test Structure creation."""
+        assert structure.path is not None
+        assert structure.ff is not None
+        assert structure.info is not None
+
+    def test_structure_has_path(self, structure):
+        """Test Structure path component."""
+        assert isinstance(structure.path, StructurePath)
+        assert structure.path.xyz_filename.endswith('.xyz')
+        assert structure.path.ff_filename.endswith('ff1.csv')
+
+    def test_structure_has_forcefield(self, structure):
+        """Test Structure force field component."""
+        assert isinstance(structure.ff, ForceField)
+        assert structure.ff.nat > 0
+
+    def test_structure_has_info(self, structure):
+        """Test Structure structural information component."""
+        assert isinstance(structure.info, StructuralInformation)
+        assert structure.info.nat > 0
+
+    def test_structure_atom_count_consistency(self, structure):
+        """Test that atom counts are consistent across components."""
+        assert structure.ff.nat == structure.info.nat
+
+    def test_structure_ff_and_info_consistency(self, structure):
+        """Test consistency between force field and structural info."""
+        # Both should reference the same structure
+        assert structure.ff.nat == structure.info.nat
+        assert len(structure.info.atom_types) == structure.ff.nat
+
+    def test_structure_with_real_data(self, example_files):
+        """Test Structure with real example data."""
+        nat, comment, xyz, atom_types = readin_xyz(example_files['xyz'])
+        wbo = read_wbo_file(example_files['wbo'])
+        
+        path = StructurePath(
+            xyz_filename=example_files['xyz'],
+            hessian_filename="",
+            wbo_filename=example_files['wbo'],
+            ff_filename=example_files['ff'],
+        )
+        
+        ff = ForceField(nat=nat, ff_filename=example_files['ff'], readff=True)
+        info = StructuralInformation(
+            nat=nat,
+            xyz=xyz,
+            wbo_dict=wbo,
+            atom_types=np.array(atom_types),
+        )
+        
+        structure = Structure(path=path, ff=ff, info=info)
+        
+        # Verify structure is correctly assembled
+        assert structure.info.nat == 7
+        assert len(structure.info.wbo) == 6
+        assert len(structure.ff.bonds) > 0
+
+
+class TestStructuralInformationGraphOperations:
+    """Test graph-related operations in StructuralInformation."""
+
+    def test_subgraph_node_attributes(self):
+        """Test that subgraph nodes have correct attributes."""
+        info = StructuralInformation(
+            nat=NAT,
+            xyz=XYZ,
+            wbo_dict=WBO,
+            atom_types=np.array(ATOM_TYPES),
+        )
+        
+        for subgraph in info.seperate_molecule_list:
+            for node in subgraph.nodes():
+                assert 'id_in_subgraph' in subgraph.nodes[node]
+
+    def test_multiple_molecules_separation(self):
+        """Test separation of multiple molecules."""
+        # Create WBO for two separate molecules (no connection)
+        wbo_separate = {
+            (1, 2): 1.0,  # Molecule 1
+            (4, 5): 1.0,  # Molecule 2
+        }
+        
+        info = StructuralInformation(
+            nat=5,
+            xyz=np.array([
+                [0, 0, 0], [1, 0, 0], [2, 0, 0],
+                [10, 0, 0], [11, 0, 0]
+            ], dtype=float),
+            wbo_dict=wbo_separate,
+            atom_types=np.array(['C', 'C', 'C', 'C', 'C']),
+        )
+        
+        # Should have 2 separate molecules (2 connected components)
+        assert info.molecule_count == 2
+
+    def test_empty_wbo(self):
+        """Test StructuralInformation with empty WBO (single atoms)."""
+        info = StructuralInformation(
+            nat=2,
+            xyz=np.array([[0, 0, 0], [5, 0, 0]], dtype=float),
+            wbo_dict={},
+            atom_types=np.array(['He', 'He']),
+        )
+        
+        # Should still have vander_matrix
+        assert info.vander_matrix.shape == (2, 2)
+
+
+class TestIntegration:
+    """Integration tests combining multiple components."""
+
+    @pytest.fixture
+    def full_structure(self):
+        """Create a complete structure from example files."""
+        test_dir = Path(__file__).parent.parent.parent / "examples" / "small_single_molecule"
+        
+        xyz_file = str(test_dir / "struc1.xyz")
+        ff_file = str(test_dir / "ff1.csv")
+        wbo_file = str(test_dir / "wbo1")
+        
+        nat, comment, xyz, atom_types = readin_xyz(xyz_file)
+        wbo = read_wbo_file(wbo_file)
+        
+        path = StructurePath(
+            xyz_filename=xyz_file,
+            hessian_filename="",
+            wbo_filename=wbo_file,
+            ff_filename=ff_file,
+        )
+        
+        ff = ForceField(nat=nat, ff_filename=ff_file, readff=True)
+        info = StructuralInformation(
+            nat=nat,
+            xyz=xyz,
+            wbo_dict=wbo,
+            atom_types=np.array(atom_types),
+        )
+        
+        return Structure(path=path, ff=ff, info=info)
+
+    def test_structure_components_interact(self, full_structure):
+        """Test that structure components work together."""
+        # All components should have consistent nat
+        assert full_structure.ff.nat == full_structure.info.nat
+        
+        # FF should have bonds/angles/dihedrals computed for this structure
+        assert len(full_structure.ff.bonds) > 0
+        
+        # Info should have graph computed from WBO
+        assert full_structure.info.complete_graph is not None
+
+    def test_structure_with_all_data_types(self, full_structure):
+        """Test structure with all types of force field parameters."""
+        ff = full_structure.ff
+        
+        # Check that we have all FF parameter types
+        assert len(ff.bonds) > 0, "Should have bond parameters"
+        assert len(ff.angles) > 0, "Should have angle parameters"
+        assert len(ff.dihedrals) > 0, "Should have dihedral parameters"
+        assert len(ff.repulsive) > 0, "Should have repulsive parameters"
+
+    def test_vander_radius_effect(self):
+        """Test that van der Waals radii affect interaction matrix."""
+        atoms = np.array(['H', 'C'])
+        vander = get_vander_matrix(atoms)
+        
+        # Verify that different atoms give different interactions
+        assert vander[0, 0] != vander[1, 1]  # Different atoms
+        assert vander[0, 1] == vander[1, 0]  # Symmetric
+
+    def test_roundtrip_ff_write_read(self):
+        """Test writing and reading back force field data."""
+        test_dir = Path(__file__).parent.parent.parent / "examples" / "small_single_molecule"
+        ff_file = str(test_dir / "ff1.csv")
+        
+        # Read original
+        ff1 = ForceField(nat=7, ff_filename=ff_file, readff=True)
+        original_bonds = len(ff1.bonds)
+        
+        with TemporaryDirectory() as tmpdir:
+            # Write to temp file
+            temp_ff = os.path.join(tmpdir, "temp_ff.csv")
+            ff1.ff_filename = temp_ff
+            ff1.write()
+            
+            # Read back
+            ff1_read = ForceField(nat=7, ff_filename=temp_ff, readff=True)
+            
+            # Compare
+            assert len(ff1_read.bonds) == original_bonds
+            assert len(ff1_read.angles) == len(ff1.angles)
+            assert len(ff1_read.dihedrals) == len(ff1.dihedrals)
+            assert len(ff1_read.repulsive) == len(ff1.repulsive)
