@@ -44,11 +44,11 @@ Command line keywords are:
 - `--multiplicity`
 - `--charge`
 
-For using the configuration options, see chapter [Configuration File](#configuration-file).
+For using the configuration options, see chapter [Configuration File](#configuration-file). In both modes the final structure is `optimized.xyz` with the corresponding trajectory in `trajectory.xyz`. The TS guess mode will additionally generate (if it was not read-in) the FF, WBO and Hessian files of reactant and product, as well as the TS FF file. If a specific change is needed in the TS guess, the TS FF file can be modified and used in the optimization mode. 
 
 # Theory
 
-todo
+todo _information on how exactly each part of the algorithm works_
 
 # Configuration File 
 
