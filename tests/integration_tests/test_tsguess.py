@@ -5,6 +5,8 @@ import shutil
 import os
 from pathlib import Path
 import pytest
+from ffits.io.reader import readin_xyz
+from ffits.utils.rmsd import kabsch_rmsd
 
 # Code which calls ffits as a subprocess
 def run_ffits_as_subprocess(args):
@@ -22,14 +24,11 @@ def test_ffits_standard_tsguess_run():
     examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
-        for item in examples_dir.iterdir():
-            if item.is_file():
-                shutil.copy2(item, temp_path / item.name)
+        shutil.copy2(examples_dir / 'struc1.xyz', temp_path / "reac.xyz")
+        shutil.copy2(examples_dir / 'struc2.xyz', temp_path / "prod.xyz")
         
         original_cwd = os.getcwd()
         os.chdir(temp_path)
-        os.rename(temp_path / "struc1.xyz", temp_path / "reac.xyz")
-        os.rename(temp_path / "struc2.xyz", temp_path / "prod.xyz")
 
         try:
             stdout, stderr, returncode = run_ffits_as_subprocess(['reac.xyz', 'prod.xyz'])
@@ -58,6 +57,153 @@ def test_ffits_standard_tsguess_run():
             os.chdir(original_cwd)
 
 
+def test_ffits_with_hessreadin():
+    """
+    Test which first calculates with present hessian and then without hessian and wbo calculation but reading in the files created in the first run, by changing the filenames in the config file
+    """  
+    examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        shutil.copy2(examples_dir / 'struc1.xyz', temp_path / "reac.xyz")
+        shutil.copy2(examples_dir / 'struc2.xyz', temp_path / "prod.xyz")
+        
+        original_cwd = os.getcwd()
+        os.chdir(temp_path)
+
+
+        custom_input = """
+[reactant.calculation]
+hessian_calc = false
+[product.calculation]
+hessian_calc = false
+"""
+        with open(temp_path / "custom_config.toml", 'w') as f:
+            f.write(custom_input)
+        
+        try:
+            stdout, stderr, returncode = run_ffits_as_subprocess(['reac.xyz', 'prod.xyz'])
+            print("STDOUT:", stdout)
+            print("STDERR:", stderr)
+            assert returncode == 0, f"ffits failed with return code {returncode}\nstderr: {stderr}"
+            _, _, optimized_xyz, _ = readin_xyz(temp_path / "optimized.xyz")
+            
+            os.remove(temp_path / "optimized.xyz")
+
+            # list every file in temp_path
+            for file in temp_path.iterdir():
+                print(file.name)
+
+            # with config and readin
+            stdout, stderr, returncode = run_ffits_as_subprocess(['reac.xyz', 'prod.xyz', '--config', 'custom_config.toml'])
+            print("STDOUT:", stdout)
+            print("STDERR:", stderr)
+            _, _, optimized_xyz_withreadin, _ = readin_xyz(temp_path / "optimized.xyz")
+            
+            # compare both ts guess through rmsd
+            assert kabsch_rmsd(optimized_xyz, optimized_xyz_withreadin) < 1e-5, "Optimized geometries differ between runs with and without hessian calculation."
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_ffits_with_wboreadin():
+    """
+    Test which first calculates with present hessian and then without hessian and wbo calculation but reading in the files created in the first run, by changing the filenames in the config file
+    """  
+    examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        shutil.copy2(examples_dir / 'struc1.xyz', temp_path / "reac.xyz")
+        shutil.copy2(examples_dir / 'struc2.xyz', temp_path / "prod.xyz")
+        
+        original_cwd = os.getcwd()
+        os.chdir(temp_path)
+
+
+        custom_input = """
+[reactant.calculation]
+wbo_calc = false
+[product.calculation]
+wbo_calc = false
+"""
+        with open(temp_path / "custom_config.toml", 'w') as f:
+            f.write(custom_input)
+        
+        try:
+            stdout, stderr, returncode = run_ffits_as_subprocess(['reac.xyz', 'prod.xyz'])
+            print("STDOUT:", stdout)
+            print("STDERR:", stderr)
+            assert returncode == 0, f"ffits failed with return code {returncode}\nstderr: {stderr}"
+            _, _, optimized_xyz, _ = readin_xyz(temp_path / "optimized.xyz")
+            
+            os.remove(temp_path / "optimized.xyz")
+
+            # list every file in temp_path
+            for file in temp_path.iterdir():
+                print(file.name)
+
+            # with config and readin
+            stdout, stderr, returncode = run_ffits_as_subprocess(['reac.xyz', 'prod.xyz', '--config', 'custom_config.toml'])
+            print("STDOUT:", stdout)
+            print("STDERR:", stderr)
+            _, _, optimized_xyz_withreadin, _ = readin_xyz(temp_path / "optimized.xyz")
+            
+            # compare both ts guess through rmsd
+            assert kabsch_rmsd(optimized_xyz, optimized_xyz_withreadin) < 1e-5, "Optimized geometries differ between runs with and without hessian calculation."
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_ffits_with_ffreadin():
+    """
+    Test which first calculates with present hessian and then without hessian and ff parameterization calculation but reading in the files created in the first run, by changing the filenames in the config file
+    """  
+    examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        shutil.copy2(examples_dir / 'struc1.xyz', temp_path / "reac.xyz")
+        shutil.copy2(examples_dir / 'struc2.xyz', temp_path / "prod.xyz")
+        
+        original_cwd = os.getcwd()
+        os.chdir(temp_path)
+
+
+        custom_input = """
+[reactant.calculation]
+ff_parameterization = false
+[product.calculation]
+ff_parameterization = false
+"""
+        with open(temp_path / "custom_config.toml", 'w') as f:
+            f.write(custom_input)
+        
+        try:
+            stdout, stderr, returncode = run_ffits_as_subprocess(['reac.xyz', 'prod.xyz'])
+            print("STDOUT:", stdout)
+            print("STDERR:", stderr)
+            assert returncode == 0, f"ffits failed with return code {returncode}\nstderr: {stderr}"
+            _, _, optimized_xyz, _ = readin_xyz(temp_path / "optimized.xyz")
+            
+            os.remove(temp_path / "optimized.xyz")
+
+            # list every file in temp_path
+            for file in temp_path.iterdir():
+                print(file.name)
+
+            # with config and readin
+            stdout, stderr, returncode = run_ffits_as_subprocess(['reac.xyz', 'prod.xyz', '--config', 'custom_config.toml'])
+            print("STDOUT:", stdout)
+            print("STDERR:", stderr)
+            _, _, optimized_xyz_withreadin, _ = readin_xyz(temp_path / "optimized.xyz")
+            
+            # compare both ts guess through rmsd
+            assert kabsch_rmsd(optimized_xyz, optimized_xyz_withreadin) < 1e-5, "Optimized geometries differ between runs with and without ff parameterization calculation."
+
+        finally:
+            os.chdir(original_cwd)
+
+
 def test_ffits_with_filename_change_config():
     """
     Test that ffits creates optimized.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with custom toml input
@@ -65,28 +211,19 @@ def test_ffits_with_filename_change_config():
     examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
-        for item in examples_dir.iterdir():
-            if item.is_file():
-                shutil.copy2(item, temp_path / item.name)
+        shutil.copy2(examples_dir / 'struc1.xyz', temp_path / "reac.xyz")
+        shutil.copy2(examples_dir / 'struc2.xyz', temp_path / "prod.xyz")
         
         original_cwd = os.getcwd()
         os.chdir(temp_path)
-        os.rename(temp_path / "struc1.xyz", temp_path / "reac.xyz")
-        os.rename(temp_path / "struc2.xyz", temp_path / "prod.xyz")
         
         custom_input = """
-[ts_calc]
-factor_reactant = 0.7
-factor_product = 0.3
-
 [reactant.path]
-xyz_filename = "struc1.xyz"
 wbo_filename = "wbooo1"
 hessian_filename = "struc1test.hess"
 ff_filename = "ff1test.csv"
 
 [product.path]
-xyz_filename = "struc2.xyz"
 wbo_filename = "wbooo2"
 hessian_filename = "struc2test.hess"
 ff_filename = "ff2test.csv"
@@ -122,60 +259,9 @@ ff_filename = "ff2test.csv"
 
 
 
-        
-        # # Create malformed XYZ files (missing atom count or invalid format)
-        # bad_xyz1 = temp_path / "bad1.xyz"
-        # bad_xyz2 = temp_path / "bad2.xyz"
-        
-        # bad_xyz1.write_text("not_a_number\ncomment line\nH 0 0 0\n")
-        # bad_xyz2.write_text("2\ncomment\nH 0 0 0\n")  # Says 2 atoms but only has 1
-        
-        # original_cwd = os.getcwd()
-        # os.chdir(temp_path)
-        
-        # try:
-        #     stdout, stderr, returncode = run_ffits_as_subprocess(['bad1.xyz', 'bad2.xyz'])
-        #     assert returncode != 0, "ffits should fail with malformed XYZ files"
-        # finally:
-        #     os.chdir(original_cwd)
-
-
-# def test_ffits_preserves_atom_count():
-#     """
-#     Test that the optimized structure has the same number of atoms as input
-#     """
-#     examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
-#     with tempfile.TemporaryDirectory() as temp_dir:
-#         temp_path = Path(temp_dir)
-#         for item in examples_dir.iterdir():
-#             if item.is_file():
-#                 shutil.copy2(item, temp_path / item.name)
-#             elif item.is_dir():
-#                 shutil.copytree(item, temp_path / item.name)
-        
-#         original_cwd = os.getcwd()
-#         os.chdir(temp_path)
-        
-#         try:
-#             # Read input atom count
-#             with open('struc1.xyz') as f:
-#                 input_natoms = int(f.readline().strip())
-            
-#             stdout, stderr, returncode = run_ffits_as_subprocess(['struc1.xyz', 'struc2.xyz'])
-#             assert returncode == 0
-            
-#             # Read output atom count
-#             with open(temp_path / "optimized.xyz") as f:
-#                 output_natoms = int(f.readline().strip())
-            
-#             assert output_natoms == input_natoms, \
-#                 f"Atom count changed: input {input_natoms}, output {output_natoms}"
-#         finally:
-#             os.chdir(original_cwd)
 
 
 
-# 34 40 67
 
 
 # TODO dieser Test wird fertig gemacht, wenn die temporary directories printbar sind 
