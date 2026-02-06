@@ -1,16 +1,34 @@
-# FFiTS
-Force Field-interpolated Transtition States
+FFiTS
+==============
+
+***Force Field-interpolated Transition States***
+
+**Author:** *Daria Babushkina*
 
 
+# Introduction
 
-## Introduction
+The goal of this program is to generate a transition state (TS) guess from a reactant and a product structure. Constructing a TS guess with FFiTS happens in three main steps:
 
-The goal of this program is to generate a transition state (TS) guess from a reactant and a product structure. All of the data is generated with xtb
+1. **Calculating preliminary information**: The Hessian and Wiberg bond orders (WBO) are calculated with `xtb` (version 6.7.0) on the GFN2-xTB level of theory. 
+2. **Parametrizing system-specific FFS**: The data from step 1 is used to construct two FFs - one for reactant and one for product structure - by parameterizing the FFs to represent curvature at the given minima. 
+3. **Constructing and optimizing to TS guess**: The TS FF is generated from the reactant and product FF and used as the potential for a geometry optimization to its minimum. The resulting structure is the TS. 
 
 
-## Usage
+# Installation
+To get this code running, please execute following lines:
+```bash
+git clone git@git.rwth-aachen.de:bannwarthlab/ffits.git
+cd ffits 
+python3.11 -m venv venv
+source venv/bin/activate
+git checkout dev
+make install-dev 
+```
 
-After installation (see below), the code can be executed in two run modes:
+# Usage
+
+After installation, the code can be executed in two run modes:
 
 1. TS guess mode: A TS guess is created from a reactant and product structure.
 ```bash
@@ -28,32 +46,24 @@ Command line keywords are:
 
 For using the configuration options, see chapter [Configuration File](#configuration-file).
 
-## Installation
-To get this code running, please execute following lines:
-```bash
-git clone git@git.rwth-aachen.de:bannwarthlab/ffits.git
-cd ffits 
-python3.11 -m venv venv
-source venv/bin/activate
-git checkout dev
-make install-dev 
-```
+# Theory
 
+todo
 
-## Configuration File 
+# Configuration File 
 
 Configuration is done via a TOML file. The configuration file is optional; if not provided, default values will be used. Please keep in mind, that while a lot of (optimization) parameters can be changed, not all of them should be changed recklessly. 
 
-### Using a Configuration File
+## Using a Configuration File
 
 Pass a configuration file using the `--config` flag:
 ```bash
 ffits reactant.xyz product.xyz --config config.toml
 ```
 
-### Configuration Parameters
+## Configuration Parameters
 
-#### **System Settings** (`[system]`)
+### **System Settings** (`[system]`)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -69,9 +79,9 @@ multiplicity = 1
 
 ---
 
-#### **Reactant Settings** (`[reactant]`)
+### **Reactant Settings** (`[reactant]`)
 
-##### Reactant Paths (`[reactant.path]`)
+#### Reactant Paths (`[reactant.path]`)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -79,7 +89,7 @@ multiplicity = 1
 | `hessian_filename` | str | "struc1.hess" | Path to file with Hessian matrix for reactant |
 | `ff_filename` | str | "ff1.csv" | Path to file with force field parameters for reactant in csv file format |
 
-##### Reactant Calculations (`[reactant.calculation]`)
+#### Reactant Calculations (`[reactant.calculation]`)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -109,9 +119,9 @@ ff_parameterization_threshold = 0.001
 
 ---
 
-#### **Product Settings** (`[product]`)
+### **Product Settings** (`[product]`)
 
-##### Product Paths (`[product.path]`)
+#### Product Paths (`[product.path]`)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -119,7 +129,7 @@ ff_parameterization_threshold = 0.001
 | `hessian_filename` | string | "struc2.hess" | Path to file with Hessian matrix for product |
 | `ff_filename` | string | "ff2.csv" | Path to file with force field parameters for product in csv file format |
 
-##### Product Calculations (`[product.calculation]`)
+#### Product Calculations (`[product.calculation]`)
 
 Same as Reactant Calculations (see above). All the same parameters apply to the product structure.
 
@@ -135,9 +145,9 @@ ff_parameterization = true
 
 ---
 
-#### **Transition State Guess Settings** (`[ts_guess_calculation]`)
+### **Transition State Guess Settings** (`[ts_guess_calculation]`)
 
-##### TS Paths (`[ts_guess_calculation.path]`)
+#### TS Paths (`[ts_guess_calculation.path]`)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
