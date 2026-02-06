@@ -48,7 +48,8 @@ For using the configuration options, see chapter [Configuration File](#configura
 
 # Theory
 
-todo _information on how exactly each part of the algorithm works_
+## Force Field
+A harmonic FF, similar to the one used in MolBar, is employed. The FF energy is a sum of bond, angle, dihedral angle and repulsive terms.
 
 # Configuration File 
 
