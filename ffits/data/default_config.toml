@@ -1,6 +1,8 @@
 [system]
 charge = 0
 multiplicity = 1
+xtb_path = 'xtb'
+# path to xtb binary
 
 # ============================
 # Reactant configuration
