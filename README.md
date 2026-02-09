@@ -3,7 +3,11 @@ FFiTS
 
 ***Force Field-interpolated Transition States***
 
-**Author:** *Daria Babushkina*
+**Author:** *Daria Babushkina*  
+**Version:** 0.2.0-alpha  
+**License:** MIT  
+**Status:** Development  
+**Python:** >=3.11  
 
 
 # Introduction
