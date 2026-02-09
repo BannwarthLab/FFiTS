@@ -9,67 +9,85 @@ from ffits.setup.structure_preparatation import get_preliminary_information
 from ffits.ts_guess.define_starting_parameters import fill_ff
 from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
 from ffits.ts_guess.guess import get_ts_guess
-from ffits.io.print.config import print_calculation_data, print_setup
+from ffits.io.print.config import print_calculation_data, print_header_setup
 from ffits.io.print.header import print_program_header
+from ffits.io.print.summary import print_run_summary
+from ffits.forcefield.python_interface.optimization import optimize_xyz_with_forcefield
+from ffits.io.file_writer import write_hessian_to_orcahessfile
+from ffits.external.molbar_optimizer import anc_optimizer
 
-def main():
-    # read commandline arguments and get calculation data from given config file
-    # a normal call would python3 main.py struc1.xyz struc2.xyz -i input.toml -m 3 -c 1
-    print_program_header()
-    args = parse_args()
-    calcdata = load_calculation_data(args["input_file"])
+def run_optimizer_mode(args):
+    """
+    Run in optimizer mode: takes a single structure and optimizes it using the specified optimizer.
+    Usage: ffits structure.xyz --opt ff
+    """
+    print("[INFO] Running in optimizer mode")
+
+    calcdata: CalculationData = load_calculation_data(args["config_file"])
+    overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"], args["structures"])
+    # print_calculation_data(calcdata)
+
+    optimize_xyz_with_forcefield(args['structures'][0], args['optff'], calcdata.ts_calc, anc_optimizer)
+    # read in FF and define energy terms
+    # run optimizer as with calculation of TS guess through TS FF 
+    # return structure 
+
+
+def run_tsguess_mode(args):
+    """
+    Normal mode: processes reactant and product structures through the TS guess pipeline.
+    """
+    calcdata = load_calculation_data(args["config_file"])
     overwrite_from_commandline(calcdata, args["multiplicity"], args["charge"], args["structures"])
     print_calculation_data(calcdata)
 
-
-    print_setup()
-    struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path, 1, calcdata.system.charge, calcdata.system.multiplicity)
-    struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system.charge, calcdata.system.multiplicity)
-    #    TODO add repulsive start and bo threshold in calcdata, and all the parameters in ff fit 
+    print_header_setup()
+    struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path, 1, calcdata.system)
+    struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system)
+    #    TODO add bo threshold in calcdata
     
-    fill_ff(struc1.ff, struc1.info) 
-    fill_ff(struc2.ff, struc2.info) 
+    if calcdata.reactant_calc.ff_parameterization:
+        fill_ff(struc1.ff, struc1.info, repulsive_start=calcdata.reactant_calc.ff_parameter_repulsion) 
+        fit_ff_to_hessian(struc1,
+                        maxit=calcdata.reactant_calc.ff_parameterization_maxiteration,
+                        stepsize=calcdata.reactant_calc.ff_parameterization_stepsize,
+                        threshold=calcdata.reactant_calc.ff_parameterization_threshold,
+                        constant_repulsion=calcdata.reactant_calc.ff_parameterization_constant_repulsion)
+        
+    if calcdata.product_calc.ff_parameterization:
+        fill_ff(struc2.ff, struc2.info, repulsive_start=calcdata.product_calc.ff_parameter_repulsion) 
+        fit_ff_to_hessian(struc2,
+                        maxit=calcdata.product_calc.ff_parameterization_maxiteration,
+                        stepsize=calcdata.product_calc.ff_parameterization_stepsize,
+                        threshold=calcdata.product_calc.ff_parameterization_threshold,
+                        constant_repulsion=calcdata.product_calc.ff_parameterization_constant_repulsion)
 
-    fit_ff_to_hessian(struc1)
-    fit_ff_to_hessian(struc2)
-
-    get_ts_guess(struc1, struc2)
-    # cwd = os.getcwd() 
-    
-    # calcdata = load_calculation_data()
-
-
-# def main(calc_params):
-#     # calc_params = initialization('/home/dbabushkina/1_ts_search2024/pytsguess/config.json')
-
-#     struc1_info = generate_data_for_calculation(calc_params.struc1, calc_params)
-#     struc1_ff = generate_ff(calc_params.struc1, struc1_info)
-#     struc1 = Structure(calc_params.struc1, struc1_ff, struc1_info)
-
-#     struc2_info = generate_data_for_calculation(calc_params.struc2, calc_params)
-#     struc2_ff = generate_ff(calc_params.struc2, struc2_info)
-#     struc2 = Structure(calc_params.struc2, struc2_ff, struc2_info)
-
-#     reac = Reaction(struc1, struc2)
-    
-#     #struc1, struc2 = align(struc1, struc2, reac, calc_params)
-    
-#     tic = time.time()
-#     ts_ff = search_ts(struc1, struc2, calc_params)
-#     tac = time.time()
-#     print(f'TS Guess calculation took {tac - tic}')
-
-#     constrained_optimization(reac, calc_params)
-
+    tsff, converged, energy, final_geom = get_ts_guess(struc1, struc2, calcdata=calcdata)
     
 
-# if __name__ == "__main__":
-#     calc_params = initialization('/home/dbabushkina/1_ts_search2024/pytsguess/config.json')
-#     try:
-#         main(calc_params)
-#     except Exception as error: 
-#         shutil.copy(Name.original_xyz(calc_params.struc1.xyz_filename), calc_params.struc1.xyz_filename)
-#         shutil.copy(Name.original_xyz(calc_params.struc2.xyz_filename), calc_params.struc2.xyz_filename)
-#         print(error)
+
+def main():
+    start_time = time.time()
+    
+    try:
+        args = parse_args()
+        print_program_header()
+        
+        if args["optff"] is not None:
+            run_optimizer_mode(args)
+        else:
+            run_tsguess_mode(args)
+        
+        end_time = time.time()
+        print_run_summary(start_time, end_time, success=True)
+        
+    except Exception as e:
+        end_time = time.time()
+        print_run_summary(start_time, end_time, success=False, message=str(e))
+        raise
+
+
+
+
 if __name__ == "__main__":
     main()

@@ -4,36 +4,40 @@ import numpy as np
 import sys
 from collections.abc import Callable
 from ffits.ts_guess.mix_ff import create_tsff
-from ffits.datatype.structure_data import ForceField, StructuralInformation, Structure
-from ffits.external.molbar_optimizer import anc_optimizer, scipy_optimizer, failed_anc_opt, write_last_valid_xyz
+from ffits.datatype.structure_data import  Structure, ForceField
+from ffits.datatype.calculation_data import CalculationData
+from ffits.external.molbar_optimizer import anc_optimizer
 from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient,complete_hessian
-from ffits.io.print.details import print_optimization_end, print_optimization_start
+from ffits.io.print.details import print_ts_optimization_start
+from ffits.io.file_writer import write_hessian_to_orcahessfile
+from ffits.data.elements import element_to_weight
+from ffits.forcefield.python_interface.optimization import optimize_with_forcefield
 
-
-def get_ts_guess(struc1: Structure, struc2: Structure, optimizer: Callable = anc_optimizer):
+def get_ts_guess(struc1: Structure, struc2: Structure, calcdata: CalculationData, optimizer: Callable = anc_optimizer):
     trajectory_filename: str = 'trajectory.xyz'
     final_geometry_filename: str = 'optimized.xyz'
-    print_optimization_start()
-    tsff = create_tsff(struc1.ff, struc1.info, struc2.ff, struc2.info)
+    print_ts_optimization_start()
+
+    #### ------- Create TS Force Field by mixing reactant and product FFs ------- ####
+    tsff: ForceField = create_tsff(ff1 = struc1.ff, 
+                       info1 = struc1.info, 
+                       ff2 = struc2.ff, 
+                       info2 = struc2.info, 
+                       fact1 = calcdata.ts_calc.factor_reactant, 
+                       fact2 = calcdata.ts_calc.factor_product,
+                       calcdata = calcdata)
     tsff.energy_calculator = energy_ff
     tsff.gradient_calculator = complete_gradient
     tsff.hessian_calculator = complete_hessian
     
+
+    ### ---------- optimization ------------ ###
+    converged, energy, final_geom = optimize_with_forcefield(struc1.info, 
+                                                                   tsff, 
+                                                                   optimizer, 
+                                                                   calcdata.ts_calc,
+                                                                   trajectory_filename, 
+                                                                   final_geometry_filename)
     # TODO add time and also return it
 
-    opt_stdout_filename = 'ts_optimization.out'
-    orig_stdout = sys.stdout
-    f = open(opt_stdout_filename, 'w')
-    sys.stdout = f
-    converged, energy, final_geom, steps, time, message = optimizer(struc1.info.xyz, tsff, struc1.info.atom_types, max_micro_steps=5)
-
-    sys.stdout = orig_stdout
-    f.close()
-    if failed_anc_opt(opt_stdout_filename): 
-        print(f'[WARNING] The last valid structure of the optimization trajectory is written to {final_geometry_filename}.')
-        write_last_valid_xyz()
-        
-    
-    print_optimization_end(converged, energy, final_geom, steps, time, message)
-
-    return converged, energy, final_geom 
+    return tsff, converged, energy, final_geom 

@@ -1,13 +1,7 @@
 import os
 from ffits.datatype.calculation_data import CalculationData
 import argparse
-
-# For Python 3.11+, tomllib is built in.
-# For older versions, install tomli (`pip install tomli`)
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
+import tomllib
 
 
 
@@ -47,7 +41,7 @@ def load_config(user_path: str | None = None) -> dict:
 
     return config
 
-def load_calculation_data(user_path: str | None = None) -> CalculationData:
+def load_calculation_data(user_path: str | None = None, test: bool = False) -> CalculationData:
     """
     Load configuration data from a TOML file (if provided) and fill
     a CalculationData instance with defaults for missing values.
@@ -64,6 +58,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     sys_data = data.get("system", {})
     cd.system.charge = sys_data.get("charge", cd.system.charge)
     cd.system.multiplicity = sys_data.get("multiplicity", cd.system.multiplicity)
+    cd.system.xtb_path = sys_data.get("xtb_path", cd.system.xtb_path)
 
     # =======================
     # Reactant
@@ -72,7 +67,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
 
     # Reactant path
     react_path = reactant.get("path", {})
-    cd.reactant_path.xyz_filename = react_path.get("xyz_filename", cd.reactant_path.xyz_filename)
+    cd.reactant_path.xyz_filename = '' # will be set from commandline
     cd.reactant_path.wbo_filename = react_path.get("wbo_filename", cd.reactant_path.wbo_filename)
     cd.reactant_path.hessian_filename = react_path.get("hessian_filename", cd.reactant_path.hessian_filename)
     cd.reactant_path.ff_filename = react_path.get("ff_filename", cd.reactant_path.ff_filename)
@@ -84,6 +79,11 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     cd.reactant_calc.hessian_calc = react_calc.get("hessian_calc", cd.reactant_calc.hessian_calc)
     cd.reactant_calc.ff_parameterization = react_calc.get("ff_parameterization", cd.reactant_calc.ff_parameterization)
     cd.reactant_calc.test_parameterization = react_calc.get("test_parameterization", cd.reactant_calc.test_parameterization)
+    cd.reactant_calc.ff_parameterization_maxiteration = react_calc.get("ff_parameterization_maxiteration", cd.reactant_calc.ff_parameterization_maxiteration)
+    cd.reactant_calc.ff_parameter_repulsion = react_calc.get("ff_parameter_repulsion", cd.reactant_calc.ff_parameter_repulsion)
+    cd.reactant_calc.ff_parameterization_stepsize = react_calc.get("ff_parameterization_stepsize", cd.reactant_calc.ff_parameterization_stepsize)
+    cd.reactant_calc.ff_parameterization_threshold = react_calc.get("ff_parameterization_threshold", cd.reactant_calc.ff_parameterization_threshold)
+    cd.reactant_calc.ff_parameterization_constant_repulsion = react_calc.get("ff_parameterization_constant_repulsion", cd.reactant_calc.ff_parameterization_constant_repulsion)
 
     # =======================
     # Product
@@ -92,7 +92,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
 
     # Product path
     prod_path = product.get("path", {})
-    cd.product_path.xyz_filename = prod_path.get("xyz_filename", cd.product_path.xyz_filename)
+    cd.product_path.xyz_filename = '' # will be set from commandline
     cd.product_path.wbo_filename = prod_path.get("wbo_filename", cd.product_path.wbo_filename)
     cd.product_path.hessian_filename = prod_path.get("hessian_filename", cd.product_path.hessian_filename)
     cd.product_path.ff_filename = prod_path.get("ff_filename", cd.product_path.ff_filename)
@@ -104,6 +104,10 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     cd.product_calc.hessian_calc = prod_calc.get("hessian_calc", cd.product_calc.hessian_calc)
     cd.product_calc.ff_parameterization = prod_calc.get("ff_parameterization", cd.product_calc.ff_parameterization)
     cd.product_calc.test_parameterization = prod_calc.get("test_parameterization", cd.product_calc.test_parameterization)
+    cd.product_calc.ff_parameterization_maxiteration = prod_calc.get("ff_parameterization_maxiteration", cd.product_calc.ff_parameterization_maxiteration)
+    cd.product_calc.ff_parameterization_stepsize = prod_calc.get("ff_parameterization_stepsize", cd.product_calc.ff_parameterization_stepsize)
+    cd.product_calc.ff_parameterization_threshold = prod_calc.get("ff_parameterization_threshold", cd.product_calc.ff_parameterization_threshold)
+    cd.product_calc.ff_parameterization_constant_repulsion = prod_calc.get("ff_parameterization_constant_repulsion", cd.product_calc.ff_parameterization_constant_repulsion)
 
     # =======================
     # TS Guess calculation
@@ -113,6 +117,7 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     # TS path
     ts_path = ts_guess.get("path", {})
     cd.ts_path.ff_filename = ts_path.get("ff_filename", cd.ts_path.ff_filename)
+    cd.ts_path.hessian_filename = ts_path.get("hessian_filename", cd.ts_path.hessian_filename)
 
     # TS calculation
     ts_calc = ts_guess.get("calculation", {})
@@ -123,6 +128,9 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
         "energy_threshold_two_optimizations", cd.ts_calc.energy_threshold_two_optimizations
     )
     cd.ts_calc.perform_two_optimizations = ts_calc.get("perform_two_optimizations", cd.ts_calc.perform_two_optimizations)
+    cd.ts_calc.molbar_optimizer_e_tol = ts_calc.get("molbar_optimizer_e_tol", cd.ts_calc.molbar_optimizer_e_tol)
+    cd.ts_calc.molbar_optimizer_x_tol = ts_calc.get("molbar_optimizer_x_tol", cd.ts_calc.molbar_optimizer_x_tol)
+    cd.ts_calc.molbar_optimizer_max_micro_steps = ts_calc.get("molbar_optimizer_max_micro_steps", cd.ts_calc.molbar_optimizer_max_micro_steps)
 
     # =======================
     # Postprocessing
@@ -130,14 +138,17 @@ def load_calculation_data(user_path: str | None = None) -> CalculationData:
     post = data.get("postprocessing", {})
     cd.postprocessing.relaxation = post.get("relaxation", cd.postprocessing.relaxation)
 
+    # for testing purposes, return the CalculationData object without performing sanity checks, to allow testing of error handling in those checks
+    if test:
+        return cd
     # =======================
     # Sanity checks
     # =======================
-    if not cd.reactant_calc.hessian_calc and os.path.exists(cd.reactant_path.hessian_filename) :
-        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path} not found.')
+    if not cd.reactant_calc.hessian_calc and not os.path.exists(cd.reactant_path.hessian_filename) :
+        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path.hessian_filename} not found.')
     
-    if not cd.product_calc.hessian_calc and os.path.exists(cd.product_calc.hessian_filename) :
-        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path} not found.')
+    if not cd.product_calc.hessian_calc and not os.path.exists(cd.product_path.hessian_filename) :
+        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.product_path.hessian_filename} not found.')
     
     if cd.system.multiplicity > 3 or cd.system.multiplicity < 1:
         raise ValueError(f'Multiplicity of {cd.system.multiplicity} is chemically unreasonable on this theory level.')
@@ -180,3 +191,4 @@ def overwrite_from_commandline(calcdata: CalculationData, multiplicity: int | No
             print(f"[INFO] Product XYZ file set to: {structures[1]}")
         if len(structures) > 2:
             print(f"[WARNING] More than 2 structure files provided. Only the first two will be used.")
+

@@ -1,8 +1,0 @@
-[system]
-charge = -2
-
-
-[ts_guess_calculation.calculation]
-factor_reactant = 1
-factor_product = 0.5
-optimizer = "brr"

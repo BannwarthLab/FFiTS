@@ -108,13 +108,9 @@ set(fortran_src_files
     ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/b_dihedral_derivatives.f90
     ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/c_dihedral_derivatives.f90
     ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/d_dihedral_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/inv_rij_derivatives.f90
     ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/bond_derivatives.f90
     ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/angle_derivatives.f90
     ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/dihedral_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/repulsion_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/analytical_derivatives.f90
-    ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/energy.f90
     ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/lj_derivatives.f90
 )
 set(generated_module_file ${f2py_module_name}${PYTHON_EXTENSION_MODULE_SUFFIX})

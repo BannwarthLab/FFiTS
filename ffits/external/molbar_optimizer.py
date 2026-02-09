@@ -2,11 +2,10 @@ import numpy as np
 import os
 from ffits.datatype.structure_data import ForceField, StructuralInformation
 from molbar.utils.optimizer import optimize_geometry 
-from molbar.utils.debug_optimizer import optimize_fragment_scipy_debug
 from scipy.optimize import minimize
 
 
-def anc_optimizer(xyz_start: np.ndarray, ff: ForceField, atom_types: np.ndarray, g_tol: float = 1e-2, e_tol: float = 1e-8, x_tol: float = 1e-3, max_micro_steps: int = 1, trajectory_filename: str = 'trajectory.xyz', final_geometry_filename: str = 'optimized.xyz'):
+def anc_optimizer(xyz_start: np.ndarray, ff: ForceField, atom_types: np.ndarray, e_tol: float = 1e-4, x_tol: float = 1e-3, max_micro_steps: int = 1, trajectory_filename: str = 'trajectory.xyz', final_geometry_filename: str = 'optimized.xyz'):
     if ff.energy_calculator == None:
         raise Exception('Function for energy calculation needs to be defined in FF object when using the ANC optimization.')
     if ff.gradient_calculator == None:
@@ -24,7 +23,6 @@ def anc_optimizer(xyz_start: np.ndarray, ff: ForceField, atom_types: np.ndarray,
         hessian_func=ff.get_hessian,
         masses=None,  # Optional: provide atomic masses
         trust_radius=0.1,
-        g_tol=g_tol,
         e_tol=e_tol,
         x_tol=x_tol,
         max_steps=1000,
