@@ -40,7 +40,7 @@ def parse_args():
     Parse command-line arguments and return them as a dictionary.
     """
     parser = argparse.ArgumentParser(
-        description="FFITS TS calculation workflow. Provide structures and input file."
+        description="FFiTS TS calculation workflow. Provide structures and input file."
     )
 
     parser.add_argument(
@@ -51,7 +51,7 @@ def parse_args():
     )
     if "--version" in sys.argv or "-v" in sys.argv:
         version = _get_version()
-        print(f"FFITS version: {version}")
+        print(f"FFiTS version: {version}")
         sys.exit(0)
 
     # Positional arguments: multiple structure files
