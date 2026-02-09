@@ -1,20 +1,127 @@
 import datetime
 import textwrap
+import subprocess
+import os
+from pathlib import Path
 
-def print_program_header(version: str = "0.1.0-alpha"):
+import tomllib
+
+
+def _get_build_date():
+    """
+    Get the build/installation date from the ffits package directory.
+    
+    Returns
+    -------
+    str
+        Build date as "YYYY-MM-DD HH:MM" based on package modification time.
+    """
+    try:
+        # Get the ffits package directory
+        ffits_dir = Path(__file__).parent.parent
+        # Use the modification time of the package directory
+        mtime = os.path.getmtime(ffits_dir)
+        build_datetime = datetime.datetime.fromtimestamp(mtime)
+        return build_datetime.strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+
+
+def _get_last_commit_date():
+    """
+    Get the date of the last commit from git.
+    
+    Returns
+    -------
+    str or None
+        Last commit date as "YYYY-MM-DD HH:MM" or None if git is unavailable.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "log", "-1", "--format=%ci"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0:
+            # Format: "2024-02-09 10:30:45 +0100" -> extract "2024-02-09 10:30"
+            commit_date = result.stdout.strip()[:16]
+            return commit_date
+    except Exception:
+        pass
+    return None
+
+
+def _load_pyproject_metadata():
+    """
+    Load metadata from pyproject.toml.
+    
+    Returns
+    -------
+    dict
+        Dictionary with 'license', 'authors', and 'version' keys.
+    """
+    metadata = {
+        "license": "tbd",
+        "authors": "Daria Babushkina",
+        "version": "-"
+    }
+    
+    try:
+        # Find pyproject.toml in parent directories
+        current_path = Path(__file__).parent
+        while current_path != current_path.parent:
+            pyproject_path = current_path / "pyproject.toml"
+            if pyproject_path.exists():
+                with open(pyproject_path, "rb") as f:
+                    data = tomllib.load(f)
+                
+                if "project" in data:
+                    project = data["project"]
+                    
+                    if "version" in project:
+                        metadata["version"] = project["version"]
+                    
+                    if "license" in project:
+                        if isinstance(project["license"], dict) and "text" in project["license"]:
+                            metadata["license"] = project["license"]["text"]
+                    
+                    if "authors" in project and project["authors"]:
+                        authors = project["authors"]
+                        if isinstance(authors, list) and len(authors) > 0:
+                            author_names = [
+                                author.get("name", "Unknown") 
+                                for author in authors if isinstance(author, dict)
+                            ]
+                            if author_names:
+                                metadata["authors"] = ", ".join(author_names)
+                
+                break
+            current_path = current_path.parent
+    except Exception:
+        pass
+    
+    return metadata
+
+
+def print_program_header(version: str = None):
     """
     Prints a formatted header for the FFiTS program.
 
     Parameters
     ----------
-    version : str
-        Program version string.
+    version : str, optional
+        Program version string. If None, will be loaded from pyproject.toml.
     """
 
-    # --- Get current date and time ---
-    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    metadata = _load_pyproject_metadata()
+    if version is None:
+        version = metadata["version"]
 
-    # --- ASCII Art Logo (you can customize this) ---
+    build_date = _get_build_date()
+    
+    last_commit_date = _get_last_commit_date()
+
     logo = r"""
                 ███████╗███████╗██╗████████╗███████╗                
                 ██╔════╝██╔════╝╚═╝╚══██╔══╝██╔════╝                
@@ -26,14 +133,15 @@ def print_program_header(version: str = "0.1.0-alpha"):
 """
 
     # --- Print header ---
-    # print("\n" + "=" * 70)
     print(logo)
     print("=" * 70)
     print(f" Program:     FFiTS  —  Force Field-interpolated Transition States")
     print(f" Version:     {version}")
-    print(f" Date:        {now}")
-    print(f" Author:      Daria Babushkina")
-    print(f" License:     tbd")
+    print(f" Build Date:  {build_date}")
+    if last_commit_date:
+        print(f" Last Commit: {last_commit_date}")
+    print(f" Authors:     {metadata['authors']}")
+    print(f" License:     {metadata['license']}")
     print("-" * 70)
 
     # --- Reference / Citation Info TODO ---
