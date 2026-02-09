@@ -14,7 +14,7 @@ FFiTS
 
 The goal of this program is to generate a transition state (TS) guess from a reactant and a product structure. Constructing a TS guess with FFiTS happens in three main steps through the use of harmonic force fields (FFs):
 
-1. **Calculating preliminary information**: The Hessian and Wiberg bond orders (WBO) are calculated with `xtb` (version 6.7.0) on the GFN2-xTB level of theory. 
+1. **Calculating preliminary information**: The Hessian and Wiberg bond orders (WBO) are calculated with `xtb` (tested for version 6.7.1) on the GFN2-xTB level of theory. 
 2. **Parametrizing system-specific FFs**: The data from step 1 is used to construct two FFs - one for reactant and one for product structure - by parameterizing the FFs to represent curvature at the given minima. 
 3. **Constructing and optimizing to TS guess**: The TS FF is generated from the reactant and product FF and used as the potential for a geometry optimization to its minimum. The resulting structure is the TS. 
 
@@ -32,7 +32,7 @@ make install-dev
 
 # Usage
 
-After installation, the code can be executed in two run modes:
+After installation, the code can be executed in two run modes. For the TS guess mode, please **have xtb in your environment**.
 
 1. TS guess mode: A TS guess is created from a reactant and product structure.
 ```bash
