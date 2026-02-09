@@ -1,0 +1,165 @@
+# GitLab CI/CD Pipeline for FFiTS
+# Runs tests on merge requests and main branch
+
+stages:
+  - build
+  - test
+  - deploy
+
+# build-container
+build-python3.11:
+  stage: build
+  cache:
+    key: "python3.11-$CI_COMMIT_REF_SLUG"
+    paths:
+      - containers/
+  script:
+    - mkdir -p containers
+    - if [ ! -e "containers/${CONTAINER_NAME}.sif" ] ; then apptainer build containers/${CONTAINER_NAME}.sif .gitlab/recipes/${CONTAINER_NAME}.def ; fi
+  tags:
+    - shell
+  variables:
+    CONTAINER_NAME: "python3.11"
+
+
+# Test job - runs on merge requests and main branch
+test:
+  stage: test
+  cache:
+    key: "python3.11-$CI_COMMIT_REF_SLUG"
+    paths:
+      - containers/
+  dependencies:
+    - build-python3.11
+  variables:
+    IMAGE_NAME: ""
+    CONTAINER_NAME: "containers/python3.11.sif"
+    APPTAINER_EXEC_ARGS: "" 
+  tags:
+    - cpu
+  script:  
+    # Install development dependencies (includes build dependencies)
+    # Install package in editable mode
+    # Install molbar optimizer from dev branch
+    - pwd
+    - echo $PATH
+    - which xtb
+    - export PYTHON=python3.11
+    - export CFLAGS="$(python3.11-config --cflags)"
+    - export LDFLAGS="$(python3.11-config --ldflags)"
+    - xtb --help 
+    - printenv
+    - git submodule update --init --recursive
+    - python3.11 -m venv venv && source venv/bin/activate
+    - make install-dev
+    - pip list
+    # Run tests
+    - pytest tests/
+  artifacts:
+    when: on_failure
+    paths:
+      - tests/test_results/
+    expire_in: 1 week
+
+# Multi-Python version testing (optional - runs on main branch only)
+# test-matrix:
+#   stage: test
+#   image: python:${PYTHON_VERSION}-slim
+  
+#   # Only run on main branch to avoid excessive CI usage
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == "main"'
+#     - if: '$CI_COMMIT_BRANCH == "master"'
+  
+#   parallel:
+#     matrix:
+#       - PYTHON_VERSION: ["3.9", "3.10", "3.11", "3.12"]
+  
+#   before_script:
+#     # Install system dependencies
+#     - apt-get update -qq && apt-get install -y -qq 
+#         build-essential 
+#         cmake 
+#         ninja-build 
+#         gfortran 
+#         python3-dev 
+#         git
+    
+#     # Set up Python environment
+#     - python -m pip install --upgrade pip
+#     - python -m venv venv
+#     - source venv/bin/activate
+    
+#     # Install development dependencies (includes build dependencies)
+#     - pip install -r requirements-dev.txt
+    
+#     # Build Fortran extensions in-place
+#     - python setup.py build_ext --inplace
+    
+#     # Install package in editable mode
+#     - pip install -e .
+    
+#     # Install molbar optimizer from dev branch
+#     - cd /tmp && git clone https://git.rwth-aachen.de/bannwarthlab/molbar.git
+#     - cd molbar && git fetch && git checkout dev && make install && cd -
+  
+#   script:
+#     - source venv/bin/activate
+#     # Run basic tests without coverage for speed
+#     - pytest tests/ -v --tb=short -x
+  
+#   # Allow some Python versions to fail during development
+#   allow_failure: true
+
+# Lint and code quality checks
+# lint:
+#   stage: test
+#   image: python:3.11-slim
+  
+#   rules:
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+#     - if: '$CI_COMMIT_BRANCH == "main"'
+#     - if: '$CI_COMMIT_BRANCH == "master"'
+  
+#   before_script:
+#     - python -m pip install --upgrade pip
+#     - python -m venv venv
+#     - source venv/bin/activate
+#     - pip install -r requirements-dev.txt
+  
+#   script:
+#     - source venv/bin/activate
+#     # Check code formatting
+#     - black --check --diff ffits/
+#     # Check import sorting
+#     - isort --check-only --diff ffits/
+#     # Run linting
+#     - flake8 ffits/ --max-line-length=100 --ignore=E203,W503
+  
+#   allow_failure: true
+
+# # Build wheels (only on main branch)
+# build-wheels:
+#   stage: build
+#   image: python:3.11-slim
+  
+#   # Only run on main branch or tags
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == "main"'
+#     - if: '$CI_COMMIT_TAG'
+  
+#   before_script:
+#     - apt-get update -qq && apt-get install -y -qq 
+#         build-essential 
+#         cmake 
+#         ninja-build
+#     - python -m pip install --upgrade pip build
+  
+#   script:
+#     - python -m build
+  
+#   artifacts:
+#     paths:
+#       - dist/
+#     expire_in: 1 week
+

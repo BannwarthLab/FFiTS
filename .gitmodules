@@ -1,0 +1,4 @@
+[submodule "submodules/molbar"]
+	path = submodules/molbar
+	url = https://git.rwth-aachen.de/bannwarthlab/molbar.git
+	branch = dev

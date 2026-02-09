@@ -7,17 +7,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ffits"
-version = "0.8.0a"
+version = "0.2.0a"
 description = "Force Field-interpolated Transition States"
 authors = [
   { name = "Daria Babushkina", email = "babushkina@pc.rwth-aachen.de" },
-  { name = "Christoph Bannwarth", email = "bannwarth@pc.rwth-aachen.de" }
+  # { name = "Christoph Bannwarth", email = "bannwarth@pc.rwth-aachen.de" }
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
   "numpy",
   "networkx",
-  "pandas"
+  "pandas",
+  "tomli>=1.2.0"
 ]
 
 readme = "README.md"
@@ -48,5 +49,6 @@ include = ["ffits*"]
   "data/**/*",
   "forcefield/fortran/*.so",
   "forcefield/python_interface/*.py",
-  "forcefield/python_interface/**/*.py"
+  "forcefield/python_interface/**/*.py",
+  "bin/*"  
 ]

@@ -5,9 +5,14 @@ def print_ff_fitting(struc: str):
     print(f" FF Fitting for structure {struc}")
     print("=" * 60)
 
-def print_optimization_start():
+def print_ts_optimization_start():
     print("\n" + "=" * 60)
     print(" TS Guess Construction")
+    print("=" * 60)
+
+def print_optimization_start():
+    print("\n" + "=" * 60)
+    print(" Optimization ")
     print("=" * 60)
 
 def print_optimization_end(converged, energy, final_geom, steps, time, message):

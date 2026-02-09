@@ -81,7 +81,7 @@ def read_wbo_file(wbo_path: str) -> Dict[Tuple[int, int], float]:
 
     return wbo_dict
 
-def read_hessian(file_path):
+def read_xtb_hessian(file_path):
     """
     Reads a Hessian matrix from the xtb output format 
     """

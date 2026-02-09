@@ -120,7 +120,7 @@ class StructurePath:
     Paths/Filenames and ID for a given structure.
     """
     xyz_filename: str 
-    hess_filename: str 
+    hessian_filename: str 
     wbo_filename: str 
     ff_filename: str
 
@@ -233,11 +233,12 @@ class StructuralInformation:
         self.xyz = xyz
         self.atom_types = atom_types
         self.hessian: np.ndarray = hessian
-        self.bo_matrix: np.ndarray = self.create_bomatrix_from_wbo()
-        self.fortran_xyz: np.ndarray = self.angstrom2bohr(self.convert_xyz_to_fortranstyle(self.xyz))
-        self.complete_graph: nx.Graph = self.create_graph_from_wbo()
-        self.seperate_molecule_list = self.split_in_subgraphs()
-        self.molecule_count = len(self.seperate_molecule_list)
+        if self.wbo != {}:
+            self.bo_matrix: np.ndarray = self.create_bomatrix_from_wbo()
+            self.fortran_xyz: np.ndarray = self.angstrom2bohr(self.convert_xyz_to_fortranstyle(self.xyz))
+            self.complete_graph: nx.Graph = self.create_graph_from_wbo()
+            self.seperate_molecule_list = self.split_in_subgraphs()
+            self.molecule_count = len(self.seperate_molecule_list)
         self.vander_matrix: np.ndarray = get_vander_matrix(self.atom_types)
 
     def convert_xyz_to_fortranstyle(self, xyz) -> np.array:

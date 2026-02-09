@@ -15,25 +15,13 @@ def canonical_dihedral(i, j, l, m):
     return min(forward, reverse)
 
 
-# def check_noNaN_ff_initialization(ff: ForceField):
-#     assert all(ff.c_bond.values())
-#     assert all(ff.c_angle.values())
-#     assert all(ff.c_dihedral.values())
-#     assert all(ff.c_lj.values())
 
-# def setup_unparameterized_forcefield(info: StructuralInformation, ff_filename: str, readff: bool = False) -> ForceField:
-#     ff = ForceField(info.nat, ff_filename, readff=readff)
-#     define_relevant_bonds(ff, info)
-#     get_c_tables(ff, info)
-#     return ff
-
-def fill_ff(ff: ForceField, info: StructuralInformation, bo_threshold: float = 0.0, repulsive_start_ex: float = None):
+def fill_ff(ff: ForceField, info: StructuralInformation, repulsive_start: float = 0.01, bo_threshold: float = 0.0):
     """
     Build and fill ForceField DataFrames (bonds, angles, dihedrals, repulsive)
     with 0-based atom indices, reference values, and parameters.
 
     """
-    repulsive_start = 0.01 if repulsive_start_ex is None else repulsive_start_ex
     n = ff.nat
     wbo = info.bo_matrix
 
