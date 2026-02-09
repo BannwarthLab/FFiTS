@@ -68,8 +68,8 @@ def main():
     start_time = time.time()
     
     try:
-        print_program_header()
         args = parse_args()
+        print_program_header()
         
         if args["optff"] is not None:
             run_optimizer_mode(args)

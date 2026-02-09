@@ -1,5 +1,39 @@
 import argparse
 import os
+import sys
+
+def _get_version():
+    """
+    Get version from pyproject.toml.
+    
+    Returns
+    -------
+    str
+        Version string from pyproject.toml, or "unknown" if not found.
+    """
+    try:
+        import tomllib
+    except ImportError:
+        import tomli as tomllib
+    
+    from pathlib import Path
+    
+    try:
+        # Find pyproject.toml in parent directories
+        current_path = Path(__file__).parent
+        while current_path != current_path.parent:
+            pyproject_path = current_path / "pyproject.toml"
+            if pyproject_path.exists():
+                with open(pyproject_path, "rb") as f:
+                    data = tomllib.load(f)
+                if "project" in data and "version" in data["project"]:
+                    return data["project"]["version"]
+            current_path = current_path.parent
+    except Exception:
+        pass
+    
+    return "unknown"
+
 
 def parse_args():
     """
@@ -9,10 +43,21 @@ def parse_args():
         description="FFITS TS calculation workflow. Provide structures and input file."
     )
 
+    parser.add_argument(
+        "--version", "-v",
+        action="store_true",
+        default = False,
+        help="Print version and exit."
+    )
+    if "--version" in sys.argv or "-v" in sys.argv:
+        version = _get_version()
+        print(f"FFITS version: {version}")
+        sys.exit(0)
+
     # Positional arguments: multiple structure files
     parser.add_argument(
         "structures",
-        nargs="+",
+        nargs="*",
         help="Structure files (e.g., struc1.xyz struc2.xyz)"
     )
 
@@ -43,6 +88,11 @@ def parse_args():
     )
 
     args = parser.parse_args() 
+
+    if not args.opt and len(args.structures) != 2 and args.version == False:
+        parser.error("Exactly two structure files must be provided for TS guess mode.") 
+    if args.opt and len(args.structures) != 1:
+        parser.error("Exactly one structure file must be provided for optimizer mode.")
 
     # Validate structure files
     for f in args.structures:
