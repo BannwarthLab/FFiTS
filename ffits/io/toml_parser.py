@@ -58,6 +58,7 @@ def load_calculation_data(user_path: str | None = None, test: bool = False) -> C
     sys_data = data.get("system", {})
     cd.system.charge = sys_data.get("charge", cd.system.charge)
     cd.system.multiplicity = sys_data.get("multiplicity", cd.system.multiplicity)
+    cd.system.xtb_path = sys_data.get("xtb_path", cd.system.xtb_path)
 
     # =======================
     # Reactant

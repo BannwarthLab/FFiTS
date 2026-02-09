@@ -3,7 +3,6 @@ scikit-build>=0.18
 cmake>=3.18
 ninja>=1.7.0
 numpy>=1.19
-meson>=0.62<=1.8.0
 
 # Runtime dependencies
 networkx>=2.5

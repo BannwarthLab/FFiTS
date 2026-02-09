@@ -41,8 +41,8 @@ def run_tsguess_mode(args):
     print_calculation_data(calcdata)
 
     print_header_setup()
-    struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path, 1, calcdata.system.charge, calcdata.system.multiplicity)
-    struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system.charge, calcdata.system.multiplicity)
+    struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path, 1, calcdata.system)
+    struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system)
     #    TODO add bo threshold in calcdata
     
     fill_ff(struc1.ff, struc1.info, repulsive_start=calcdata.reactant_calc.ff_parameter_repulsion) 

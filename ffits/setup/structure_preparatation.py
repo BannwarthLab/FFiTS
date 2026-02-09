@@ -1,5 +1,5 @@
 
-from ffits.datatype.calculation_data import CalculationData, CalculationOptions, PathData
+from ffits.datatype.calculation_data import CalculationData, CalculationOptions, PathData, System
 from ffits.datatype.structure_data import Structure,  StructuralInformation, StructurePath, ForceField
 from ffits.io.reader import read_xtb_hessian, read_wbo_file, readin_xyz
 from ffits.external.xtb import Xtb
@@ -7,10 +7,12 @@ from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_grad
 
 
 
-def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData, id: int, chrg: int, mult: int) -> Structure: 
+def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData, id: int, systemdata: System) -> Structure: 
     '''input is cd.reactant_calc and cd.reactant_path'''
+    chrg = systemdata.charge
+    mult = systemdata.multiplicity
     path = StructurePath(pathdata.xyz_filename, pathdata.hessian_filename, pathdata.wbo_filename, pathdata.ff_filename)
-    xtbrunner = Xtb(chrg, mult)
+    xtbrunner = Xtb(chrg, mult, xtb_path=systemdata.xtb_path) 
 
     # TODO add somewhere check that wbo and hess needs to be calculated if geomopt is performed
     if calcopt.geometry_optimization: 
