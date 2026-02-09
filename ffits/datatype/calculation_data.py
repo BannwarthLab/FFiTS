@@ -19,7 +19,7 @@ class CalculationOptions:
     geometry_optimization: bool = False
     wbo_calc: bool = True
     hessian_calc: bool = True
-    ff_parameterization: bool = False
+    ff_parameterization: bool = True
     test_parameterization: bool = False
     ff_parameter_repulsion: float = 0.01
     ff_parameterization_maxiteration: int = 1000
