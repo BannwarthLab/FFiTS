@@ -71,6 +71,7 @@ ffits reactant.xyz product.xyz --config config.toml
 |-----------|------|---------|-------------|
 | `charge` | int | 0 | Total charge of the molecular system |
 | `multiplicity` | int | 1 | Spin multiplicity (1=singlet, 2=doublet, 3=triplet, etc.). Must be between 1 and 3. |
+| `xtb_path` | str | 'xtb' | Path to xtb binary |
 
 **Example:**
 ```toml

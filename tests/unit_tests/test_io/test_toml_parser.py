@@ -176,6 +176,24 @@ multiplicity = 0
         finally:
             os.unlink(temp_path)
 
+    def test_load_calculation_data_xtb_path(self):
+        """Test that xtb_path is correctly set."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
+            f.write(
+                """
+[system]
+xtb_path = "custom_xtb_path"
+"""
+            )
+            f.flush()
+            temp_path = f.name
+
+        try:
+            cd = load_calculation_data(temp_path)
+            assert cd.system.xtb_path == "custom_xtb_path"
+        finally:
+            os.unlink(temp_path)
+
     def test_load_calculation_data_invalid_factor_sum(self):
         """Test that invalid factor sum raises ValueError."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:

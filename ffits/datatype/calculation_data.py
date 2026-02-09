@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 class System:
     charge: int = 0
     multiplicity: int = 1
+    xtb_path: str = 'xtb'
 
 
 @dataclass

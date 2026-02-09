@@ -69,7 +69,7 @@ def test_find_energy_in_output(tmp_path):
     """Check energy parser from output file."""
     f = tmp_path / "xtb.out"
     f.write_text(" some lines\n           | TOTAL ENERGY              -12.3456 Eh   |\n more\n")
-    xtb = Xtb(str(f), 0, 1)
+    xtb = Xtb(0, 1)
     energy = xtb._find_energy_in_output(f)
     assert energy == pytest.approx(-12.3456)
 
