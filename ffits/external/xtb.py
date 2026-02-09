@@ -11,15 +11,6 @@ from importlib import resources
 from typing import Tuple, List, Dict
 import numpy as np
 
-# def get_xtb_path() -> Path:
-#     """
-#     Returns a filesystem path to the xtb binary inside the package.
-#     Safe for pip-installed packages, wheels, or editable installs.
-#     """
-#     xtb_file = resources.files("ffits") / "bin" / "xtb"
-#     with resources.as_file(xtb_file) as path:
-#         return path
-
 
 class Xtb:
     """
