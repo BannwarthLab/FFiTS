@@ -49,7 +49,7 @@ ff_filename = "ff2.csv"
 geometry_optimization = false
 wbo_calc = true
 hessian_calc = true
-ff_parameterization = false
+ff_parameterization = true
 test_parameterization = false
 ## some parameters for the FF parameterization
 ff_parameterization_maxiteration = 1000

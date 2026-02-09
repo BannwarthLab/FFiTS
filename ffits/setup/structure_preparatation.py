@@ -40,7 +40,7 @@ def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData,
         ff = ForceField(nat, path.ff_filename, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
     else:
         print(f"[INFO] Skipping FF parameterization and reading in {path.ff_filename}.")
-        ff = ForceField(nat, path.ff_filename, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
+        ff = ForceField(nat, path.ff_filename, readff=True, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
     
     return Structure(path, ff, info)
 

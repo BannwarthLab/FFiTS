@@ -46,19 +46,21 @@ def run_tsguess_mode(args):
     struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system)
     #    TODO add bo threshold in calcdata
     
-    fill_ff(struc1.ff, struc1.info, repulsive_start=calcdata.reactant_calc.ff_parameter_repulsion) 
-    fill_ff(struc2.ff, struc2.info, repulsive_start=calcdata.product_calc.ff_parameter_repulsion) 
-
-    fit_ff_to_hessian(struc1,
-                      maxit=calcdata.reactant_calc.ff_parameterization_maxiteration,
-                      stepsize=calcdata.reactant_calc.ff_parameterization_stepsize,
-                      threshold=calcdata.reactant_calc.ff_parameterization_threshold,
-                      constant_repulsion=calcdata.reactant_calc.ff_parameterization_constant_repulsion)
-    fit_ff_to_hessian(struc2,
-                      maxit=calcdata.product_calc.ff_parameterization_maxiteration,
-                      stepsize=calcdata.product_calc.ff_parameterization_stepsize,
-                      threshold=calcdata.product_calc.ff_parameterization_threshold,
-                      constant_repulsion=calcdata.product_calc.ff_parameterization_constant_repulsion)
+    if calcdata.reactant_calc.ff_parameterization:
+        fill_ff(struc1.ff, struc1.info, repulsive_start=calcdata.reactant_calc.ff_parameter_repulsion) 
+        fit_ff_to_hessian(struc1,
+                        maxit=calcdata.reactant_calc.ff_parameterization_maxiteration,
+                        stepsize=calcdata.reactant_calc.ff_parameterization_stepsize,
+                        threshold=calcdata.reactant_calc.ff_parameterization_threshold,
+                        constant_repulsion=calcdata.reactant_calc.ff_parameterization_constant_repulsion)
+        
+    if calcdata.product_calc.ff_parameterization:
+        fill_ff(struc2.ff, struc2.info, repulsive_start=calcdata.product_calc.ff_parameter_repulsion) 
+        fit_ff_to_hessian(struc2,
+                        maxit=calcdata.product_calc.ff_parameterization_maxiteration,
+                        stepsize=calcdata.product_calc.ff_parameterization_stepsize,
+                        threshold=calcdata.product_calc.ff_parameterization_threshold,
+                        constant_repulsion=calcdata.product_calc.ff_parameterization_constant_repulsion)
 
     tsff, converged, energy, final_geom = get_ts_guess(struc1, struc2, calcdata=calcdata)
     
