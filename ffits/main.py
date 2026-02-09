@@ -11,6 +11,7 @@ from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
 from ffits.ts_guess.guess import get_ts_guess
 from ffits.io.print.config import print_calculation_data, print_header_setup
 from ffits.io.print.header import print_program_header
+from ffits.io.print.summary import print_run_summary
 from ffits.forcefield.python_interface.optimization import optimize_xyz_with_forcefield
 from ffits.io.file_writer import write_hessian_to_orcahessfile
 from ffits.external.molbar_optimizer import anc_optimizer
@@ -59,17 +60,29 @@ def run_tsguess_mode(args):
                       threshold=calcdata.product_calc.ff_parameterization_threshold,
                       constant_repulsion=calcdata.product_calc.ff_parameterization_constant_repulsion)
 
-    tsff, converged, energy, final_geom = get_ts_guess(struc1, struc2, calcdata=calcdata)#, optimizer=calcdata.ts_calc.optimizer)
+    tsff, converged, energy, final_geom = get_ts_guess(struc1, struc2, calcdata=calcdata)
+    
 
 
 def main():
-    print_program_header()
-    args = parse_args()
+    start_time = time.time()
     
-    if args["optff"] is not None:
-        run_optimizer_mode(args)
-    else:
-        run_tsguess_mode(args)
+    try:
+        print_program_header()
+        args = parse_args()
+        
+        if args["optff"] is not None:
+            run_optimizer_mode(args)
+        else:
+            run_tsguess_mode(args)
+        
+        end_time = time.time()
+        print_run_summary(start_time, end_time, success=True)
+        
+    except Exception as e:
+        end_time = time.time()
+        print_run_summary(start_time, end_time, success=False, message=str(e))
+        raise
 
 
 
