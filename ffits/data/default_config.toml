@@ -20,7 +20,7 @@ wbo_calc = true
 # WBO is calculated during runtime. If false, it is read from wbo_filename.
 hessian_calc = true
 # Hessian is calculated during runtime. If false, it is read from hessian_filename.
-ff_parameterization = false
+ff_parameterization = true
 # If false, FF is read from "ff_filename".
 test_parameterization = false
 # If true, the parameterized FF is used to optimize the input structure and
