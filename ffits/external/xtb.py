@@ -11,14 +11,14 @@ from importlib import resources
 from typing import Tuple, List, Dict
 import numpy as np
 
-def get_xtb_path() -> Path:
-    """
-    Returns a filesystem path to the xtb binary inside the package.
-    Safe for pip-installed packages, wheels, or editable installs.
-    """
-    xtb_file = resources.files("ffits") / "bin" / "xtb"
-    with resources.as_file(xtb_file) as path:
-        return path
+# def get_xtb_path() -> Path:
+#     """
+#     Returns a filesystem path to the xtb binary inside the package.
+#     Safe for pip-installed packages, wheels, or editable installs.
+#     """
+#     xtb_file = resources.files("ffits") / "bin" / "xtb"
+#     with resources.as_file(xtb_file) as path:
+#         return path
 
 
 class Xtb:
@@ -27,17 +27,38 @@ class Xtb:
     """
     #TODO add lömi
 
-    def __init__(self, chrg: int, mult: int, xtb_path: str = get_xtb_path()) -> None:
+    def __init__(self, chrg: int, mult: int, xtb_path: str = 'xtb') -> None:
+        # If xtb_path not provided, try to find it
+        
         self.xtb_path = xtb_path
         self.chrg = chrg
         self.uhf = mult - 1 # multiplicity = number of unpaired electrons + 1
-        self.xtb_path = xtb_path
-        # self._check_xtb_loaded()
+        self._check_xtb_loaded()
         print(f"[INFO] xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
+        print(f"[INFO] Using xTB executable: {self.xtb_path}")
 
     # ------------------------------------------------------------------
     # --- UTILITIES ----------------------------------------------------
     # ------------------------------------------------------------------
+
+    def _check_xtb_loaded(self):
+        """Check if xTB executable is available."""
+        result = subprocess.run(
+            [self.xtb_path, "--help"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            error_msg = (
+                f"xTB executable '{self.xtb_path}' not found or not working.\n"
+                f"Make sure xTB is installed and accessible.\n"
+                f"You can:\n"
+                f"  1. Load the module: module load xtb\n"
+                f"  2. Add xtb to PATH: export PATH=/path/to/xtb/bin:$PATH\n"
+                f"  3. Change variable [system] >> xtb_path in config file to the full path of the xtb executable\n"
+                f"Stderr: {result.stderr}"
+            )
+            raise RuntimeError(error_msg)
 
     def _run_xtb(self, command: str, cwd: Path):
         """Run an xTB command inside cwd and handle errors."""

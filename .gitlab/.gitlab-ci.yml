@@ -41,9 +41,14 @@ test:
     # Install development dependencies (includes build dependencies)
     # Install package in editable mode
     # Install molbar optimizer from dev branch
+    - pwd
+    - echo $PATH
+    - which xtb
     - export PYTHON=python3.11
     - export CFLAGS="$(python3.11-config --cflags)"
     - export LDFLAGS="$(python3.11-config --ldflags)"
+    - xtb --help 
+    - printenv
     - git submodule update --init --recursive
     - python3.11 -m venv venv && source venv/bin/activate
     - make install-dev
