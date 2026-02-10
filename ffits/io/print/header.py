@@ -3,6 +3,7 @@ import textwrap
 import subprocess
 import os
 from pathlib import Path
+from importlib import metadata
 
 import tomllib
 
@@ -54,54 +55,27 @@ def _get_last_commit_date():
 
 def _load_pyproject_metadata():
     """
-    Load metadata from pyproject.toml.
+    Load metadata from installed package.
     
     Returns
     -------
     dict
         Dictionary with 'license', 'authors', and 'version' keys.
     """
-    metadata = {
-        "license": "tbd",
+    metadata_dict = {
+        "license": "MIT",
         "authors": "Daria Babushkina",
         "version": "-"
     }
     
     try:
-        # Find pyproject.toml in parent directories
-        current_path = Path(__file__).parent
-        while current_path != current_path.parent:
-            pyproject_path = current_path / "pyproject.toml"
-            if pyproject_path.exists():
-                with open(pyproject_path, "rb") as f:
-                    data = tomllib.load(f)
-                
-                if "project" in data:
-                    project = data["project"]
-                    
-                    if "version" in project:
-                        metadata["version"] = project["version"]
-                    
-                    if "license" in project:
-                        if isinstance(project["license"], dict) and "text" in project["license"]:
-                            metadata["license"] = project["license"]["text"]
-                    
-                    if "authors" in project and project["authors"]:
-                        authors = project["authors"]
-                        if isinstance(authors, list) and len(authors) > 0:
-                            author_names = [
-                                author.get("name", "Unknown") 
-                                for author in authors if isinstance(author, dict)
-                            ]
-                            if author_names:
-                                metadata["authors"] = ", ".join(author_names)
-                
-                break
-            current_path = current_path.parent
+        # Get version from installed package metadata (fast, reliable on clusters)
+        version = metadata.version("ffits")
+        metadata_dict["version"] = version
     except Exception:
         pass
     
-    return metadata
+    return metadata_dict
 
 
 def print_program_header(version: str = None):
