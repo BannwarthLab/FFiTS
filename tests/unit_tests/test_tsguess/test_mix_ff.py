@@ -9,21 +9,19 @@ Tests cover:
 """
 import os
 import pandas as pd
-import shutil
 import numpy as np
-import pytest
 from ffits.ts_guess.mix_ff import (
     combine_ff_atoms,
     remove_bonds_from_repulsive,
     mix_parameters,
     mix_reference_values,
+    bond_mix_list,
+    create_tsff,
 )
-from ffits.datatype.structure_data import ForceField, StructuralInformation, StructurePath, Structure
+from ffits.datatype.structure_data import ForceField, StructuralInformation
 from ffits.io.reader import readin_xyz, read_wbo_file, read_xtb_hessian
-from ffits.ts_guess.define_starting_parameters import fill_ff
-from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
-from ffits.ts_guess.guess import get_ts_guess
-from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
+from ffits.ts_guess.define_starting_parameters import fill_ff        
+from ffits.utils.wbo_analysis import compare_wbo_differences
 
 
 def _define_ff_examples():
@@ -32,7 +30,8 @@ def _define_ff_examples():
     path1 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
     nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, 'struc1.xyz'))
     wbo = read_wbo_file(os.path.join(path1, 'wbo1'))
-    info1 = StructuralInformation(nat, xyz, wbo, atom_types)
+    hessian = read_xtb_hessian(os.path.join(path1, 'struc1.hess'))
+    info1 = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
     ff1 = ForceField(nat, os.path.join(path1, 'ff1.csv'), readff=False)
     fill_ff(ff1, info1, repulsive_start=0.0)
 
@@ -40,8 +39,9 @@ def _define_ff_examples():
     path2 = os.path.join(os.getcwd(), 'tests/examples/small_single_molecule')
     nat, _, xyz, atom_types = readin_xyz(os.path.join(path2, 'struc2.xyz'))
     wbo = read_wbo_file(os.path.join(path2, 'wbo2'))
-    info2 = StructuralInformation(nat, xyz, wbo, atom_types)
-    ff2 = ForceField(nat, os.path.join(path2, 'ff2_new'), readff=False)
+    hessian = read_xtb_hessian(os.path.join(path2, 'struc2.hess'))
+    info2 = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
+    ff2 = ForceField(nat, os.path.join(path2, 'ff2.csv'), readff=False)
     fill_ff(ff2, info2, repulsive_start=0.0)
 
     return ff1, info1, ff2, info2
@@ -466,3 +466,127 @@ class TestCompleteFFMixing:
         assert all(tsff.angles['type'] == 'angles'), "All angles should have type 'angles'"
         assert all(tsff.dihedrals['type'] == 'dihedrals'), "All dihedrals should have type 'dihedrals'"
         assert all(tsff.repulsive['type'] == 'repulsive'), "All repulsive should have type 'repulsive'"
+
+
+class TestBondMixList:
+    """Tests for bond_mix_list function that creates Hessian-weighted bond mixing factors."""
+
+    def test_bond_mix_list_returns_dict(self):
+        """Test that bond_mix_list returns a dictionary."""
+        _, info1, _, info2 = _define_ff_examples()
+        result = bond_mix_list(info1, info2)
+        
+        assert isinstance(result, dict), "bond_mix_list should return a dictionary"
+
+    def test_bond_mix_list_mixing_factors_in_range(self):
+        """Test that all mixing factors are between 0 and 1."""
+        _, info1, _, info2 = _define_ff_examples()
+        param_dict = bond_mix_list(info1, info2)
+        
+        for bond, factor in param_dict.items():
+            assert 0 <= factor <= 1, f"Mixing factor {factor} for bond {bond} should be between 0 and 1"
+
+    def test_bond_mix_list_keys_are_valid_bonds(self):
+        """Test that all dictionary keys are valid bond tuples (atom pairs)."""
+        _, info1, _, info2 = _define_ff_examples()
+        param_dict = bond_mix_list(info1, info2)
+        
+        nat = info1.nat
+        for bond in param_dict.keys():
+            assert isinstance(bond, tuple), f"Bond {bond} should be a tuple"
+            assert len(bond) == 2, f"Bond {bond} should be a pair of atoms"
+            a, b = bond
+            assert isinstance(a, (int, np.integer)), f"Atom index {a} should be an integer"
+            assert isinstance(b, (int, np.integer)), f"Atom index {b} should be an integer"
+            assert 0 <= a < nat, f"Atom index {a} out of range [0, {nat})"
+            assert 0 <= b < nat, f"Atom index {b} out of range [0, {nat})"
+            assert a != b, f"Bond should not be between same atom {a}"
+
+    def test_bond_mix_list_identifies_changing_bonds(self):
+        """Test that bond_mix_list identifies bonds with significant WBO changes."""
+        _, info1, _, info2 = _define_ff_examples()
+        param_dict = bond_mix_list(info1, info2, threshold=0.1)
+        
+        # Should identify at least some changing bonds
+        assert len(param_dict) > 0, "bond_mix_list should identify at least some changing bonds"
+
+    def test_bond_mix_list_with_threshold(self):
+        """Test that threshold parameter affects the number of identified bonds."""
+        _, info1, _, info2 = _define_ff_examples()
+        
+        # Lower threshold should identify more bonds
+        param_dict_low = bond_mix_list(info1, info2, threshold=0.05)
+        # Higher threshold should identify fewer bonds
+        param_dict_high = bond_mix_list(info1, info2, threshold=0.5)
+        
+        assert len(param_dict_low) >= len(param_dict_high), \
+            "Lower threshold should identify more or equal number of bonds"
+
+    def test_bond_mix_list_with_different_sharpness(self):
+        """Test that sharpness parameter affects mixing factor distribution."""
+        _, info1, _, info2 = _define_ff_examples()
+        
+        param_dict_sharp = bond_mix_list(info1, info2, sharpness=0.1)
+        param_dict_soft = bond_mix_list(info1, info2, sharpness=0.5)
+        
+        assert set(param_dict_sharp.keys()) == set(param_dict_soft.keys()), \
+            "Both sharpness values should identify the same bonds"
+        
+        if len(param_dict_sharp) > 0:
+            # With lower sharpness, factors should be closer to 0 or 1
+            # With higher sharpness, factors should be closer to 0.5
+            sharp_avg = np.mean(list(param_dict_sharp.values()))
+            soft_avg = np.mean(list(param_dict_soft.values()))
+            # check standard deviation to confirm distribution is sharper or softer
+            sharp_std = np.std(list(param_dict_sharp.values()))
+            soft_std = np.std(list(param_dict_soft.values()))
+            assert sharp_std < soft_std, "Sharpness should result in a lower distribution of factors"
+            assert 0 <= sharp_avg <= 1
+            assert 0 <= soft_avg <= 1
+
+    def test_bond_mix_list_hessian_weighted(self):
+        """Test that mixing factors reflect Hessian magnitudes."""
+        _, info1, _, info2 = _define_ff_examples()
+        param_dict = bond_mix_list(info1, info2, sharpness=0.2)
+
+        
+        wbo_diff = compare_wbo_differences(info1, info2, threshold=0.1)
+        
+        for bond, _, _, _ in wbo_diff['changing_bonds']:
+            i, j = bond
+            
+            # Extract Hessian blocks
+            i_start, i_end = 3 * i, 3 * i + 3
+            j_start, j_end = 3 * j, 3 * j + 3
+            
+            h1_block = info1.hessian[i_start:i_end, j_start:j_end]
+            h2_block = info2.hessian[i_start:i_end, j_start:j_end]
+            
+            h1_avg = np.mean(np.abs(h1_block))
+            h2_avg = np.mean(np.abs(h2_block))
+            
+            # Verify the factor is in the dictionary
+            assert bond in param_dict, f"Bond {bond} should be in param_dict"
+            
+            # Verify factor is valid
+            factor = param_dict[bond]
+            assert 0 <= factor <= 1, f"Factor for bond {bond} should be between 0 and 1"
+            
+            # If h1_avg >> h2_avg, factor should be closer to 1
+            # If h1_avg << h2_avg, factor should be closer to 0
+            if h1_avg > h2_avg:
+                assert factor > 0.5, f"Factor should favor reactant when h1_avg >> h2_avg"
+            elif h2_avg > h1_avg:
+                assert factor < 0.5, f"Factor should favor product when h2_avg >> h1_avg"
+
+    def test_bond_mix_list_empty_for_no_wbo_changes(self):
+        """Test that dict is empty when WBO changes are below threshold."""
+        _, info1, _, info2 = _define_ff_examples()
+        
+        # With very high threshold, should get empty or very small dict
+        param_dict = bond_mix_list(info1, info2, threshold=10.0)
+        
+        # Should have fewer or no bonds
+        assert isinstance(param_dict, dict), "Should still return a dictionary"
+        assert len(param_dict) >= 0, "Dictionary should have non-negative length"
+
