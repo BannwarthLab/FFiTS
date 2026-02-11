@@ -9,10 +9,7 @@ Tests cover:
 """
 import os
 import pandas as pd
-import shutil
 import numpy as np
-import pytest
-import tempfile
 from ffits.ts_guess.mix_ff import (
     combine_ff_atoms,
     remove_bonds_from_repulsive,
@@ -21,13 +18,10 @@ from ffits.ts_guess.mix_ff import (
     bond_mix_list,
     create_tsff,
 )
-from ffits.datatype.structure_data import ForceField, StructuralInformation, StructurePath, Structure
-from ffits.datatype.calculation_data import CalculationData
+from ffits.datatype.structure_data import ForceField, StructuralInformation
 from ffits.io.reader import readin_xyz, read_wbo_file, read_xtb_hessian
-from ffits.ts_guess.define_starting_parameters import fill_ff
-from ffits.ts_guess.parameterize_ff import fit_ff_to_hessian
-from ffits.ts_guess.guess import get_ts_guess
-from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
+from ffits.ts_guess.define_starting_parameters import fill_ff        
+from ffits.utils.wbo_analysis import compare_wbo_differences
 
 
 def _define_ff_examples():
@@ -47,7 +41,7 @@ def _define_ff_examples():
     wbo = read_wbo_file(os.path.join(path2, 'wbo2'))
     hessian = read_xtb_hessian(os.path.join(path2, 'struc2.hess'))
     info2 = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
-    ff2 = ForceField(nat, os.path.join(path2, 'ff2_new'), readff=False)
+    ff2 = ForceField(nat, os.path.join(path2, 'ff2.csv'), readff=False)
     fill_ff(ff2, info2, repulsive_start=0.0)
 
     return ff1, info1, ff2, info2
@@ -554,9 +548,7 @@ class TestBondMixList:
         """Test that mixing factors reflect Hessian magnitudes."""
         _, info1, _, info2 = _define_ff_examples()
         param_dict = bond_mix_list(info1, info2, sharpness=0.2)
-        
-        # For each bond, verify that the mixing factor is influenced by Hessian ratio
-        from ffits.utils.wbo_analysis import compare_wbo_differences
+
         
         wbo_diff = compare_wbo_differences(info1, info2, threshold=0.1)
         
