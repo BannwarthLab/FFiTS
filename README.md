@@ -272,3 +272,26 @@ perform_two_optimizations = false
   ```bash
   ffits reactant.xyz product.xyz --config config.toml --charge -1 --multiplicity 2
   ```
+
+---
+
+## Details 
+Here specific details or new features are described (mathematically.)
+
+### Hessian-Based Bond Weighting in TS Guess
+
+For each bond $(i, j)$ that changes between reactant and product states, a ratio $m_{ij}$ is calculated as:
+
+$$m_{ij} = \frac{\bar{H}_1^{ij}}{ \bar{H}_2^{ij}}$$
+
+Where:
+- $\bar{H}_\mathrm{reac}^{ij}$ = average magnitude of Hessian block for bond in reactant state
+- $\bar{H}_\mathrm{prod}^{ij}$ = average magnitude of Hessian block for bond in product state
+
+This ratio is used to calculate the mixing factor for reactant and product according to: 
+
+$$ f_{ij, \mathrm{reac}} = \frac{m_{ij}^\alpha}{1+ m_{ij}^\alpha} $$
+$$f_{ij, \mathrm{prod}} = 1- f_{ij, \mathrm{reac}} $$
+
+The sharpness parameter $\alpha$ modulates how decisive the Hessian weighting is. The higher $\alpha$, the closer $f_{ij}$ to 0.5. The lower, the stronger the structure with a higher Hessian element is weighted. The default is 0.2.
+
