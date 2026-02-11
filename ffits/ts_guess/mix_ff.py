@@ -3,8 +3,9 @@ import pandas as pd
 from ffits.utils.geometry_calc import bondlength, angle, dihedral_angle
 from ffits.datatype.structure_data import ForceField, StructuralInformation
 from ffits.datatype.calculation_data import CalculationData
+from ffits.utils.wbo_analysis import compare_wbo_differences
 
-def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation, fact1: float, fact2: float, calcdata: CalculationData) -> ForceField:
+def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation, fact1: float, fact2: float, calcdata: CalculationData, weigh_bonds_with_hessian: bool = True) -> ForceField:
 
     # TODO add parameter transfer for averaging and add that in printout too
     tsff = ForceField(ff1.nat, calcdata.ts_path.ff_filename, readff=False)
@@ -13,12 +14,22 @@ def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, 
     tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
     tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
 
-    mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds, fact1, fact2)
+    if weigh_bonds_with_hessian:
+        param_dict = bond_mix_list(info1, info2, sharpness=0.2)
+
+    mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds, fact1, fact2, param_dict)
     mix_parameters(tsff.angles, ff1.angles, ff2.angles, fact1, fact2)
     mix_parameters(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, fact1, fact2)
     mix_parameters(tsff.repulsive, ff1.repulsive, ff2.repulsive, fact1, fact2)
     
-    mix_reference_values(tsff, ff1, ff2, info1, info2, fact1, fact2)
+    mix_reference_values(tsff, ff1, ff2, info1, info2, fact1, fact2, param_dict)
+
+    # print out the mixing factors to file
+    with open(calcdata.ts_path.ff_filename + ".mixing_factors.txt", "w") as f:
+        f.write("Bond\tMixing Factor (Reactant)\n")
+        for bond, factor in param_dict.items():
+            f.write(f"{bond}\t{factor:.4f}\n")
+
     print(f'[INFO] TS FF generation finished.')
     tsff.write()
     return tsff
@@ -106,7 +117,7 @@ def remove_bonds_from_repulsive(df_source: pd.DataFrame, df_reference: pd.DataFr
     return df_source[mask].copy().reset_index(drop=True)
 
 
-def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, fact1: float, fact2: float):
+def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, fact1: float, fact2: float, param_dict: dict = None):
     """
     Fill tsff_df['parameter'] with the average of corresponding parameters
     found in ff1_df and ff2_df where 'atoms' entries match.
@@ -117,8 +128,12 @@ def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
         c1_series = ff1_df.loc[ff1_df['atoms'].apply(lambda x: x == row['atoms']), 'parameter']
         c2_series = ff2_df.loc[ff2_df['atoms'].apply(lambda x: x == row['atoms']), 'parameter']
 
-        c1 = c1_series.squeeze() if not c1_series.empty else c2_series.squeeze() # TODO ggf hier das es dann der wert einzeln ist anstatt mit 0 geaveraged
+        c1 = c1_series.squeeze() if not c1_series.empty else c2_series.squeeze() 
         c2 = c2_series.squeeze() if not c2_series.empty else c1_series.squeeze()
+
+        if (param_dict and row['atoms'] in param_dict) or (param_dict and tuple(reversed(row['atoms'])) in param_dict):
+            fact1 = param_dict.get(row['atoms'], param_dict.get(tuple(reversed(row['atoms']))))
+            fact2 = 1 - fact1
 
         new_val = _average_c(c1, c2, fact1, fact2)
         new_params.append((idx, new_val))
@@ -127,6 +142,51 @@ def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
         tsff_df.at[idx, 'parameter'] = val
 
 
+def bond_mix_list(info1: StructuralInformation, info2: StructuralInformation, sharpness: float = 0.2, threshold: float = 0.1):
+    """
+    Create a dictionary with bond tuples as keys and mixing factors for the reactant as values.
+    The mixing factor is calculated based on the ratio of average Hessian values for the bond in the reactant and product. So if the Hessian block for the bond in the reactant is much larger than in the product, the factor will be closer to 1 (more weight on reactant parameters). If the Hessian block is much smaller, the factor will be closer to 0 (more weight on product parameters). 
+
+    Parameters
+    ----------
+    info1 : StructuralInformation
+        Structural information for the reactant.
+    info2 : StructuralInformation
+        Structural information for the product.
+    sharpness : float
+        Controls how sharply the mixing factor changes with the Hessian ratio (default: 0.2). The lower the sharpness, the more the factor will approach 0 or 1 for small deviations in the ratio. The higher the sharpness, the more the factor will be closer to 0.5 for a wider range of ratios.
+    threshold : float
+        Minimum WBO change to consider a bond for mixing (default: 0.1).
+    Returns
+    -------
+    dict
+        Dictionary with bond tuples (i, j) as keys and mixing factors for the reactant as values (between 0 and 1).
+    """
+    param_dict = {}
+
+    wbo_diff = compare_wbo_differences(info1, info2, threshold=threshold)
+    
+    for bond, _, _, _ in wbo_diff['changing_bonds']:
+        i, j = bond
+        
+        i_start, i_end = 3 * i, 3 * i + 3
+        j_start, j_end = 3 * j, 3 * j + 3
+        
+        h1_block = info1.hessian[i_start:i_end, j_start:j_end]
+        h2_block = info2.hessian[i_start:i_end, j_start:j_end]
+        
+        h1_avg = np.mean(np.abs(h1_block))
+        h2_avg = np.mean(np.abs(h2_block))
+
+        ratio = h1_avg / h2_avg if h2_avg != 0 else 0.0001
+
+        param_reac = (ratio**sharpness) / ((ratio**sharpness) + 1)
+
+        # create a dict with bond as key and param_reac and param_prod as values
+        param_dict[(i, j)] = param_reac
+    print(param_dict)
+    return param_dict
+
 
 def _average_c(c1: float, c2: float, c1_factor: float, c2_factor: float) -> float:
     if round(c1_factor + c2_factor, 2) != 1.00:
@@ -134,14 +194,14 @@ def _average_c(c1: float, c2: float, c1_factor: float, c2_factor: float) -> floa
     return round(c1 * c1_factor + c2 * c2_factor, 8)
 
 
-def mix_reference_values(tsff: ForceField, ff1: ForceField, ff2: ForceField, info1: StructuralInformation, info2: StructuralInformation, fact1: float, fact2: float):
+def mix_reference_values(tsff: ForceField, ff1: ForceField, ff2: ForceField, info1: StructuralInformation, info2: StructuralInformation, fact1: float, fact2: float, dict_param: dict = None):
 
-    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info1, info2, 'bonds', fact1, fact2)
-    _mix_reference(tsff.angles, ff1.angles, ff2.angles, info1, info2, 'angles', fact1, fact2)
-    _mix_reference(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, info1, info2, 'dihedrals', fact1, fact2)
-    _mix_reference(tsff.repulsive, ff1.repulsive, ff2.repulsive, info1, info2, 'repulsive', fact1, fact2)
+    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info1, info2, 'bonds', fact1, fact2, dict_param)
+    _mix_reference(tsff.angles, ff1.angles, ff2.angles, info1, info2, 'angles', fact1, fact2, dict_param)
+    _mix_reference(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, info1, info2, 'dihedrals', fact1, fact2, dict_param)
+    _mix_reference(tsff.repulsive, ff1.repulsive, ff2.repulsive, info1, info2, 'repulsive', fact1, fact2, dict_param)
 
-def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info1: StructuralInformation, info2: StructuralInformation, calctype: str, fact1: float, fact2: float):
+def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info1: StructuralInformation, info2: StructuralInformation, calctype: str, fact1: float, fact2: float, dict_param: dict = None):
     new_params = []
     for idx, row in tsff_df.iterrows():
         val1_series = ff1_df.loc[ff1_df['atoms'].apply(lambda x: x == row['atoms']), 'reference_value']
@@ -156,6 +216,9 @@ def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
                 val1 = info1.vander_matrix[a, b]
             if val2 > info2.vander_matrix[a, b]: 
                 val2 = info2.vander_matrix[a, b]
+            if dict_param and row['atoms'] in dict_param:
+                fact1 = dict_param[row['atoms']]
+                fact2 = 1 - fact1
             new_val = _average_single_bond(val1, val2, fact1, fact2)
         elif calctype == 'angles':
             a, b, c = row['atoms']
