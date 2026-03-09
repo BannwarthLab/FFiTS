@@ -7,7 +7,7 @@ from ffits.utils.wbo_analysis import compare_wbo_differences
 
 def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation, fact1: float, fact2: float, calcdata: CalculationData, weigh_bonds_with_hessian: bool = True) -> ForceField:
 
-    # TODO add parameter transfer for averaging and add that in printout too
+    # TODO add parameter transfer for averaginc dg and add that in printout too
     tsff = ForceField(ff1.nat, calcdata.ts_path.ff_filename, readff=False)
     tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
     tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
@@ -15,20 +15,28 @@ def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, 
     tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
 
     if weigh_bonds_with_hessian:
-        param_dict = bond_mix_list(info1, info2, sharpness=0.2)
+        print(f'[INFO] Calculating mixing factors based on Hessian analysis.')
+        sharpness = 0.8
+        params_mix = hessian_weighting_mix_list(info1, info2, tsff.bonds, tsff.angles, tsff.dihedrals, sharpness=sharpness) 
+        # get average reac parameter for bond terms (so tupels with only two entries)
+        average_bond_param_reac = np.mean([factor for atoms, factor in params_mix.items() if len(atoms) == 2])
+        average_param_reac = np.mean(list(params_mix.values()))
+        print(f'[INFO] Average mixing factor for reactant across bond terms: {average_bond_param_reac:.4f}')
+        if average_bond_param_reac <= 0.5: 
+            tsff.start_from_reactant = False
 
-    mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds, fact1, fact2, param_dict)
-    mix_parameters(tsff.angles, ff1.angles, ff2.angles, fact1, fact2)
-    mix_parameters(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, fact1, fact2)
+    mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds, fact1, fact2, params_mix)
+    mix_parameters(tsff.angles, ff1.angles, ff2.angles, fact1, fact2, params_mix)
+    mix_parameters(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, fact1, fact2, params_mix)
     mix_parameters(tsff.repulsive, ff1.repulsive, ff2.repulsive, fact1, fact2)
     
-    mix_reference_values(tsff, ff1, ff2, info1, info2, fact1, fact2, param_dict)
+    mix_reference_values(tsff, ff1, ff2, info1, info2, fact1, fact2, dict_param_mix=params_mix)
 
     # print out the mixing factors to file
-    with open(calcdata.ts_path.ff_filename + ".mixing_factors.txt", "w") as f:
-        f.write("Bond\tMixing Factor (Reactant)\n")
-        for bond, factor in param_dict.items():
-            f.write(f"{bond}\t{factor:.4f}\n")
+    with open(f'{calcdata.ts_path.ff_filename[:-4]}.mixing_factors.txt', "w") as f:
+        f.write("Bond/Angle/Dihedral\tMixing Factor (Reactant)\n")
+        for term, factor in params_mix.items():
+            f.write(f"{term}\t{factor:.4f}\n")
 
     print(f'[INFO] TS FF generation finished.')
     tsff.write()
@@ -142,10 +150,79 @@ def mix_parameters(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
         tsff_df.at[idx, 'parameter'] = val
 
 
-def bond_mix_list(info1: StructuralInformation, info2: StructuralInformation, sharpness: float = 0.2, threshold: float = 0.1):
+def hessian_mix_list(info1: StructuralInformation, info2: StructuralInformation, atoms: tuple, sharpness: float = 0.2, changing_bonds: list = None) -> float:
     """
-    Create a dictionary with bond tuples as keys and mixing factors for the reactant as values.
-    The mixing factor is calculated based on the ratio of average Hessian values for the bond in the reactant and product. So if the Hessian block for the bond in the reactant is much larger than in the product, the factor will be closer to 1 (more weight on reactant parameters). If the Hessian block is much smaller, the factor will be closer to 0 (more weight on product parameters). 
+    Calculate mixing factor for a set of atoms based on hessian analysis.
+    Only calculates if at least one bond in the atom group is in the changing_bonds list.
+    
+    Parameters
+    ----------
+    info1 : StructuralInformation
+        Structural information for the reactant.
+    info2 : StructuralInformation
+        Structural information for the product.
+    atoms : tuple
+        Tuple of 2, 3, or 4 atom indices.
+    sharpness : float
+        Controls how sharply the mixing factor changes with the Hessian ratio (default: 0.2).
+    changing_bonds : list
+        List of bond tuples from WBO analysis that are changing. Only include this term if 
+        at least one of its bonds is in this list.
+    
+    Returns
+    -------
+    float or None
+        Mixing factor for the reactant (between 0 and 1), or None if no changing bonds are present in this term.
+    """
+    if changing_bonds is None:
+        changing_bonds = []
+    
+    # Generate all possible bonds for this set of atoms
+    atom_pairs = []
+    if len(atoms) == 2:
+        atom_pairs = [atoms]    
+
+    elif len(atoms) == 3:
+        i, j, k = atoms
+        atom_pairs = [(min(i, j), max(i, j)), (min(i, k), max(i, k)), (min(j, k), max(j, k))]
+    elif len(atoms) == 4:
+        i, j, k, l = atoms
+        atom_pairs = [
+            (min(i, j), max(i, j)), (min(i, k), max(i, k)), (min(i, l), max(i, l)),
+            (min(j, k), max(j, k)), (min(j, l), max(j, l)), (min(k, l), max(k, l))
+        ]
+    else:
+        raise ValueError(f"atoms must have 2, 3, or 4 elements, got {len(atoms)}")
+    
+    # Check if any bonds are in changing_bonds
+    has_changing_bond = any(bond in changing_bonds for bond in atom_pairs)
+    if not has_changing_bond:
+        return None
+    
+    # Sum Hessian blocks
+    h1_avg_sum = 0.0
+    h2_avg_sum = 0.0
+    
+    for a1, a2 in atom_pairs:
+        h1_block = info1.hessian[3*a1:3*a1+3, 3*a2:3*a2+3]
+        h2_block = info2.hessian[3*a1:3*a1+3, 3*a2:3*a2+3]
+        h1_avg_sum += np.mean(np.abs(h1_block))
+        h2_avg_sum += np.mean(np.abs(h2_block))
+    
+    ratio = h1_avg_sum / h2_avg_sum if h2_avg_sum != 0 else 1
+    param_reac = (ratio**(1-sharpness)) / ((ratio**(1-sharpness)) + 1) # 1 - sharpness damit das Wort sharpness Sinn ergibt 
+    
+    print(f'[DEBUG] Atoms: {atoms}, H1 avg sum: {h1_avg_sum:.4f}, H2 avg sum: {h2_avg_sum:.4f}, Ratio: {ratio:.4f}, Param reac: {param_reac:.4f}')
+    
+    return param_reac
+
+
+def hessian_weighting_mix_list(info1: StructuralInformation, info2: StructuralInformation, 
+                               bonds_df: pd.DataFrame, angles_df: pd.DataFrame, dihedrals_df: pd.DataFrame,
+                               sharpness: float = 0.2, threshold: float = 0.1) -> dict:
+    """
+    Create a dictionary with bond, angle, and dihedral tuples as keys and mixing factors for the reactant as values.
+    Combines results from bonds, angles, and dihedrals, only including terms that contain at least one bond from the changing bonds.
 
     Parameters
     ----------
@@ -153,38 +230,52 @@ def bond_mix_list(info1: StructuralInformation, info2: StructuralInformation, sh
         Structural information for the reactant.
     info2 : StructuralInformation
         Structural information for the product.
+    bonds_df : pd.DataFrame
+        DataFrame with bonds already combined from both force fields.
+    angles_df : pd.DataFrame
+        DataFrame with angles already combined from both force fields.
+    dihedrals_df : pd.DataFrame
+        DataFrame with dihedrals already combined from both force fields.
     sharpness : float
-        Controls how sharply the mixing factor changes with the Hessian ratio (default: 0.2). The lower the sharpness, the more the factor will approach 0 or 1 for small deviations in the ratio. The higher the sharpness, the more the factor will be closer to 0.5 for a wider range of ratios.
+        Controls how sharply the mixing factor changes with the Hessian ratio (default: 0.2).
     threshold : float
         Minimum WBO change to consider a bond for mixing (default: 0.1).
+    
     Returns
     -------
     dict
-        Dictionary with bond tuples (i, j) as keys and mixing factors for the reactant as values (between 0 and 1).
+        Dictionary with bond tuples (i, j), angle tuples (i, j, k), and dihedral tuples (i, j, k, l) as keys 
+        and mixing factors for the reactant as values.
     """
     param_dict = {}
-
     wbo_diff = compare_wbo_differences(info1, info2, threshold=threshold)
+    changing_bonds = [bond for bond, _, _, _ in wbo_diff['changing_bonds']]
     
-    for bond, _, _, _ in wbo_diff['changing_bonds']:
-        i, j = bond
-        
-        i_start, i_end = 3 * i, 3 * i + 3
-        j_start, j_end = 3 * j, 3 * j + 3
-        
-        h1_block = info1.hessian[i_start:i_end, j_start:j_end]
-        h2_block = info2.hessian[i_start:i_end, j_start:j_end]
-        
-        h1_avg = np.mean(np.abs(h1_block))
-        h2_avg = np.mean(np.abs(h2_block))
+    if not changing_bonds:
+        print(f'[INFO] No changing bonds found with WBO difference above {threshold}. All mixing factors will be 0.5.')
+        return param_dict  # Return empty dict, which will lead to default 0.5 mixing in mix_parameters
 
-        ratio = h1_avg / h2_avg if h2_avg != 0 else 0.0001
-
-        param_reac = (ratio**sharpness) / ((ratio**sharpness) + 1)
-
-        # create a dict with bond as key and param_reac and param_prod as values
-        param_dict[(i, j)] = param_reac
-    print(param_dict)
+    # Process bonds
+    for idx, row in bonds_df.iterrows():
+        atoms = row['atoms']
+        factor = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
+        if factor is not None:
+            param_dict[atoms] = factor
+    
+    # # Process angles
+    # for idx, row in angles_df.iterrows():
+    #     atoms = row['atoms']
+    #     factor = hessian_mix_list(info1, info2, atoms, 0.8, changing_bonds)
+    #     if factor is not None:
+    #         param_dict[atoms] = factor
+    
+    # # Process dihedrals
+    # for idx, row in dihedrals_df.iterrows():
+    #     atoms = row['atoms']
+    #     factor = hessian_mix_list(info1, info2, atoms, 0.8, changing_bonds)
+    #     if factor is not None:
+    #         param_dict[atoms] = factor
+    
     return param_dict
 
 
@@ -194,12 +285,12 @@ def _average_c(c1: float, c2: float, c1_factor: float, c2_factor: float) -> floa
     return round(c1 * c1_factor + c2 * c2_factor, 8)
 
 
-def mix_reference_values(tsff: ForceField, ff1: ForceField, ff2: ForceField, info1: StructuralInformation, info2: StructuralInformation, fact1: float, fact2: float, dict_param: dict = None):
+def mix_reference_values(tsff: ForceField, ff1: ForceField, ff2: ForceField, info1: StructuralInformation, info2: StructuralInformation, fact1: float, fact2: float, dict_param_mix: dict = None):
 
-    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info1, info2, 'bonds', fact1, fact2, dict_param)
-    _mix_reference(tsff.angles, ff1.angles, ff2.angles, info1, info2, 'angles', fact1, fact2, dict_param)
-    _mix_reference(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, info1, info2, 'dihedrals', fact1, fact2, dict_param)
-    _mix_reference(tsff.repulsive, ff1.repulsive, ff2.repulsive, info1, info2, 'repulsive', fact1, fact2, dict_param)
+    _mix_reference(tsff.bonds, ff1.bonds, ff2.bonds, info1, info2, 'bonds', fact1, fact2, dict_param_mix)
+    _mix_reference(tsff.angles, ff1.angles, ff2.angles, info1, info2, 'angles', fact1, fact2, dict_param_mix)
+    _mix_reference(tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, info1, info2, 'dihedrals', fact1, fact2, dict_param_mix)
+    _mix_reference(tsff.repulsive, ff1.repulsive, ff2.repulsive, info1, info2, 'repulsive', fact1, fact2)
 
 def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataFrame, info1: StructuralInformation, info2: StructuralInformation, calctype: str, fact1: float, fact2: float, dict_param: dict = None):
     new_params = []
@@ -224,11 +315,17 @@ def _mix_reference(tsff_df: pd.DataFrame, ff1_df: pd.DataFrame, ff2_df: pd.DataF
             a, b, c = row['atoms']
             val1 = val1_series.squeeze() if not val1_series.empty else angle(info1.fortran_xyz, a, b, c)
             val2 = val2_series.squeeze() if not val2_series.empty else angle(info2.fortran_xyz, a, b, c)
+            if dict_param and row['atoms'] in dict_param:
+                fact1 = dict_param[row['atoms']]
+                fact2 = 1 - fact1
             new_val = _average_single_angle(val1, val2, fact1, fact2)
         elif calctype == 'dihedrals':
             a, b, c, d = row['atoms']
             val1 = val1_series.squeeze() if not val1_series.empty else dihedral_angle(info1.fortran_xyz, a, b, c, d)
             val2 = val2_series.squeeze() if not val2_series.empty else dihedral_angle(info2.fortran_xyz, a, b, c, d)
+            if dict_param and row['atoms'] in dict_param:
+                fact1 = dict_param[row['atoms']]
+                fact2 = 1 - fact1
             new_val = _average_single_dihedral(val1, val2, fact1, fact2)
         elif calctype == 'repulsive':
             a, b = row['atoms']
