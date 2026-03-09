@@ -14,7 +14,7 @@ from ffits.io.print.header import print_program_header
 from ffits.io.print.summary import print_run_summary
 from ffits.forcefield.python_interface.optimization import optimize_xyz_with_forcefield
 from ffits.io.file_writer import write_hessian_to_orcahessfile
-from ffits.external.molbar_optimizer import anc_optimizer
+from ffits.external.molbar import anc_optimizer
 
 def run_optimizer_mode(args):
     """
