@@ -2,7 +2,7 @@
 from collections.abc import Callable   
 import numpy as np
 from ffits.datatype.structure_data import (ForceField, StructuralInformation)
-from ffits.external.molbar_optimizer import (anc_optimizer, 
+from ffits.external.molbar import (anc_optimizer, 
                                              failed_anc_opt, 
                                              write_last_valid_xyz,
                                              scipy_optimizer)

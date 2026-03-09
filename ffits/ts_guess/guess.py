@@ -6,7 +6,7 @@ from collections.abc import Callable
 from ffits.ts_guess.mix_ff import create_tsff
 from ffits.datatype.structure_data import  Structure, ForceField
 from ffits.datatype.calculation_data import CalculationData
-from ffits.external.molbar_optimizer import anc_optimizer
+from ffits.external.molbar import anc_optimizer
 from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient,complete_hessian
 from ffits.io.print.details import print_ts_optimization_start
 from ffits.io.file_writer import write_hessian_to_orcahessfile

@@ -14,7 +14,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
-from ffits.external.molbar_optimizer import anc_optimizer, scipy_optimizer
+from ffits.external.molbar import anc_optimizer, scipy_optimizer
 from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
 from ffits.datatype.structure_data import ForceField, StructuralInformation
 from ffits.io.reader import readin_xyz
