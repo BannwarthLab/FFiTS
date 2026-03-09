@@ -32,7 +32,13 @@ def get_ts_guess(struc1: Structure, struc2: Structure, calcdata: CalculationData
     
 
     ### ---------- optimization ------------ ###
-    converged, energy, final_geom = optimize_with_forcefield(struc1.info, 
+    if tsff.start_from_reactant:
+        print(f'[INFO] Starting TS guess optimization from reactant geometry.')
+        initial_struc = struc1.info
+    else:
+        print(f'[INFO] Starting TS guess optimization from product geometry.')
+        initial_struc = struc2.info
+    converged, energy, final_geom = optimize_with_forcefield(initial_struc, 
                                                                    tsff, 
                                                                    optimizer, 
                                                                    calcdata.ts_calc,

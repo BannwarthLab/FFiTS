@@ -143,6 +143,8 @@ class ForceField:
         self.energy_calculator = energy_calculator
         self.gradient_calculator = gradient_calculator
         self.hessian_calculator = hessian_calculator
+        ## only relevant for TS FF
+        self.start_from_reactant: bool = True
 
     def get_energy(self, xyz_displaced: np.ndarray): 
         if np.shape(xyz_displaced) == (self.nat, 3):
