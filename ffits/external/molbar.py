@@ -2,7 +2,60 @@ import numpy as np
 import os
 from ffits.datatype.structure_data import ForceField, StructuralInformation
 from molbar.utils.optimizer import optimize_geometry 
+
 from scipy.optimize import minimize
+from molbar.topology.priorities import _calculate_priorities
+from molbar.topology.topology import _get_topology_barcode
+from molbar.molecule.molecule import Molecule
+
+
+def _define_bonds_for_molbar(mol: Molecule, struc1: StructuralInformation, struc2: StructuralInformation, bo_threshold: float = 0.5) -> None:
+    """Fills mol object with connectivity information based on the combined bond order matrices of struc1 and struc2. Bonds are defined where the combined bond order exceeds the specified threshold.
+
+    Args:
+        mol (Molecule): MolBar Molecule object to be filled with connectivity information.
+        struc1 (StructuralInformation): Structural information of reactant structure.
+        struc2 (StructuralInformation): Structural information of product structure.
+        bo_threshold (float, optional): Threshold for defining bonds. Defaults to 0.5.
+
+    Raises:
+        ValueError: If either struc1 or struc2 is missing bond order matrices.
+    """
+    # raise error when necessary data is missing in struc1 or struc2
+    if struc1.bo_matrix is None or struc2.bo_matrix is None:
+        raise ValueError("Both struc1 and struc2 must have bond order matrices to define bonds for MolBar.")
+
+    mixed_bo_matrix = struc1.bo_matrix + struc2.bo_matrix
+    mol.cn_matrix = np.zeros(mixed_bo_matrix.shape, dtype=int)
+
+    for i in range(mixed_bo_matrix.shape[0]):
+        for j in range(i + 1, mixed_bo_matrix.shape[1]):
+            if mixed_bo_matrix[i, j] > bo_threshold:
+                mol.cn_matrix[i, j] = 1
+                mol.cn_matrix[j, i] = 1
+    mol.cn = np.sum(mol.cn_matrix, axis=1)
+
+    
+def get_combinded_priorities(struc1: StructuralInformation, struc2: StructuralInformation, bo_threshold: float = 0.5) -> dict:
+    """Calculates combined priorities for each atom based on the connectivity of both structures. This is done by creating a MolBar Molecule object, defining bonds based on the combined bond order matrices of struc1 and struc2, and then calculating priorities using MolBar's internal functions.
+
+    Args:
+        struc1 (StructuralInformation): Structural information of reactant structure.
+        struc2 (StructuralInformation): Structural information of product structure.
+        bo_threshold (float, optional): Threshold for defining bonds. Defaults to 0.5.
+
+    Returns:
+        dict: Dictionary mapping atom indices to their combined priorities based on the connectivity of both structures.
+    """
+    # Assuming atom types are the same for both structures
+    # coordinates are not used, struc1 is just set as a proxy 
+    mol = Molecule(coordinates=struc1.xyz, elements=struc2.atom_types) 
+
+    _define_bonds_for_molbar(mol, struc1, struc2, bo_threshold=bo_threshold)
+    _get_topology_barcode(mol)
+    _calculate_priorities(mol)
+
+    return {i: int(mol.priorities[i]) for i in range(len(mol.priorities))}
 
 
 def anc_optimizer(xyz_start: np.ndarray, ff: ForceField, atom_types: np.ndarray, e_tol: float = 1e-4, x_tol: float = 1e-3, max_micro_steps: int = 1, trajectory_filename: str = 'trajectory.xyz', final_geometry_filename: str = 'optimized.xyz'):
@@ -82,5 +135,3 @@ def scipy_optimizer(xyz_start: np.ndarray, ff: ForceField, struc: StructuralInfo
 
     return result
 
-
-    

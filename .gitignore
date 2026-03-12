@@ -23,3 +23,4 @@ dist/
 *.so
 *~
 .DS_Store
+.vscode/settings.json
