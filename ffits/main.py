@@ -42,8 +42,8 @@ def run_tsguess_mode(args):
     print_calculation_data(calcdata)
 
     print_header_setup()
-    struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path, 1, calcdata.system)
-    struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system)
+    struc1 = get_preliminary_information(calcdata.reactant_calc, calcdata.reactant_path, 1, calcdata.system, random_seed=42)
+    struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system, random_seed=41)
     #    TODO add bo threshold in calcdata
     
     # Compute combined priorities for dihedral classification
