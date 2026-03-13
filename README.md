@@ -4,7 +4,7 @@ FFiTS
 ***Force Field-interpolated Transition States***
 
 **Author:** *Daria Babushkina*  
-**Version:** 0.2.0-alpha  
+**Version:** 0.2.1-alpha  
 **License:** MIT  
 **Status:** Development  
 **Python:** >=3.11  
@@ -76,6 +76,8 @@ ffits reactant.xyz product.xyz --config config.toml
 | `charge` | int | 0 | Total charge of the molecular system |
 | `multiplicity` | int | 1 | Spin multiplicity (1=singlet, 2=doublet, 3=triplet, etc.). Must be between 1 and 3. |
 | `xtb_path` | str | 'xtb' | Path to xtb binary |
+| `xtb_input_name` | str | 'None' | xtb input name for `xtb coord.xyz --input xtb_input_name` call |
+| `xtb_alpb_solvent` | str | 'None' | Solvent for `--alpb` xtb commandline argument |
 
 **Example:**
 ```toml
