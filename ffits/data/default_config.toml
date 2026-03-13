@@ -2,6 +2,7 @@
 charge = 0
 multiplicity = 1
 xtb_path = 'xtb'
+
 # path to xtb binary
 
 # ============================
@@ -74,8 +75,8 @@ factor_reactant = 0.5
 factor_product = 0.5
 optimizer = "molbar-optimizer"
 # Other option: "scipy-optimizer" 
-molbar_optimizer_e_tol = 1e-8
-molbar_optimizer_x_tol = 1e-3
+molbar_optimizer_e_tol = 1e-4
+molbar_optimizer_x_tol = 1e-2
 molbar_optimizer_max_micro_steps = 1
 energy_threshold_two_optimizations = 0.15
 # the energy threshold for to repeat the optimization from the product if started at reactant was to high. 

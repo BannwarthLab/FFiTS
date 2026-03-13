@@ -22,6 +22,8 @@ def print_calculation_data(calc_data: CalculationData):
     print(f"  Charge:       {system.charge}")
     print(f"  Multiplicity: {system.multiplicity}")
     print(f"  XTB path:     {system.xtb_path}")
+    print(f"  XTB input:    {system.xtb_input_name or '—'}")
+    print(f"  XTB ALPB solvent: {system.xtb_alpb_solvent or '—'}")
 
     # --- Paths section ---
     print("\n[ Reactant Paths ]")

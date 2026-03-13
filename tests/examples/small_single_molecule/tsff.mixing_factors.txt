@@ -1,0 +1,6 @@
+Bond/Angle/Dihedral	Mixing Factor (Reactant)
+(0, 1)	0.4709
+(0, 2)	0.5079
+(0, 6)	0.6632
+(1, 2)	0.5375
+(2, 6)	0.3030

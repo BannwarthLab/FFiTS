@@ -12,7 +12,7 @@ def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData,
     chrg = systemdata.charge
     mult = systemdata.multiplicity
     path = StructurePath(pathdata.xyz_filename, pathdata.hessian_filename, pathdata.wbo_filename, pathdata.ff_filename)
-    xtbrunner = Xtb(chrg, mult, xtb_path=systemdata.xtb_path) 
+    xtbrunner = Xtb(chrg, mult, xtb_path=systemdata.xtb_path, xtb_alpb_solvent=systemdata.xtb_alpb_solvent, xtb_input_name=systemdata.xtb_input_name) 
 
     # TODO add somewhere check that wbo and hess needs to be calculated if geomopt is performed
     if calcopt.geometry_optimization: 
