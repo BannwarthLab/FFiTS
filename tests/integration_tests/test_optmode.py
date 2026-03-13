@@ -19,7 +19,7 @@ def run_ffits_as_subprocess(args):
 
 def test_ffits_optmode():
     """
-    Test which first calculates with present hessian and then without hessian and wbo calculation but reading in the files created in the first run, by changing the filenames in the config file
+    This test runs ffits in optimizer mode on a single structure and checks if the optimized geometry is consistent with the expected product geometry. It uses the example files for a small single molecule reaction and compares the optimized geometry to the known product geometry using RMSD. The test also checks that the optimization runs successfully without errors.
     """  
     examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
     with tempfile.TemporaryDirectory() as temp_dir:

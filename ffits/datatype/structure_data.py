@@ -132,7 +132,7 @@ class ForceField:
         self.nat = nat
         self.ff_filename = ff_filename
         self.columns = ['type', 'atoms', 'parameter', 'reference_value']
-        self.dihedrals_columns = ['type', 'atoms', 'dihedral_type', 'parameter', 'reference_value']
+        self.dihedrals_columns = ['type', 'atoms', 'parameter', 'reference_value', 'proper_dihedral']
         self.bonds: pd.DataFrame     = pd.DataFrame(columns=self.columns)
         self.angles: pd.DataFrame    = pd.DataFrame(columns=self.columns)
         self.dihedrals: pd.DataFrame = pd.DataFrame(columns=self.dihedrals_columns)

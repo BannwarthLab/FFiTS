@@ -189,9 +189,10 @@ class TestForceField:
         """Test that force field has correct columns."""
         ff = ForceField(nat=7, ff_filename="test.ff", readff=False)
         expected_cols = ['type', 'atoms', 'parameter', 'reference_value']
+        expected_cols_dihedral = ['type', 'atoms', 'parameter', 'reference_value', 'proper_dihedral']
         assert list(ff.bonds.columns) == expected_cols
         assert list(ff.angles.columns) == expected_cols
-        assert list(ff.dihedrals.columns) == expected_cols
+        assert list(ff.dihedrals.columns) == expected_cols_dihedral
         assert list(ff.repulsive.columns) == expected_cols
 
     def test_forcefield_write_to_csv(self, ff_path):
@@ -210,7 +211,7 @@ class TestForceField:
             ff2 = ForceField(nat=7, ff_filename=output_path, readff=True)
             assert len(ff2.bonds) == len(ff.bonds)
             assert len(ff2.angles) == len(ff.angles)
-
+            assert len(ff2.dihedrals) == len(ff.dihedrals)
     def test_forcefield_with_calculators(self):
         """Test ForceField with calculator functions."""
         def dummy_energy(xyz, ff):
