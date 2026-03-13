@@ -4,10 +4,29 @@ from ffits.datatype.structure_data import Structure,  StructuralInformation, Str
 from ffits.io.reader import read_xtb_hessian, read_wbo_file, readin_xyz
 from ffits.external.xtb import Xtb
 from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_gradient, complete_hessian
+import numpy as np
 
 
+def randomize_coordinates(xyz: np.ndarray, displacement: float = 0.01, random_seed: int = 42) -> np.ndarray:
+    """Randomizes the coordinates of a structure by adding small random displacements to each atom's position. This can be useful for testing the robustness of the TS guess generation process against small perturbations in the input geometry.
 
-def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData, id: int, systemdata: System) -> Structure: 
+    Args:
+        xyz (np.ndarray): Original coordinates of the structure (shape: [nat, 3]).
+        displacement (float, optional): Maximum displacement for each atom. Defaults to 0.1.
+        random_seed (int, optional): Seed for reproducibility of randomization. Defaults to 42.
+
+    Returns:
+        np.ndarray: Randomized coordinates of the structure (shape: [nat, 3]).
+    """
+    np.random.seed(random_seed)
+    # randomize only the sign of the displacement, but the displacement itself is fixed to ensure consistency
+    random_signs = np.random.choice([-1, 1], size=xyz.shape)  # Adjust scale as needed
+    random_displacement = np.random.rand(*xyz.shape) * np.random.rand() * displacement  # Random displacement scaled by the specified factor
+    randomized_xyz = xyz + random_signs * displacement
+    # randomize_xyz = xyz + random_displacement# random_signs * displacement
+    return randomized_xyz
+
+def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData, id: int, systemdata: System, random_seed: int | None = None) -> Structure: 
     '''input is cd.reactant_calc and cd.reactant_path'''
     chrg = systemdata.charge
     mult = systemdata.multiplicity
@@ -21,6 +40,9 @@ def get_preliminary_information(calcopt: CalculationOptions, pathdata: PathData,
         calcopt.wbo_calc = False
 
     nat, _, xyz, atom_types = readin_xyz(path.xyz_filename)
+
+    if random_seed is not None:
+        xyz = randomize_coordinates(xyz, displacement=0.01, random_seed=random_seed)
     
     if calcopt.hessian_calc:
         hessian = xtbrunner.hesscalc(path.xyz_filename, path.hessian_filename)
