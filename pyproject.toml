@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ffits"
-version = "0.2.0a-dev"
+version = "0.2.1a-dev"
 description = "Force Field-interpolated Transition States"
 authors = [
   { name = "Daria Babushkina", email = "babushkina@pc.rwth-aachen.de" },
