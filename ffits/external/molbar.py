@@ -42,7 +42,7 @@ def get_combinded_priorities(struc1: StructuralInformation, struc2: StructuralIn
     Args:
         struc1 (StructuralInformation): Structural information of reactant structure.
         struc2 (StructuralInformation): Structural information of product structure.
-        bo_threshold (float, optional): Threshold for defining bonds. Defaults to 0.5.
+        bo_threshold (float, optional): Threshold for defining bonds. Defaults to 0.0.
 
     Returns:
         dict: Dictionary mapping atom indices to their combined priorities based on the connectivity of both structures.

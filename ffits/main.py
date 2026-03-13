@@ -14,7 +14,7 @@ from ffits.io.print.header import print_program_header
 from ffits.io.print.summary import print_run_summary
 from ffits.forcefield.python_interface.optimization import optimize_xyz_with_forcefield
 from ffits.io.file_writer import write_hessian_to_orcahessfile
-from ffits.external.molbar import anc_optimizer
+from ffits.external.molbar import anc_optimizer, get_combinded_priorities
 
 def run_optimizer_mode(args):
     """
@@ -46,8 +46,11 @@ def run_tsguess_mode(args):
     struc2 = get_preliminary_information(calcdata.product_calc, calcdata.product_path, 2, calcdata.system)
     #    TODO add bo threshold in calcdata
     
+    # Compute combined priorities for dihedral classification
+    priorities = get_combinded_priorities(struc1.info, struc2.info)
+    
     if calcdata.reactant_calc.ff_parameterization:
-        fill_ff(struc1.ff, struc1.info, repulsive_start=calcdata.reactant_calc.ff_parameter_repulsion) 
+        fill_ff(struc1.ff, struc1.info, repulsive_start=calcdata.reactant_calc.ff_parameter_repulsion, priorities=priorities) 
         fit_ff_to_hessian(struc1,
                         maxit=calcdata.reactant_calc.ff_parameterization_maxiteration,
                         stepsize=calcdata.reactant_calc.ff_parameterization_stepsize,
@@ -55,7 +58,7 @@ def run_tsguess_mode(args):
                         constant_repulsion=calcdata.reactant_calc.ff_parameterization_constant_repulsion)
         
     if calcdata.product_calc.ff_parameterization:
-        fill_ff(struc2.ff, struc2.info, repulsive_start=calcdata.product_calc.ff_parameter_repulsion) 
+        fill_ff(struc2.ff, struc2.info, repulsive_start=calcdata.product_calc.ff_parameter_repulsion, priorities=priorities) 
         fit_ff_to_hessian(struc2,
                         maxit=calcdata.product_calc.ff_parameterization_maxiteration,
                         stepsize=calcdata.product_calc.ff_parameterization_stepsize,
