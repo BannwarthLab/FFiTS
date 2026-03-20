@@ -119,9 +119,8 @@ def filter_dihedrals(dihedrals: list, priorities: dict, A: np.ndarray) -> list:
     central_pair_groups = defaultdict(list)
     for dihedral in dihedrals:
         i, j, l, m = dihedral
-        central_pair = tuple(sorted([j, l]))
+        central_pair = tuple([j, l])
         central_pair_groups[central_pair].append(dihedral)
-    
     result = []
     
     for central_pair, dihedral_group in central_pair_groups.items():
