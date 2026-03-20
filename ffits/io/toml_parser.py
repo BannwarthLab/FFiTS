@@ -46,10 +46,7 @@ def load_calculation_data(user_path: str | None = None, test: bool = False) -> C
     Load configuration data from a TOML file (if provided) and fill
     a CalculationData instance with defaults for missing values.
     """
-    if user_path:
-        data = load_config(user_path)
-    else: 
-        data = load_config()
+    data = load_config(user_path)
     cd = CalculationData()  # start with defaults
 
     # =======================
@@ -59,6 +56,8 @@ def load_calculation_data(user_path: str | None = None, test: bool = False) -> C
     cd.system.charge = sys_data.get("charge", cd.system.charge)
     cd.system.multiplicity = sys_data.get("multiplicity", cd.system.multiplicity)
     cd.system.xtb_path = sys_data.get("xtb_path", cd.system.xtb_path)
+    cd.system.xtb_input_name = sys_data.get("xtb_input_name", cd.system.xtb_input_name)
+    cd.system.xtb_alpb_solvent = sys_data.get("xtb_alpb_solvent", cd.system.xtb_alpb_solvent)
 
     # =======================
     # Reactant

@@ -18,15 +18,21 @@ class Xtb:
     """
     #TODO add lömi
 
-    def __init__(self, chrg: int, mult: int, xtb_path: str = 'xtb') -> None:
+    def __init__(self, chrg: int, mult: int, xtb_alpb_solvent: str | None = None, xtb_input_name: str | None = None, xtb_path: str = 'xtb') -> None:
         # If xtb_path not provided, try to find it
         
         self.xtb_path = xtb_path
         self.chrg = chrg
         self.uhf = mult - 1 # multiplicity = number of unpaired electrons + 1
+        self.xtb_input_name = xtb_input_name
+        self.xtb_alpb_solvent = xtb_alpb_solvent
         self._check_xtb_loaded()
         print(f"[INFO] xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
         print(f"[INFO] Using xTB executable: {self.xtb_path}")
+        if self.xtb_alpb_solvent is not None:
+            print(f"[INFO] Using ALPB solvent model with solvent: {self.xtb_alpb_solvent}")
+        if self.xtb_input_name is not None:
+            print(f"[INFO] Using xTB input file: {self.xtb_input_name}")
 
     # ------------------------------------------------------------------
     # --- UTILITIES ----------------------------------------------------
@@ -69,6 +75,10 @@ class Xtb:
 
     def _get_command(self, input_xyz: Path, keyword: str) -> str:
         """Build xTB command string."""
+        if self.xtb_alpb_solvent is not None:
+            keyword += f" --alpb {self.xtb_alpb_solvent}"   
+        if self.xtb_input_name is not None:
+            keyword += f" --input {self.xtb_input_name}"
         return f"{self.xtb_path} {input_xyz} --uhf {self.uhf} --chrg {self.chrg} {keyword}"
 
     # ------------------------------------------------------------------
