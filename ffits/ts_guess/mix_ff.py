@@ -1,9 +1,12 @@
+import logging
 import numpy as np
 import pandas as pd
 from ffits.utils.geometry_calc import bondlength, angle, dihedral_angle
 from ffits.datatype.structure_data import ForceField, StructuralInformation
 from ffits.datatype.calculation_data import CalculationData
 from ffits.utils.wbo_analysis import compare_wbo_differences
+
+logger = logging.getLogger(__name__)
 
 def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, info2: StructuralInformation, fact1: float, fact2: float, calcdata: CalculationData, weigh_bonds_with_hessian: bool = True) -> ForceField:
 
@@ -15,15 +18,19 @@ def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, 
     tsff.repulsive = remove_bonds_from_repulsive(combine_ff_atoms(ff1.repulsive, ff2.repulsive), combine_ff_atoms(ff1.bonds, ff2.bonds))
 
     if weigh_bonds_with_hessian:
-        print(f'[INFO] Calculating mixing factors based on Hessian analysis.')
+        logger.info('Calculating mixing factors based on Hessian analysis.')
         sharpness = 0.8
         params_mix = hessian_weighting_mix_list(info1, info2, tsff.bonds, tsff.angles, tsff.dihedrals, sharpness=sharpness) 
         # get average reac parameter for bond terms (so tupels with only two entries)
         average_bond_param_reac = np.mean([factor for atoms, factor in params_mix.items() if len(atoms) == 2])
         average_param_reac = np.mean(list(params_mix.values()))
-        print(f'[INFO] Average mixing factor for reactant across bond terms: {average_bond_param_reac:.4f}')
+        logger.debug(f'Average mixing factor for reactant across bond terms: {average_bond_param_reac:.4f}.')
+
         if average_bond_param_reac <= 0.5: 
+            logger.info(f'The optimization with the TSFF will start from the product geometry, since the average mixing factor for bond terms is {average_bond_param_reac:.4f} (<= 0.5).')
             tsff.start_from_reactant = False
+        else: 
+            logger.info(f'The optimization with the TSFF will start from the reactant geometry, since the average mixing factor for bond terms is {average_bond_param_reac:.4f} (> 0.5).')
 
     mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds, fact1, fact2, params_mix)
     mix_parameters(tsff.angles, ff1.angles, ff2.angles, fact1, fact2, params_mix)
@@ -38,7 +45,7 @@ def create_tsff(ff1: ForceField, info1: StructuralInformation, ff2: ForceField, 
         for term, factor in params_mix.items():
             f.write(f"{term}\t{factor:.4f}\n")
 
-    print(f'[INFO] TS FF generation finished.')
+    logger.info(f'TS FF generation finished.')
     tsff.write()
     return tsff
 
@@ -212,7 +219,7 @@ def hessian_mix_list(info1: StructuralInformation, info2: StructuralInformation,
     ratio = h1_avg_sum / h2_avg_sum if h2_avg_sum != 0 else 1
     param_reac = (ratio**(1-sharpness)) / ((ratio**(1-sharpness)) + 1) # 1 - sharpness damit das Wort sharpness Sinn ergibt 
     
-    print(f'[DEBUG] Atoms: {atoms}, H1 avg sum: {h1_avg_sum:.4f}, H2 avg sum: {h2_avg_sum:.4f}, Ratio: {ratio:.4f}, Param reac: {param_reac:.4f}')
+    logger.debug(f'Atoms: {atoms}, H1 avg sum: {h1_avg_sum:.4f}, H2 avg sum: {h2_avg_sum:.4f}, Ratio: {ratio:.4f}, Param reac: {param_reac:.4f}')
     
     return param_reac
 
@@ -252,7 +259,7 @@ def hessian_weighting_mix_list(info1: StructuralInformation, info2: StructuralIn
     changing_bonds = [bond for bond, _, _, _ in wbo_diff['changing_bonds']]
     
     if not changing_bonds:
-        print(f'[INFO] No changing bonds found with WBO difference above {threshold}. All mixing factors will be 0.5.')
+        logger.info(f'No changing bonds found with WBO difference above {threshold}. All mixing factors will be 0.5.')
         return param_dict  # Return empty dict, which will lead to default 0.5 mixing in mix_parameters
 
     # Process bonds

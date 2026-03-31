@@ -1,3 +1,4 @@
+import logging
 from ffits.datatype.structure_data import ForceField, StructuralInformation, Structure
 from ffits.forcefield.python_interface.ff_energy import complete_hessian
 import ffits.forcefield.python_interface.fortran_bindings as fb
@@ -5,6 +6,9 @@ from ffits.io.print.details import print_ff_fitting
 from typing import Optional
 import numpy as np
 import warnings
+
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_hessian_rmsd(hessian_ff, hessian_ref, dim):
@@ -57,7 +61,7 @@ def fit_ff_to_hessian(struc: Structure,
 
     
     print_ff_fitting(struc.path.xyz_filename)
-    print("Following parameters are used (maxit, stepsize, threshold):", maxit, stepsize, threshold, '\n')
+    logger.info(f"Following parameters are used (maxit, stepsize, threshold): {maxit}, {stepsize}, {threshold}")
 
     # Main iterative loop
     while (rmsd_gap >= threshold) and (counter < maxit):
@@ -108,11 +112,11 @@ def fit_ff_to_hessian(struc: Structure,
         # compute RMSD between current FF Hessian and reference Hessian
         rmsdd = calculate_hessian_rmsd(hessian_ff, info.hessian, 3*nat)
         obj_fun = ff_fit_objective_function(hessian_ff, info.hessian, 3*nat)
-        print(f"CYCLE {counter} RMSD: {round(rmsdd, 4):.4f}") #, "obj_fun", obj_fun) 
+        logger.debug(f"CYCLE {counter} RMSD: {round(rmsdd, 4):.4f}")
         temp = rmsdd
         rmsd_gap = abs(temp_old - temp)
 
-    print(f'[INFO] Fitting finished after {counter} iterations with an RMSD of {round(rmsdd, 4)} and {round(obj_fun, 4)}.')
+    logger.info(f'Fitting finished after {counter} iterations with an RMSD of {round(rmsdd, 4)} and {round(obj_fun, 4)}.')
 
     ff.write()
     return {"iterations": counter, 

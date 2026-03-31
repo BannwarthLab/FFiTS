@@ -1,3 +1,4 @@
+import logging
 import os
 import pandas as pd
 import numpy as np
@@ -12,8 +13,12 @@ from ffits.io.print.details import print_ts_optimization_start
 from ffits.io.file_writer import write_hessian_to_orcahessfile
 from ffits.data.elements import element_to_weight
 from ffits.forcefield.python_interface.optimization import optimize_with_forcefield
+from ffits.utils.temp_dir_manager import TempDirManager
+from typing import Optional
 
-def get_ts_guess(struc1: Structure, struc2: Structure, calcdata: CalculationData, optimizer: Callable = anc_optimizer):
+logger = logging.getLogger(__name__)
+
+def get_ts_guess(struc1: Structure, struc2: Structure, calcdata: CalculationData, optimizer: Callable = anc_optimizer, temp_dir_manager: Optional[TempDirManager] = None):
     trajectory_filename: str = 'trajectory.xyz'
     final_geometry_filename: str = 'optimized.xyz'
     print_ts_optimization_start()
@@ -33,10 +38,10 @@ def get_ts_guess(struc1: Structure, struc2: Structure, calcdata: CalculationData
 
     ### ---------- optimization ------------ ###
     if tsff.start_from_reactant:
-        print(f'[INFO] Starting TS guess optimization from reactant geometry.')
+        logger.info('Starting TS guess optimization from reactant geometry.')
         initial_struc = struc1.info
     else:
-        print(f'[INFO] Starting TS guess optimization from product geometry.')
+        logger.info('Starting TS guess optimization from product geometry.')
         initial_struc = struc2.info
     converged, energy, final_geom = optimize_with_forcefield(initial_struc, 
                                                                    tsff, 

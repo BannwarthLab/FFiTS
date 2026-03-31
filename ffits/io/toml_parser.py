@@ -1,7 +1,11 @@
+import logging
 import os
 from ffits.datatype.calculation_data import CalculationData
 import argparse
 import tomllib
+
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -37,7 +41,7 @@ def load_config(user_path: str | None = None) -> dict:
         user_config = load_toml(user_path)
         config = deep_update(config, user_config)
     else:
-        print("[INFO] No user config found, using defaults.")
+        logger.info("No user config found, using defaults.")
 
     return config
 
@@ -175,19 +179,19 @@ def overwrite_from_commandline(calcdata: CalculationData, multiplicity: int | No
     '''overwrites information in CalculationData object if given via commandline'''
     if multiplicity:
         if multiplicity != calcdata.system.multiplicity:
-            print(f"[INFO] Multiplicity of {calcdata.system.multiplicity} is being overwritten by {multiplicity}.")
+            logger.info(f"Multiplicity of {calcdata.system.multiplicity} is being overwritten by {multiplicity}.")
         calcdata.system.multiplicity = multiplicity
     if charge:
         if charge != calcdata.system.charge:
-            print(f"[INFO] Charge of {calcdata.system.charge} is being overwritten by {charge}.")
+            logger.info(f"Charge of {calcdata.system.charge} is being overwritten by {charge}.")
         calcdata.system.charge = charge
     if structures:
         if len(structures) >= 1:
             calcdata.reactant_path.xyz_filename = structures[0]
-            print(f"[INFO] Reactant XYZ file set to: {structures[0]}")
+            logger.info(f"Reactant XYZ file set to: {structures[0]}")
         if len(structures) >= 2:
             calcdata.product_path.xyz_filename = structures[1]
-            print(f"[INFO] Product XYZ file set to: {structures[1]}")
+            logger.info(f"Product XYZ file set to: {structures[1]}")
         if len(structures) > 2:
-            print(f"[WARNING] More than 2 structure files provided. Only the first two will be used.")
+            logger.warning(f"More than 2 structure files provided. Only the first two will be used.")
 

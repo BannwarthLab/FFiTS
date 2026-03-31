@@ -86,6 +86,12 @@ def parse_args():
         default=None,
         help="Run optimizer mode with specified csv ff."
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Enable debug mode with detailed logging output and DEBUG directory creation."
+    )
 
     args = parser.parse_args() 
 
@@ -115,6 +121,7 @@ def parse_args():
         "config_file": args.config,
         "charge": args.charge,
         "multiplicity": args.multiplicity,
-        "optff": args.opt
+        "optff": args.opt,
+        "debug": args.debug
     }
 
