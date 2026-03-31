@@ -1,5 +1,6 @@
 #!/bin/python
 
+import logging
 from dataclasses import dataclass
 import networkx as nx
 import numpy as np
@@ -7,6 +8,9 @@ import os
 import pandas as pd
 import re
 from collections.abc import Callable
+
+
+logger = logging.getLogger(__name__)
 
 
 VANDER_VALUES = np.array([
@@ -177,7 +181,7 @@ class ForceField:
         df_combined = df_combined.copy()
         df_combined['atoms'] = df_combined['atoms'].apply(format_atoms)
         df_combined.to_csv(self.ff_filename)
-        print(f'[INFO] FF information written to {self.ff_filename}.')
+        logger.info(f'FF information written to {self.ff_filename}.')
 
 
     def readin(self, filename: str):

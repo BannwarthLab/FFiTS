@@ -1,15 +1,20 @@
 #!/bin/python
 
+import logging
 import subprocess
 import os
 from ffits.io.reader import read_wbo_file, read_xtb_hessian, readin_xyz
+from ffits.utils.temp_dir_manager import TempDirManager
 import subprocess
 import tempfile
 import shutil
 from pathlib import Path
 from importlib import resources
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Optional
 import numpy as np
+
+
+logger = logging.getLogger(__name__)
 
 
 class Xtb:
@@ -18,7 +23,7 @@ class Xtb:
     """
     #TODO add lömi
 
-    def __init__(self, chrg: int, mult: int, xtb_alpb_solvent: str | None = None, xtb_input_name: str | None = None, xtb_path: str = 'xtb') -> None:
+    def __init__(self, chrg: int, mult: int, xtb_alpb_solvent: str | None = None, xtb_input_name: str | None = None, xtb_path: str = 'xtb', temp_dir_manager: Optional[TempDirManager] = None) -> None:
         # If xtb_path not provided, try to find it
         
         self.xtb_path = xtb_path
@@ -26,13 +31,14 @@ class Xtb:
         self.uhf = mult - 1 # multiplicity = number of unpaired electrons + 1
         self.xtb_input_name = xtb_input_name
         self.xtb_alpb_solvent = xtb_alpb_solvent
+        self.temp_dir_manager = temp_dir_manager
         self._check_xtb_loaded()
-        print(f"[INFO] xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
-        print(f"[INFO] Using xTB executable: {self.xtb_path}")
+        logger.info(f"xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
+        logger.info(f"Using xTB executable: {self.xtb_path}")
         if self.xtb_alpb_solvent is not None:
-            print(f"[INFO] Using ALPB solvent model with solvent: {self.xtb_alpb_solvent}")
+            logger.info(f"Using ALPB solvent model with solvent: {self.xtb_alpb_solvent}")
         if self.xtb_input_name is not None:
-            print(f"[INFO] Using xTB input file: {self.xtb_input_name}")
+            logger.info(f"Using xTB input file: {self.xtb_input_name}")
 
     # ------------------------------------------------------------------
     # --- UTILITIES ----------------------------------------------------
@@ -131,8 +137,13 @@ class Xtb:
             if output_dir is not None:
                 shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
 
+            # Copy to DEBUG directory if debug logging is enabled
+            if self.temp_dir_manager is not None:
+                step_name = f"xtb_opt_{Path(output_filename).stem}"
+                self.temp_dir_manager.copy_temp_to_debug(tmp, step_name)
+
             (tmp / "xtbrestart").unlink(missing_ok=True)
-            print(f'[INFO] Geometry optimization of {input_xyz} to {output_filename} finished successfully.')
+            logger.info(f'Geometry optimization of {input_xyz} to {output_filename} finished successfully.')
 
             return readin_xyz(f"{output_filename}")
 
@@ -160,8 +171,14 @@ class Xtb:
             # copy whole temp directory to output_dir if specified
             if output_dir is not None:
                 shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
+
+            # Copy to DEBUG directory if debug logging is enabled
+            if self.temp_dir_manager is not None:
+                step_name = f"xtb_hess_{Path(output_name).stem}"
+                self.temp_dir_manager.copy_temp_to_debug(tmp, step_name)
+
             shutil.copy(hess_file, cwd / output_name) # copy hessian to original directory for later reading
-            print(f'[INFO] Hessian calculation for {input_xyz} finished successfully.')
+            logger.info(f'Hessian calculation for {input_xyz} finished successfully.')
             return read_xtb_hessian(f"{cwd / output_name}")
 
     def wbocalc(self, input_xyz: str, output_name: str, output_dir: str | None = None)  -> Dict[Tuple[int, int], float]:
@@ -184,13 +201,18 @@ class Xtb:
             if output_dir is not None:
                 shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
 
+            # Copy to DEBUG directory if debug logging is enabled
+            if self.temp_dir_manager is not None:
+                step_name = f"xtb_wbo_{Path(output_name).stem}"
+                self.temp_dir_manager.copy_temp_to_debug(tmp, step_name)
+
             wbo_file = tmp / "wbo"
             if not wbo_file.exists():
                 raise RuntimeError("No WBO file generated.")
             if not wbo_file.exists():
                 raise RuntimeError("No WBO file generated.")
             shutil.copy(wbo_file, cwd / output_name)
-            print(f'[INFO] WBO calculation for {input_xyz} finished successfully.')
+            logger.info(f'WBO calculation for {input_xyz} finished successfully.')
             return read_wbo_file(f"{output_name}")
         
     def geomopt_with_topology_check(self, input_xyz: str, output_basename: str, wbo_output_basename: str, threshold: float = 0.2) -> Tuple[str, Dict[Tuple[int, int], float]]:

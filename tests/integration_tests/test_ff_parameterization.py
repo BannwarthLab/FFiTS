@@ -42,12 +42,10 @@ def test_fit_ff_to_hessian():
     examples_dir = Path(os.getcwd()) / 'tests' / 'examples' / 'small_single_molecule'
     
     with TemporaryDirectory() as tmpdir:
-        # Copy necessary files to temp directory
         temp_path = Path(tmpdir)
         shutil.copy2(examples_dir / 'ff1.csv', temp_path / 'ff1.csv')
         shutil.copy2(examples_dir / 'struc1.hess', temp_path / 'struc1.hess')
         
-        # Work in temporary directory
         original_cwd = os.getcwd()
         try:
             os.chdir(tmpdir)

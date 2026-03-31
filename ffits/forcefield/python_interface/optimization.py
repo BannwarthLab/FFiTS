@@ -1,4 +1,5 @@
  
+import logging
 from collections.abc import Callable   
 import numpy as np
 from ffits.datatype.structure_data import (ForceField, StructuralInformation)
@@ -10,12 +11,16 @@ from ffits.forcefield.python_interface.ff_energy import energy_ff, complete_grad
 from ffits.io.print.details import (print_optimization_start, print_optimization_end)
 from ffits.io.reader import readin_xyz
 from ffits.datatype.calculation_data import TSCalculationOptions
+from ffits.utils.temp_dir_manager import TempDirManager
+from typing import Optional
 import sys
 
 
-def optimize_xyz_with_forcefield(xyz_file: str, ff_file: str, calcoptions:TSCalculationOptions, optimizer: Callable = anc_optimizer):
+logger = logging.getLogger(__name__)
+
+def optimize_xyz_with_forcefield(xyz_file: str, ff_file: str, calcoptions:TSCalculationOptions, optimizer: Callable = anc_optimizer, temp_dir_manager: Optional[TempDirManager] = None):
     print_optimization_start()
-    print(f'[INFO] Optimization is performed with force field from file {ff_file}, starting from structure {xyz_file}.')
+    logger.info(f'Optimization is performed with force field from file {ff_file}, starting from structure {xyz_file}.')
     nat, comment, xyz, atom_types = readin_xyz(xyz_file)
     info = StructuralInformation(nat, xyz, {}, atom_types)
     ff = ForceField(nat, ff_filename=ff_file, readff=True, energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
@@ -55,7 +60,7 @@ def optimize_with_forcefield(info: StructuralInformation,
         f.close()
 
         if failed_anc_opt(opt_stdout_filename): 
-            print(f'[WARNING] The last valid structure of the optimization trajectory is written to {final_geometry_filename}.')
+            logger.warning(f'The last valid structure of the optimization trajectory is written to {final_geometry_filename}.')
             write_last_valid_xyz()
 
     elif optimizer == scipy_optimizer: # TODO does not work yet i think
