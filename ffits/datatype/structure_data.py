@@ -210,7 +210,7 @@ class ForceField:
 
     def write(self):
         """
-        Writes out all FF data in specified ff_filename in the csv format.
+        Writes out all FF data in self.ff_filename in the csv format.
         """
 
         def format_atoms(t):
