@@ -9,7 +9,6 @@ import pytest
 import os
 import tempfile
 import logging
-from pathlib import Path
 from ffits.datatype.calculation_data import CalculationData
 
 
@@ -36,7 +35,9 @@ class TestLoadToml:
             temp_path = f.name
 
         try:
-            with pytest.raises(Exception):  # tomllib raises various exceptions for invalid TOML
+            with pytest.raises(
+                Exception
+            ):  # tomllib raises various exceptions for invalid TOML
                 load_toml(temp_path)
         finally:
             os.unlink(temp_path)
@@ -83,9 +84,7 @@ class TestDeepUpdate:
 
     def test_deep_update_deeply_nested(self):
         """Test deeply nested dictionary updates."""
-        base = {
-            "level1": {"level2": {"level3": {"value": "original", "keep": "this"}}}
-        }
+        base = {"level1": {"level2": {"level3": {"value": "original", "keep": "this"}}}}
         updates = {"level1": {"level2": {"level3": {"value": "updated"}}}}
         result = deep_update(base, updates)
         assert result["level1"]["level2"]["level3"]["value"] == "updated"
@@ -112,12 +111,10 @@ class TestLoadConfig:
     def test_load_config_merges_correctly(self):
         """Test that user config correctly merges with defaults."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [system]
 charge = 5
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -144,12 +141,10 @@ class TestLoadCalculationData:
     def test_load_calculation_data_invalid_multiplicity_too_high(self):
         """Test that invalid multiplicity (too high) raises ValueError."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [system]
 multiplicity = 5
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -162,12 +157,10 @@ multiplicity = 5
     def test_load_calculation_data_invalid_multiplicity_too_low(self):
         """Test that invalid multiplicity (too low) raises ValueError."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [system]
 multiplicity = 0
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -180,12 +173,10 @@ multiplicity = 0
     def test_load_calculation_data_xtb_path(self):
         """Test that xtb_path is correctly set."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [system]
 xtb_path = "custom_xtb_path"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -198,18 +189,18 @@ xtb_path = "custom_xtb_path"
     def test_load_calculation_data_invalid_factor_sum(self):
         """Test that invalid factor sum raises ValueError."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.calculation]
 factor_reactant = 0.3
 factor_product = 0.3
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
         try:
-            with pytest.raises(ValueError, match="factor_reactant.*factor_product.*must equal 1.0"):
+            with pytest.raises(
+                ValueError, match="factor_reactant.*factor_product.*must equal 1.0"
+            ):
                 load_calculation_data(temp_path)
         finally:
             os.unlink(temp_path)
@@ -217,12 +208,10 @@ factor_product = 0.3
     def test_load_calculation_data_invalid_optimizer(self):
         """Test that invalid optimizer raises ValueError."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.calculation]
 optimizer = "invalid-optimizer"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -235,12 +224,10 @@ optimizer = "invalid-optimizer"
     def test_load_calculation_data_invalid_relaxation(self):
         """Test that invalid relaxation option raises ValueError."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [postprocessing]
 relaxation = "invalid-relaxation"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -253,14 +240,12 @@ relaxation = "invalid-relaxation"
     def test_load_calculation_data_sets_reactant_paths(self):
         """Test that reactant paths are correctly set."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.path]
 wbo_filename = "wbooo1"
 hessian_filename = "struc1test.hess"
 ff_filename = "ff1test.csv"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -275,14 +260,12 @@ ff_filename = "ff1test.csv"
     def test_load_calculation_data_sets_product_paths(self):
         """Test that product paths are correctly set."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [product.path]
 wbo_filename = "wbooo1"
 hessian_filename = "struc1test.hess"
 ff_filename = "ff1test.csv"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -297,12 +280,10 @@ ff_filename = "ff1test.csv"
     def test_load_calculation_data_sets_ts_paths(self):
         """Test that TS guess paths are correctly set."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.path]
 ff_filename = "custom_ts_ff.txt"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -315,14 +296,12 @@ ff_filename = "custom_ts_ff.txt"
     def test_load_calculation_data_sets_calculation_flags(self):
         """Test that calculation flags are correctly set."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.calculation]
 geometry_optimization = true
 wbo_calc = false
 hessian_calc = true
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -337,14 +316,12 @@ hessian_calc = true
     def test_load_calculation_data_sets_optimization_parameters(self):
         """Test that optimization parameters are correctly set."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.calculation]
 factor_reactant = 0.6
 factor_product = 0.4
 molbar_optimizer_e_tol = 1e-6
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -419,11 +396,13 @@ class TestOverwriteFromCommandline:
         assert cd.system.charge == original_charge
         assert caplog.text.strip() == ""
 
+
 def test_overwrite_from_commandline_no_change(caplog):
     cd = CalculationData()
     overwrite_from_commandline(cd, multiplicity=1, charge=0)
     # no message expected because nothing changed
     assert caplog.text.strip() == ""
+
 
 def test_overwrite_from_commandline_partial(caplog):
     cd = CalculationData()

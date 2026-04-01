@@ -20,9 +20,10 @@ def write_file(path, content):
 # XYZ READER TESTS
 # ============================================================================
 
+
 class TestXyzReader:
     """Tests for readin_xyz function."""
-    
+
     def test_readin_xyz_valid(self, tmp_path):
         """Test reading a valid XYZ file."""
         xyz_content = """3
@@ -59,7 +60,9 @@ O 0.0 0.0 0.0
             file_path = os.path.join(tmpdir, "bad.xyz")
             write_file(file_path, xyz_content)
 
-            with pytest.raises(ValueError, match="First line of XYZ file must be an integer"):
+            with pytest.raises(
+                ValueError, match="First line of XYZ file must be an integer"
+            ):
                 readin_xyz(file_path)
 
     def test_readin_xyz_atom_count_mismatch(self, tmp_path):
@@ -115,9 +118,10 @@ H -2.351 4.357 0.516
 # WBO READER TESTS
 # ============================================================================
 
+
 class TestWboReader:
     """Tests for read_wbo_file function."""
-    
+
     def test_read_wbo_file_valid(self):
         """Test reading a valid WBO file."""
         content = """1 2 0.95
@@ -186,7 +190,7 @@ bad line
             write_file(file_path, content)
 
             result = read_wbo_file(file_path)
-            
+
             # Keys should be sorted tuples
             for bond in result.keys():
                 assert bond[0] < bond[1]
@@ -205,7 +209,7 @@ bad line
             write_file(file_path, content)
 
             result = read_wbo_file(file_path)
-            
+
             assert len(result) == 6
             assert result[(1, 2)] == 1.027
             assert result[(2, 3)] == 1.928
@@ -215,9 +219,10 @@ bad line
 # HESSIAN READER TESTS
 # ============================================================================
 
+
 class TestHessianReader:
     """Tests for read_hessian function."""
-    
+
     def test_read_hessian_valid_1atom(self):
         """Test reading a 3x3 Hessian (1 atom)."""
         content = """$hessian
@@ -263,7 +268,7 @@ class TestHessianReader:
 
     def test_read_hessian_invalid_dimensions_error(self):
         """Test error for Hessian dimensions not divisible by 3."""
-        content = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"  
+        content = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"
         with TemporaryDirectory() as tmpdir:
             file_path = os.path.join(tmpdir, "bad_dims.txt")
             write_file(file_path, content)
@@ -291,7 +296,7 @@ class TestHessianReader:
         size = 21
         data = np.eye(size).flatten().tolist()
         content = "$hessian\n" + " ".join(map(str, data))
-        
+
         with TemporaryDirectory() as tmpdir:
             file_path = os.path.join(tmpdir, "large.txt")
             write_file(file_path, content)

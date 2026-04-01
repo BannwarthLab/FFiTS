@@ -1,5 +1,6 @@
 #!/bin/python
 
+
 class ConvergenceError(Exception):
     def __init__(self, message):
         self.message = message

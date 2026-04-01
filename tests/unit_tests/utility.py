@@ -1,4 +1,3 @@
-
 def compare_dictionaries(d1, d2) -> bool:
     if len(d1) != len(d2):
         return False

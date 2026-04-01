@@ -10,7 +10,6 @@ import os
 import sys
 from typing import Optional
 
-
 # Global logger instance
 _LOGGER: Optional[logging.Logger] = None
 

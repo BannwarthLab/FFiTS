@@ -1,24 +1,25 @@
-
-
 def print_ff_fitting(struc: str):
     print("\n" + "\n" + "=" * 60)
     print(f" FF Fitting for structure {struc}")
     print("=" * 60)
+
 
 def print_ts_optimization_start():
     print("\n" + "=" * 60)
     print(" TS Guess Construction")
     print("=" * 60)
 
+
 def print_optimization_start():
     print("\n" + "=" * 60)
     print(" Optimization ")
     print("=" * 60)
 
+
 def print_optimization_end(converged, energy, final_geom, steps, time, message):
     print("\n" + "-" * 60)
     print(" Geometry Optimization Summary")
-    print('\n')
+    print("\n")
 
     # --- Results block ---
     status = "CONVERGED" if converged else "NOT CONVERGED"

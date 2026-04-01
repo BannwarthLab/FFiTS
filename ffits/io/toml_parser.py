@@ -4,9 +4,7 @@ from ffits.datatype.calculation_data import CalculationData
 import argparse
 import tomllib
 
-
 logger = logging.getLogger(__name__)
-
 
 
 def load_toml(path: str) -> dict:
@@ -45,7 +43,10 @@ def load_config(user_path: str | None = None) -> dict:
 
     return config
 
-def load_calculation_data(user_path: str | None = None, test: bool = False) -> CalculationData:
+
+def load_calculation_data(
+    user_path: str | None = None, test: bool = False
+) -> CalculationData:
     """
     Load configuration data from a TOML file (if provided) and fill
     a CalculationData instance with defaults for missing values.
@@ -61,7 +62,9 @@ def load_calculation_data(user_path: str | None = None, test: bool = False) -> C
     cd.system.multiplicity = sys_data.get("multiplicity", cd.system.multiplicity)
     cd.system.xtb_path = sys_data.get("xtb_path", cd.system.xtb_path)
     cd.system.xtb_input_name = sys_data.get("xtb_input_name", cd.system.xtb_input_name)
-    cd.system.xtb_alpb_solvent = sys_data.get("xtb_alpb_solvent", cd.system.xtb_alpb_solvent)
+    cd.system.xtb_alpb_solvent = sys_data.get(
+        "xtb_alpb_solvent", cd.system.xtb_alpb_solvent
+    )
 
     # =======================
     # Reactant
@@ -70,23 +73,49 @@ def load_calculation_data(user_path: str | None = None, test: bool = False) -> C
 
     # Reactant path
     react_path = reactant.get("path", {})
-    cd.reactant_path.xyz_filename = '' # will be set from commandline
-    cd.reactant_path.wbo_filename = react_path.get("wbo_filename", cd.reactant_path.wbo_filename)
-    cd.reactant_path.hessian_filename = react_path.get("hessian_filename", cd.reactant_path.hessian_filename)
-    cd.reactant_path.ff_filename = react_path.get("ff_filename", cd.reactant_path.ff_filename)
+    cd.reactant_path.xyz_filename = ""  # will be set from commandline
+    cd.reactant_path.wbo_filename = react_path.get(
+        "wbo_filename", cd.reactant_path.wbo_filename
+    )
+    cd.reactant_path.hessian_filename = react_path.get(
+        "hessian_filename", cd.reactant_path.hessian_filename
+    )
+    cd.reactant_path.ff_filename = react_path.get(
+        "ff_filename", cd.reactant_path.ff_filename
+    )
 
     # Reactant calculation
     react_calc = reactant.get("calculation", {})
-    cd.reactant_calc.geometry_optimization = react_calc.get("geometry_optimization", cd.reactant_calc.geometry_optimization)
+    cd.reactant_calc.geometry_optimization = react_calc.get(
+        "geometry_optimization", cd.reactant_calc.geometry_optimization
+    )
     cd.reactant_calc.wbo_calc = react_calc.get("wbo_calc", cd.reactant_calc.wbo_calc)
-    cd.reactant_calc.hessian_calc = react_calc.get("hessian_calc", cd.reactant_calc.hessian_calc)
-    cd.reactant_calc.ff_parameterization = react_calc.get("ff_parameterization", cd.reactant_calc.ff_parameterization)
-    cd.reactant_calc.test_parameterization = react_calc.get("test_parameterization", cd.reactant_calc.test_parameterization)
-    cd.reactant_calc.ff_parameterization_maxiteration = react_calc.get("ff_parameterization_maxiteration", cd.reactant_calc.ff_parameterization_maxiteration)
-    cd.reactant_calc.ff_parameter_repulsion = react_calc.get("ff_parameter_repulsion", cd.reactant_calc.ff_parameter_repulsion)
-    cd.reactant_calc.ff_parameterization_stepsize = react_calc.get("ff_parameterization_stepsize", cd.reactant_calc.ff_parameterization_stepsize)
-    cd.reactant_calc.ff_parameterization_threshold = react_calc.get("ff_parameterization_threshold", cd.reactant_calc.ff_parameterization_threshold)
-    cd.reactant_calc.ff_parameterization_constant_repulsion = react_calc.get("ff_parameterization_constant_repulsion", cd.reactant_calc.ff_parameterization_constant_repulsion)
+    cd.reactant_calc.hessian_calc = react_calc.get(
+        "hessian_calc", cd.reactant_calc.hessian_calc
+    )
+    cd.reactant_calc.ff_parameterization = react_calc.get(
+        "ff_parameterization", cd.reactant_calc.ff_parameterization
+    )
+    cd.reactant_calc.test_parameterization = react_calc.get(
+        "test_parameterization", cd.reactant_calc.test_parameterization
+    )
+    cd.reactant_calc.ff_parameterization_maxiteration = react_calc.get(
+        "ff_parameterization_maxiteration",
+        cd.reactant_calc.ff_parameterization_maxiteration,
+    )
+    cd.reactant_calc.ff_parameter_repulsion = react_calc.get(
+        "ff_parameter_repulsion", cd.reactant_calc.ff_parameter_repulsion
+    )
+    cd.reactant_calc.ff_parameterization_stepsize = react_calc.get(
+        "ff_parameterization_stepsize", cd.reactant_calc.ff_parameterization_stepsize
+    )
+    cd.reactant_calc.ff_parameterization_threshold = react_calc.get(
+        "ff_parameterization_threshold", cd.reactant_calc.ff_parameterization_threshold
+    )
+    cd.reactant_calc.ff_parameterization_constant_repulsion = react_calc.get(
+        "ff_parameterization_constant_repulsion",
+        cd.reactant_calc.ff_parameterization_constant_repulsion,
+    )
 
     # =======================
     # Product
@@ -95,22 +124,46 @@ def load_calculation_data(user_path: str | None = None, test: bool = False) -> C
 
     # Product path
     prod_path = product.get("path", {})
-    cd.product_path.xyz_filename = '' # will be set from commandline
-    cd.product_path.wbo_filename = prod_path.get("wbo_filename", cd.product_path.wbo_filename)
-    cd.product_path.hessian_filename = prod_path.get("hessian_filename", cd.product_path.hessian_filename)
-    cd.product_path.ff_filename = prod_path.get("ff_filename", cd.product_path.ff_filename)
+    cd.product_path.xyz_filename = ""  # will be set from commandline
+    cd.product_path.wbo_filename = prod_path.get(
+        "wbo_filename", cd.product_path.wbo_filename
+    )
+    cd.product_path.hessian_filename = prod_path.get(
+        "hessian_filename", cd.product_path.hessian_filename
+    )
+    cd.product_path.ff_filename = prod_path.get(
+        "ff_filename", cd.product_path.ff_filename
+    )
 
     # Product calculation
     prod_calc = product.get("calculation", {})
-    cd.product_calc.geometry_optimization = prod_calc.get("geometry_optimization", cd.product_calc.geometry_optimization)
+    cd.product_calc.geometry_optimization = prod_calc.get(
+        "geometry_optimization", cd.product_calc.geometry_optimization
+    )
     cd.product_calc.wbo_calc = prod_calc.get("wbo_calc", cd.product_calc.wbo_calc)
-    cd.product_calc.hessian_calc = prod_calc.get("hessian_calc", cd.product_calc.hessian_calc)
-    cd.product_calc.ff_parameterization = prod_calc.get("ff_parameterization", cd.product_calc.ff_parameterization)
-    cd.product_calc.test_parameterization = prod_calc.get("test_parameterization", cd.product_calc.test_parameterization)
-    cd.product_calc.ff_parameterization_maxiteration = prod_calc.get("ff_parameterization_maxiteration", cd.product_calc.ff_parameterization_maxiteration)
-    cd.product_calc.ff_parameterization_stepsize = prod_calc.get("ff_parameterization_stepsize", cd.product_calc.ff_parameterization_stepsize)
-    cd.product_calc.ff_parameterization_threshold = prod_calc.get("ff_parameterization_threshold", cd.product_calc.ff_parameterization_threshold)
-    cd.product_calc.ff_parameterization_constant_repulsion = prod_calc.get("ff_parameterization_constant_repulsion", cd.product_calc.ff_parameterization_constant_repulsion)
+    cd.product_calc.hessian_calc = prod_calc.get(
+        "hessian_calc", cd.product_calc.hessian_calc
+    )
+    cd.product_calc.ff_parameterization = prod_calc.get(
+        "ff_parameterization", cd.product_calc.ff_parameterization
+    )
+    cd.product_calc.test_parameterization = prod_calc.get(
+        "test_parameterization", cd.product_calc.test_parameterization
+    )
+    cd.product_calc.ff_parameterization_maxiteration = prod_calc.get(
+        "ff_parameterization_maxiteration",
+        cd.product_calc.ff_parameterization_maxiteration,
+    )
+    cd.product_calc.ff_parameterization_stepsize = prod_calc.get(
+        "ff_parameterization_stepsize", cd.product_calc.ff_parameterization_stepsize
+    )
+    cd.product_calc.ff_parameterization_threshold = prod_calc.get(
+        "ff_parameterization_threshold", cd.product_calc.ff_parameterization_threshold
+    )
+    cd.product_calc.ff_parameterization_constant_repulsion = prod_calc.get(
+        "ff_parameterization_constant_repulsion",
+        cd.product_calc.ff_parameterization_constant_repulsion,
+    )
 
     # =======================
     # TS Guess calculation
@@ -120,20 +173,33 @@ def load_calculation_data(user_path: str | None = None, test: bool = False) -> C
     # TS path
     ts_path = ts_guess.get("path", {})
     cd.ts_path.ff_filename = ts_path.get("ff_filename", cd.ts_path.ff_filename)
-    cd.ts_path.hessian_filename = ts_path.get("hessian_filename", cd.ts_path.hessian_filename)
+    cd.ts_path.hessian_filename = ts_path.get(
+        "hessian_filename", cd.ts_path.hessian_filename
+    )
 
     # TS calculation
     ts_calc = ts_guess.get("calculation", {})
-    cd.ts_calc.factor_reactant = ts_calc.get("factor_reactant", cd.ts_calc.factor_reactant)
+    cd.ts_calc.factor_reactant = ts_calc.get(
+        "factor_reactant", cd.ts_calc.factor_reactant
+    )
     cd.ts_calc.factor_product = ts_calc.get("factor_product", cd.ts_calc.factor_product)
     cd.ts_calc.optimizer = ts_calc.get("optimizer", cd.ts_calc.optimizer)
     cd.ts_calc.energy_threshold_two_optimizations = ts_calc.get(
-        "energy_threshold_two_optimizations", cd.ts_calc.energy_threshold_two_optimizations
+        "energy_threshold_two_optimizations",
+        cd.ts_calc.energy_threshold_two_optimizations,
     )
-    cd.ts_calc.perform_two_optimizations = ts_calc.get("perform_two_optimizations", cd.ts_calc.perform_two_optimizations)
-    cd.ts_calc.molbar_optimizer_e_tol = ts_calc.get("molbar_optimizer_e_tol", cd.ts_calc.molbar_optimizer_e_tol)
-    cd.ts_calc.molbar_optimizer_x_tol = ts_calc.get("molbar_optimizer_x_tol", cd.ts_calc.molbar_optimizer_x_tol)
-    cd.ts_calc.molbar_optimizer_max_micro_steps = ts_calc.get("molbar_optimizer_max_micro_steps", cd.ts_calc.molbar_optimizer_max_micro_steps)
+    cd.ts_calc.perform_two_optimizations = ts_calc.get(
+        "perform_two_optimizations", cd.ts_calc.perform_two_optimizations
+    )
+    cd.ts_calc.molbar_optimizer_e_tol = ts_calc.get(
+        "molbar_optimizer_e_tol", cd.ts_calc.molbar_optimizer_e_tol
+    )
+    cd.ts_calc.molbar_optimizer_x_tol = ts_calc.get(
+        "molbar_optimizer_x_tol", cd.ts_calc.molbar_optimizer_x_tol
+    )
+    cd.ts_calc.molbar_optimizer_max_micro_steps = ts_calc.get(
+        "molbar_optimizer_max_micro_steps", cd.ts_calc.molbar_optimizer_max_micro_steps
+    )
 
     # =======================
     # Postprocessing
@@ -147,18 +213,28 @@ def load_calculation_data(user_path: str | None = None, test: bool = False) -> C
     # =======================
     # Sanity checks
     # =======================
-    if not cd.reactant_calc.hessian_calc and not os.path.exists(cd.reactant_path.hessian_filename) :
-        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.reactant_path.hessian_filename} not found.')
-    
-    if not cd.product_calc.hessian_calc and not os.path.exists(cd.product_path.hessian_filename) :
-        raise FileNotFoundError(f'No Hessian calculation requested, but file {cd.product_path.hessian_filename} not found.')
-    
+    if not cd.reactant_calc.hessian_calc and not os.path.exists(
+        cd.reactant_path.hessian_filename
+    ):
+        raise FileNotFoundError(
+            f"No Hessian calculation requested, but file {cd.reactant_path.hessian_filename} not found."
+        )
+
+    if not cd.product_calc.hessian_calc and not os.path.exists(
+        cd.product_path.hessian_filename
+    ):
+        raise FileNotFoundError(
+            f"No Hessian calculation requested, but file {cd.product_path.hessian_filename} not found."
+        )
+
     if cd.system.multiplicity > 3 or cd.system.multiplicity < 1:
-        raise ValueError(f'Multiplicity of {cd.system.multiplicity} is chemically unreasonable on this theory level.')
-    
+        raise ValueError(
+            f"Multiplicity of {cd.system.multiplicity} is chemically unreasonable on this theory level."
+        )
+
     # if cd.system.charge > 3 or cd.system.charge < -3:
     #     print(f'[WARNING] Charge of {cd.system.charge} may be a bit much. Are you certain this is correct?')
-    
+
     # Ensure factors sum to 1.0
     if abs(cd.ts_calc.factor_reactant + cd.ts_calc.factor_product - 1.0) > 1e-8:
         raise ValueError("Error: factor_reactant + factor_product must equal 1.0")
@@ -175,15 +251,25 @@ def load_calculation_data(user_path: str | None = None, test: bool = False) -> C
 
     return cd
 
-def overwrite_from_commandline(calcdata: CalculationData, multiplicity: int | None, charge: int | None, structures: list | None = None):
-    '''overwrites information in CalculationData object if given via commandline'''
+
+def overwrite_from_commandline(
+    calcdata: CalculationData,
+    multiplicity: int | None,
+    charge: int | None,
+    structures: list | None = None,
+):
+    """overwrites information in CalculationData object if given via commandline"""
     if multiplicity:
         if multiplicity != calcdata.system.multiplicity:
-            logger.info(f"Multiplicity of {calcdata.system.multiplicity} is being overwritten by {multiplicity}.")
+            logger.info(
+                f"Multiplicity of {calcdata.system.multiplicity} is being overwritten by {multiplicity}."
+            )
         calcdata.system.multiplicity = multiplicity
     if charge:
         if charge != calcdata.system.charge:
-            logger.info(f"Charge of {calcdata.system.charge} is being overwritten by {charge}.")
+            logger.info(
+                f"Charge of {calcdata.system.charge} is being overwritten by {charge}."
+            )
         calcdata.system.charge = charge
     if structures:
         if len(structures) >= 1:
@@ -193,5 +279,6 @@ def overwrite_from_commandline(calcdata: CalculationData, multiplicity: int | No
             calcdata.product_path.xyz_filename = structures[1]
             logger.info(f"Product XYZ file set to: {structures[1]}")
         if len(structures) > 2:
-            logger.warning(f"More than 2 structure files provided. Only the first two will be used.")
-
+            logger.warning(
+                f"More than 2 structure files provided. Only the first two will be used."
+            )
