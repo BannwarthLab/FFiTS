@@ -48,23 +48,24 @@ PERIODIC_TABLE = {
     "Lu": 71, "Hf": 72, "Ta": 73, "W": 74, "Re": 75, "Os": 76, "Ir": 77, "Pt": 78,
     "Au": 79, "Hg": 80, "Tl": 81, "Pb": 82, "Bi": 83, "Po": 84, "At": 85, "Rn": 86
 }
-def convert_xyz_to_fortranstyle(nat, xyz): 
-    x = []
-    y = []
-    z = []
-    for i in range(nat):
-        x.append(xyz[i][0])
-        y.append(xyz[i][1])
-        z.append(xyz[i][2])
-    return np.array([x,y,z],order='F')
+def convert_xyz_to_fortranstyle(nat: int, xyz: np.ndarray) -> np.ndarray:
+    """
+    Converts xyz to column-major.
+    """
+    return np.asarray(xyz, dtype=float, order='F').T
 
-def angstrom2bohr(val):
-        if type(val) == np.array:
-            return np.divide(val, 1/1.8897259)
-        return val/(1/1.8897259)
+def angstrom2bohr(val: float | np.ndarray):
+    """
+    Convert a value or array from Angstroms to Bohr.
+    """
+    if type(val) == np.array:
+        return np.divide(val, 1/1.8897259)
+    return val/(1/1.8897259)
 
 def atom_symbol_to_number(symbol: str) -> int:
-    """Convert an element symbol (e.g. 'C') to its atomic number (e.g. 6)."""
+    """
+    Convert an element symbol (e.g. 'C') to its atomic number (e.g. 6).
+    """
     try:
         return PERIODIC_TABLE[symbol.capitalize()]
     except KeyError:
@@ -96,26 +97,26 @@ def get_vander_matrix(at: np.ndarray, vander_values=VANDER_VALUES, factor=1.8897
 
     return vander_matrix
 
-@dataclass
-class Name:
-    """
-    Class, defining path names of data, generated during the calculation.
-    """
-    @staticmethod
-    def modified_ff(input_str: str):
-        return f'{input_str}'
-    @staticmethod
-    def fitted_ff(input_str: str):
-        return f'{input_str}'
-    @staticmethod
-    def optimized_xyz(input_str: str):
-        return f'opt_{input_str}'
-    @staticmethod
-    def aligned_xyz(input_str: str):
-        return f'aligned_{input_str}'
-    @staticmethod
-    def original_xyz(input_str: str):
-        return f'original_{input_str}'
+# @dataclass
+# class Name:
+#     """
+#     Class, defining path names of data, generated during the calculation.
+#     """
+#     @staticmethod
+#     def modified_ff(input_str: str):
+#         return f'{input_str}'
+#     @staticmethod
+#     def fitted_ff(input_str: str):
+#         return f'{input_str}'
+#     @staticmethod
+#     def optimized_xyz(input_str: str):
+#         return f'opt_{input_str}'
+#     @staticmethod
+#     def aligned_xyz(input_str: str):
+#         return f'aligned_{input_str}'
+#     @staticmethod
+#     def original_xyz(input_str: str):
+#         return f'original_{input_str}'
     
 
 @dataclass
@@ -151,21 +152,30 @@ class ForceField:
         ## only relevant for TS FF
         self.start_from_reactant: bool = True
 
-    def get_energy(self, xyz_displaced: np.ndarray): 
+    def get_energy(self, xyz_displaced: np.ndarray) -> float: 
+        """
+        Calculates energy with defined self.energy_calculator. Handles transfer in correct xyz format for said calculator. 
+
+        Args:
+            xyz_displaced (np.ndarray): Displaced xyz. 
+
+        Returns:
+            enerty (float): The calculated energy.
+        """
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.energy_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
         if len(xyz_displaced) == self.nat*3:
             return self.energy_calculator(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T), self)
         return self.energy_calculator(xyz_displaced, self)
     
-    def get_gradient(self, xyz_displaced: np.ndarray): 
+    def get_gradient(self, xyz_displaced: np.ndarray) -> np.ndarray:
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.gradient_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
         if len(xyz_displaced) == self.nat*3:
             return self.gradient_calculator(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T), self)
         return self.gradient_calculator(xyz_displaced, self)
     
-    def get_hessian(self, xyz_displaced: np.ndarray): 
+    def get_hessian(self, xyz_displaced: np.ndarray) -> np.ndarray:
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.hessian_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
         if len(xyz_displaced) == self.nat*3:

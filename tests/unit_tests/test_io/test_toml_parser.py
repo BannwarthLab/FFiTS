@@ -8,6 +8,7 @@ from ffits.io.toml_parser import (
 import pytest
 import os
 import tempfile
+import logging
 from pathlib import Path
 from ffits.datatype.calculation_data import CalculationData
 
@@ -101,12 +102,12 @@ class TestLoadConfig:
         assert "system" in config
         assert config["system"]["charge"] == 0
 
-    def test_load_config_with_nonexistent_user_path(self, capsys):
+    def test_load_config_with_nonexistent_user_path(self, caplog):
         """Test that nonexistent user path falls back to defaults."""
+        caplog.set_level(logging.INFO)
         config = load_config("/nonexistent/path/config.toml")
         assert isinstance(config, dict)
-        captured = capsys.readouterr()
-        assert "No user config found" in captured.out
+        assert "No user config found" in caplog.text
 
     def test_load_config_merges_correctly(self):
         """Test that user config correctly merges with defaults."""
@@ -359,9 +360,10 @@ molbar_optimizer_e_tol = 1e-6
 class TestOverwriteFromCommandline:
     """Tests for overwrite_from_commandline function."""
 
-    def test_overwrite_both_multiplicity_and_charge(self, capsys):
+    def test_overwrite_both_multiplicity_and_charge(self, caplog):
         """Test overwriting both multiplicity and charge."""
         cd = CalculationData()
+        caplog.set_level(logging.INFO)
         original_charge = cd.system.charge
         original_mult = cd.system.multiplicity
 
@@ -369,29 +371,28 @@ class TestOverwriteFromCommandline:
 
         assert cd.system.multiplicity == 3
         assert cd.system.charge == 2
-        captured = capsys.readouterr()
-        assert "Multiplicity" in captured.out
-        assert "Charge" in captured.out
+        assert "Multiplicity" in caplog.text
+        assert "Charge" in caplog.text
 
-    def test_overwrite_only_multiplicity(self, capsys):
+    def test_overwrite_only_multiplicity(self, caplog):
         """Test overwriting only multiplicity."""
         cd = CalculationData()
+        caplog.set_level(logging.INFO)
         overwrite_from_commandline(cd, multiplicity=2, charge=None)
 
         assert cd.system.multiplicity == 2
-        captured = capsys.readouterr()
-        assert "Multiplicity" in captured.out
+        assert "Multiplicity" in caplog.text
 
-    def test_overwrite_only_charge(self, capsys):
+    def test_overwrite_only_charge(self, caplog):
         """Test overwriting only charge."""
         cd = CalculationData()
+        caplog.set_level(logging.INFO)
         overwrite_from_commandline(cd, multiplicity=None, charge=-2)
 
         assert cd.system.charge == -2
-        captured = capsys.readouterr()
-        assert "Charge" in captured.out
+        assert "Charge" in caplog.text
 
-    def test_overwrite_with_same_values(self, capsys):
+    def test_overwrite_with_same_values(self, caplog):
         """Test that no message is printed when values are the same."""
         cd = CalculationData()
         original_charge = cd.system.charge
@@ -403,11 +404,10 @@ class TestOverwriteFromCommandline:
 
         assert cd.system.multiplicity == original_mult
         assert cd.system.charge == original_charge
-        captured = capsys.readouterr()
-        # Should not print info messages when values are the same
-        assert captured.out.strip() == ""
+        # Should not log info messages when values are the same
+        assert caplog.text.strip() == ""
 
-    def test_overwrite_with_none_values(self, capsys):
+    def test_overwrite_with_none_values(self, caplog):
         """Test that None values don't change anything."""
         cd = CalculationData()
         original_charge = cd.system.charge
@@ -417,20 +417,18 @@ class TestOverwriteFromCommandline:
 
         assert cd.system.multiplicity == original_mult
         assert cd.system.charge == original_charge
-        captured = capsys.readouterr()
-        assert captured.out.strip() == ""
+        assert caplog.text.strip() == ""
 
-def test_overwrite_from_commandline_no_change(capsys):
+def test_overwrite_from_commandline_no_change(caplog):
     cd = CalculationData()
     overwrite_from_commandline(cd, multiplicity=1, charge=0)
-    captured = capsys.readouterr()
     # no message expected because nothing changed
-    assert captured.out.strip() == ""
+    assert caplog.text.strip() == ""
 
-def test_overwrite_from_commandline_partial(capsys):
+def test_overwrite_from_commandline_partial(caplog):
     cd = CalculationData()
+    caplog.set_level(logging.INFO)
     overwrite_from_commandline(cd, multiplicity=None, charge=-2)
-    captured = capsys.readouterr()
     assert cd.system.multiplicity == 1  # unchanged
     assert cd.system.charge == -2
-    assert "Charge" in captured.out
+    assert "Charge" in caplog.text
