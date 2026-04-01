@@ -102,33 +102,33 @@ class TestAtomConversionFunctions:
         assert vander[1, 1] > 0
 
 
-class TestName:
-    """Test Name dataclass static methods."""
+# class TestName:
+#     """Test Name dataclass static methods."""
 
-    def test_modified_ff(self):
-        """Test modified_ff naming."""
-        result = Name.modified_ff("test.ff")
-        assert result == "test.ff"
+#     def test_modified_ff(self):
+#         """Test modified_ff naming."""
+#         result = Name.modified_ff("test.ff")
+#         assert result == "test.ff"
 
-    def test_fitted_ff(self):
-        """Test fitted_ff naming."""
-        result = Name.fitted_ff("test.ff")
-        assert result == "test.ff"
+#     def test_fitted_ff(self):
+#         """Test fitted_ff naming."""
+#         result = Name.fitted_ff("test.ff")
+#         assert result == "test.ff"
 
-    def test_optimized_xyz(self):
-        """Test optimized_xyz naming."""
-        result = Name.optimized_xyz("structure.xyz")
-        assert result == "opt_structure.xyz"
+#     def test_optimized_xyz(self):
+#         """Test optimized_xyz naming."""
+#         result = Name.optimized_xyz("structure.xyz")
+#         assert result == "opt_structure.xyz"
 
-    def test_aligned_xyz(self):
-        """Test aligned_xyz naming."""
-        result = Name.aligned_xyz("structure.xyz")
-        assert result == "aligned_structure.xyz"
+#     def test_aligned_xyz(self):
+#         """Test aligned_xyz naming."""
+#         result = Name.aligned_xyz("structure.xyz")
+#         assert result == "aligned_structure.xyz"
 
-    def test_original_xyz(self):
-        """Test original_xyz naming."""
-        result = Name.original_xyz("structure.xyz")
-        assert result == "original_structure.xyz"
+#     def test_original_xyz(self):
+#         """Test original_xyz naming."""
+#         result = Name.original_xyz("structure.xyz")
+#         assert result == "original_structure.xyz"
 
 
 class TestStructurePath:

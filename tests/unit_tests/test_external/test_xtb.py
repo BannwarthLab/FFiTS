@@ -7,7 +7,7 @@ import numpy as np
 
 import ffits.io.reader as reader
 from ffits.external.xtb import Xtb  # adjust import to your actual module path
-
+import logging
 
 # ---------------------------------------------------------------------
 # Fixtures and helpers
@@ -107,12 +107,12 @@ class TestXtbSinglepoint:
 class TestXtbGeomOpt:
     """Integration tests for geometry optimization."""
     
-    def test_geomopt_water_produces_optimized_geometry(self, water_xyz, change_to_tmp_path, capsys):
+    def test_geomopt_water_produces_optimized_geometry(self, water_xyz, change_to_tmp_path, caplog):
         """Test geometry optimization produces valid output and returns parsed data."""
         xtb = Xtb(chrg=0, mult=1)
+        caplog.set_level(logging.INFO)
         output_file = str(change_to_tmp_path / "water_opt.xyz")
         result = xtb.geomopt(str(water_xyz), output_file)
-        
         # geomopt returns tuple
         assert isinstance(result, tuple)
         assert len(result) == 4
@@ -142,8 +142,8 @@ class TestXtbGeomOpt:
         opt_coords = opt_lines[2:]
         assert orig_coords != opt_coords, "Optimized geometry should differ from starting geometry"
         
-        captured = capsys.readouterr()
-        assert "finished successfully" in captured.out, "Expected completion message in stdout"
+        
+        assert "finished successfully" in caplog.text, "Expected completion message in stdout"
     
     def test_geomopt_methane_structure_changes(self, methane_xyz, change_to_tmp_path):
         """Test that geometry optimization changes coordinates."""
@@ -166,9 +166,10 @@ class TestXtbGeomOpt:
         opt_coords = opt_lines[2:]
         assert orig_coords != opt_coords
     
-    def test_geomopt_with_output_dir(self, water_xyz, change_to_tmp_path, capsys):
+    def test_geomopt_with_output_dir(self, water_xyz, change_to_tmp_path, caplog):
         """Test that all xtb output files are copied to output_dir."""
         xtb = Xtb(chrg=0, mult=1)
+        caplog.set_level(logging.INFO)
         output_dir = change_to_tmp_path / "xtb_output"
         output_file = str(change_to_tmp_path / "water_opt.xyz")
         
@@ -204,8 +205,7 @@ class TestXtbGeomOpt:
         
         assert Path(output_file).exists(), "Optimized geometry should be saved in tmp_path"
         
-        captured = capsys.readouterr()
-        assert "finished successfully" in captured.out
+        assert "finished successfully" in caplog.text, "Expected completion message in logs"
 
 
 class TestXtbHessian:
