@@ -53,7 +53,7 @@ class CalculationOptions:
         ff_parameter_repulsion (float): Starting value for the repulsion parameters during FF parameterization.
         ff_parameterization_maxiteration (int): Maximum number of iterations for FF parameterization.
         ff_parameterization_stepsize (float): Step size for FF parameterization.
-        ff_parameterization_threshold (float): Threshold for convergence of FF parameterization based on the change in energy between iterations.
+        ff_parameterization_threshold (float): Threshold for convergence of FF parameterization based on the change in the RMSD between FF and Ref Hessian between iterations.
         ff_parameterization_constant_repulsion (bool): If set to true, the ff parameters of the repulsive terms are not changed during fitting. This can be useful to prevent overfitting of the FF to the reference data.
 
     """
