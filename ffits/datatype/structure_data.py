@@ -48,19 +48,22 @@ PERIODIC_TABLE = {
     "Lu": 71, "Hf": 72, "Ta": 73, "W": 74, "Re": 75, "Os": 76, "Ir": 77, "Pt": 78,
     "Au": 79, "Hg": 80, "Tl": 81, "Pb": 82, "Bi": 83, "Po": 84, "At": 85, "Rn": 86
 }
+
 def convert_xyz_to_fortranstyle(nat: int, xyz: np.ndarray) -> np.ndarray:
     """
     Converts xyz to column-major.
     """
-    return np.asarray(xyz, dtype=float, order='F').T
+    return np.asarray(xyz, dtype=float, order="F").T
+
 
 def angstrom2bohr(val: float | np.ndarray):
     """
     Convert a value or array from Angstroms to Bohr.
     """
     if type(val) == np.array:
-        return np.divide(val, 1/1.8897259)
-    return val/(1/1.8897259)
+        return np.divide(val, 1 / 1.8897259)
+    return val / (1 / 1.8897259)
+
 
 def atom_symbol_to_number(symbol: str) -> int:
     """
@@ -70,7 +73,8 @@ def atom_symbol_to_number(symbol: str) -> int:
         return PERIODIC_TABLE[symbol.capitalize()]
     except KeyError:
         raise ValueError(f"Unknown atom symbol: {symbol}")
-    
+
+
 def get_vander_matrix(at: np.ndarray, vander_values=VANDER_VALUES, factor=1.8897259):
     """
     Build van der Waals interaction matrix.
@@ -90,113 +94,142 @@ def get_vander_matrix(at: np.ndarray, vander_values=VANDER_VALUES, factor=1.8897
     vander_matrix : np.ndarray (nat x nat)
     """
     # Convert atomic numbers to 0-based indices
-    radii = np.array([vander_values[atom_symbol_to_number(sym) - 1] * factor for sym in at])
+    radii = np.array(
+        [vander_values[atom_symbol_to_number(sym) - 1] * factor for sym in at]
+    )
 
     # Build the full symmetric matrix (outer sum)
     vander_matrix = radii[:, None] + radii[None, :]
 
     return vander_matrix
 
-# @dataclass
-# class Name:
-#     """
-#     Class, defining path names of data, generated during the calculation.
-#     """
-#     @staticmethod
-#     def modified_ff(input_str: str):
-#         return f'{input_str}'
-#     @staticmethod
-#     def fitted_ff(input_str: str):
-#         return f'{input_str}'
-#     @staticmethod
-#     def optimized_xyz(input_str: str):
-#         return f'opt_{input_str}'
-#     @staticmethod
-#     def aligned_xyz(input_str: str):
-#         return f'aligned_{input_str}'
-#     @staticmethod
-#     def original_xyz(input_str: str):
-#         return f'original_{input_str}'
-    
 
 @dataclass
 class StructurePath:
     """
     Paths/Filenames and ID for a given structure.
     """
-    xyz_filename: str 
-    hessian_filename: str 
-    wbo_filename: str 
+
+    xyz_filename: str
+    hessian_filename: str
+    wbo_filename: str
     ff_filename: str
 
+
 class ForceField:
-    """ 
-    FF definition through FF parameters (np arrays starting with c_), reference values (bondlenghts, angles, etc) and corresponding atom numbers, which construct the bond / angle / dihedral angle / lj term. 
     """
-    def __init__(self, nat: int, ff_filename: str, readff: bool = False, energy_calculator: Callable = None, gradient_calculator: Callable = None, hessian_calculator: Callable = None):
+    FF definition through FF parameters (np arrays starting with c_), reference values (bondlenghts, angles, etc) and corresponding atom numbers, which construct the bond / angle / dihedral angle / lj term.
+    """
+
+    def __init__(
+        self,
+        nat: int,
+        ff_filename: str,
+        readff: bool = False,
+        energy_calculator: Callable = None,
+        gradient_calculator: Callable = None,
+        hessian_calculator: Callable = None,
+    ):
         self.nat = nat
         self.ff_filename = ff_filename
-        self.columns = ['type', 'atoms', 'parameter', 'reference_value']
-        self.dihedrals_columns = ['type', 'atoms', 'parameter', 'reference_value', 'proper_dihedral']
-        self.bonds: pd.DataFrame     = pd.DataFrame(columns=self.columns)
-        self.angles: pd.DataFrame    = pd.DataFrame(columns=self.columns)
-        self.dihedrals: pd.DataFrame = pd.DataFrame(columns=self.dihedrals_columns)
+        self.columns = ["type", "atoms", "parameter", "reference_value"]
+        self.bonds: pd.DataFrame = pd.DataFrame(columns=self.columns)
+        self.angles: pd.DataFrame = pd.DataFrame(columns=self.columns)
+        self.dihedrals: pd.DataFrame = pd.DataFrame(columns=self.columns)
         self.repulsive: pd.DataFrame = pd.DataFrame(columns=self.columns)
         if readff:
             self.readin(ff_filename)
-            # if not self.correct_dimensions():
-            #     raise Exception('Dimensions of reference values and given dimensions do not fit.')
         self.energy_calculator = energy_calculator
         self.gradient_calculator = gradient_calculator
         self.hessian_calculator = hessian_calculator
         ## only relevant for TS FF
         self.start_from_reactant: bool = True
 
-    def get_energy(self, xyz_displaced: np.ndarray) -> float: 
+    def get_energy(self, xyz_displaced: np.ndarray) -> float:
         """
-        Calculates energy with defined self.energy_calculator. Handles transfer in correct xyz format for said calculator. 
+        Calculates energy with defined self.energy_calculator. Handles transfer in correct xyz format for said calculator.
 
         Args:
-            xyz_displaced (np.ndarray): Displaced xyz. 
+            xyz_displaced (np.ndarray): Displaced xyz. Can be in shape (nat, 3) or (nat*3,).
 
         Returns:
             enerty (float): The calculated energy.
         """
         if np.shape(xyz_displaced) == (self.nat, 3):
-            return self.energy_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
-        if len(xyz_displaced) == self.nat*3:
-            return self.energy_calculator(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T), self)
+            return self.energy_calculator(
+                angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)),
+                self,
+            )
+        if len(xyz_displaced) == self.nat * 3:
+            return self.energy_calculator(
+                angstrom2bohr(xyz_displaced.reshape(self.nat, 3).T), self
+            )
         return self.energy_calculator(xyz_displaced, self)
-    
+
     def get_gradient(self, xyz_displaced: np.ndarray) -> np.ndarray:
+        """
+        Calculates gradient with defined self.gradient_calculator. Handles transfer in correct xyz format for said calculator.
+
+        Args:
+            xyz_displaced (np.ndarray): Displaced xyz. Can be in shape (nat, 3) or (nat*3).
+
+        Returns:
+            gradient (np.ndarray, shape=(nat*3)): The calculated gradient.
+        """
         if np.shape(xyz_displaced) == (self.nat, 3):
-            return self.gradient_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
-        if len(xyz_displaced) == self.nat*3:
-            return self.gradient_calculator(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T), self)
+            return self.gradient_calculator(
+                angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)),
+                self,
+            )
+        if len(xyz_displaced) == self.nat * 3:
+            return self.gradient_calculator(
+                angstrom2bohr(xyz_displaced.reshape(self.nat, 3).T), self
+            )
         return self.gradient_calculator(xyz_displaced, self)
-    
+
     def get_hessian(self, xyz_displaced: np.ndarray) -> np.ndarray:
+        """
+        Calculates hessian with defined self.hessian_calculator. Handles transfer in correct xyz format for said calculator.
+
+        Args:
+            xyz_displaced (np.ndarray): Displaced xyz. Can be in shape (nat, 3) or (nat*3).
+
+        Returns:
+            hessian (np.ndarray, shape=(nat*3, nat*3)): The calculated hessian.
+        """
         if np.shape(xyz_displaced) == (self.nat, 3):
-            return self.hessian_calculator(angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)), self)
-        if len(xyz_displaced) == self.nat*3:
-            return self.hessian_calculator(angstrom2bohr(xyz_displaced.reshape(self.nat,3).T), self)
+            return self.hessian_calculator(
+                angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)),
+                self,
+            )
+        if len(xyz_displaced) == self.nat * 3:
+            return self.hessian_calculator(
+                angstrom2bohr(xyz_displaced.reshape(self.nat, 3).T), self
+            )
         return self.hessian_calculator(xyz_displaced, self)
 
     def write(self):
-        """Combine all parameter DataFrames and write to CSV."""
+        """
+        Writes out all FF data in specified ff_filename in the csv format.
+        """
+
         def format_atoms(t):
             return "[" + " ".join(map(str, t)) + "]"
 
-        df_combined = pd.concat([self.bonds, self.angles, self.dihedrals, self.repulsive], ignore_index=True)
+        df_combined = pd.concat(
+            [self.bonds, self.angles, self.dihedrals, self.repulsive], ignore_index=True
+        )
         df_combined = df_combined.copy()
-        df_combined['atoms'] = df_combined['atoms'].apply(format_atoms)
+        df_combined["atoms"] = df_combined["atoms"].apply(format_atoms)
         df_combined.to_csv(self.ff_filename)
-        logger.info(f'FF information written to {self.ff_filename}.')
-
+        logger.info(f"FF information written to {self.ff_filename}.")
 
     def readin(self, filename: str):
-        """Read a force field CSV file and populate the corresponding DataFrames."""
+        """
+        Reads a force field csv file and fills defines the ForceField object accordingly.
+        """
         try:
+
             def parse_atoms(x):
                 """Parse 'atoms' column into a tuple of integers."""
                 if pd.isna(x):
@@ -205,18 +238,18 @@ class ForceField:
                     # Already iterable — ensure tuple of ints
                     return tuple(int(i) for i in x)
                 # Remove brackets and commas, split on whitespace
-                x = re.sub(r'[\[\],]', ' ', str(x))
+                x = re.sub(r"[\[\],]", " ", str(x))
                 tokens = x.split()
                 return tuple(int(tok) for tok in tokens)
 
             df = pd.read_csv(
                 filename,
                 converters={
-                    'atoms': parse_atoms,
-                    'parameter': float,
-                    'reference_value': float,
+                    "atoms": parse_atoms,
+                    "parameter": float,
+                    "reference_value": float,
                 },
-                index_col=0
+                index_col=0,
             )
 
         except FileNotFoundError:
@@ -226,73 +259,83 @@ class ForceField:
         except Exception as e:
             raise ValueError(f"Error while reading '{filename}': {e}")
 
-        # --- Split into sub-dataframes ---
-        self.bonds     = df[df['type'] == 'bonds'].copy()
-        self.angles    = df[df['type'] == 'angles'].copy()
-        self.dihedrals = df[df['type'] == 'dihedrals'].copy()
-        self.repulsive = df[df['type'] == 'repulsive'].copy()
-
+        self.bonds = df[df["type"] == "bonds"].copy()
+        self.angles = df[df["type"] == "angles"].copy()
+        self.dihedrals = df[df["type"] == "dihedrals"].copy()
+        self.repulsive = df[df["type"] == "repulsive"].copy()
 
 
 class StructuralInformation:
-    """ 
-    Information on the given structure.
-        nat: number of atoms
-        xyz: directly transferred into bohr
-        wbo: Wilberg Bond Order as directory of bond pairs and corresponding WBO values
-        complete_graph: networkx Graph object with atoms as nodes and bond order larger then 0 as edges.
-        seperate_molecule_list: List of subgraphs not connectred by edges in complete_graph.
-        molecule_count: number of seperate molecules in structure.
     """
-    def __init__(self, nat: int, xyz: np.array, wbo_dict: dict, atom_types: np.array, hessian: np.ndarray = None):
-        self.nat = nat 
+    Information on the given structure.
+
+    Variables:
+        nat (int): number of atoms
+        xyz (np.ndarray): coordinates in bohr
+        wbo (dict): Wilberg Bond Order as dictionary of bond pairs and corresponding WBO values
+        complete_graph (nx.Graph): networkx Graph object with atoms as nodes and bond order larger than 0 as edges.
+        seperate_molecule_list (list): List of subgraphs not connected by edges in complete_graph.
+        molecule_count (int): number of separate molecules in structure.
+    """
+
+    def __init__(
+        self,
+        nat: int,
+        xyz: np.array,
+        wbo_dict: dict,
+        atom_types: np.array,
+        hessian: np.ndarray = None,
+    ):
+        self.nat = nat
         self.wbo = wbo_dict
         self.xyz = xyz
         self.atom_types = atom_types
         self.hessian: np.ndarray = hessian
         if self.wbo != {}:
             self.bo_matrix: np.ndarray = self.create_bomatrix_from_wbo()
-            self.fortran_xyz: np.ndarray = self.angstrom2bohr(self.convert_xyz_to_fortranstyle(self.xyz))
+            self.fortran_xyz: np.ndarray = self.angstrom2bohr(
+                self.convert_xyz_to_fortranstyle(self.xyz)
+            )
             self.complete_graph: nx.Graph = self.create_graph_from_wbo()
             self.seperate_molecule_list = self.split_in_subgraphs()
             self.molecule_count = len(self.seperate_molecule_list)
         self.vander_matrix: np.ndarray = get_vander_matrix(self.atom_types)
 
     def convert_xyz_to_fortranstyle(self, xyz) -> np.array:
-        '''returns column major version of xyz'''
-        return np.asarray(xyz, dtype=float, order='F').T 
-    
+        """returns column major version of xyz"""
+        return np.asarray(xyz, dtype=float, order="F").T
+
     def angstrom2bohr(self, val: float | np.ndarray):
         if type(val) == np.array:
-            return np.divide(val, 1/1.8897259)
-        return val/(1/1.8897259)
+            return np.divide(val, 1 / 1.8897259)
+        return val / (1 / 1.8897259)
 
     def create_bomatrix_from_wbo(self) -> np.ndarray:
-        bo_matrix = np.zeros((self.nat,self.nat))
-        for atoms, val in self.wbo.items(): 
-            i = atoms[0] 
+        bo_matrix = np.zeros((self.nat, self.nat))
+        for atoms, val in self.wbo.items():
+            i = atoms[0]
             j = atoms[1]
-            if bo_matrix[i-1,j-1] != 0:
-                raise Exception('Double entry is present in wbo file.')
-            bo_matrix[i-1,j-1] = val 
-            bo_matrix[j-1,i-1] = val 
+            if bo_matrix[i - 1, j - 1] != 0:
+                raise Exception("Double entry is present in wbo file.")
+            bo_matrix[i - 1, j - 1] = val
+            bo_matrix[j - 1, i - 1] = val
         return bo_matrix
-    
+
     def scipy_optimizer_callback(self, xk: np.ndarray) -> None:
         """Callback function for scipy optimizer progress tracking."""
         cwd = os.getcwd()
-        temp_wd = os.path.join(cwd, 'trj.xyz')
+        temp_wd = os.path.join(cwd, "trj.xyz")
 
         coordinates = xk.reshape(-1, 3)
         elements = self.atom_types
-        with open(os.path.join(temp_wd), 'a') as f:
+        with open(os.path.join(temp_wd), "a") as f:
             f.write(f"{len(coordinates)}\n")
             f.write("Debug optimization step\n")
             for e, c in zip(elements, coordinates):
                 f.write(f"{e} {c[0]:.6f} {c[1]:.6f} {c[2]:.6f}\n")
 
     def create_graph_from_wbo(self) -> nx.Graph:
-        """ 
+        """
         creates networkx Graph object with atoms as nodes and bond order values larger then 0 as edges.
         """
         G = nx.Graph()
@@ -303,31 +346,36 @@ class StructuralInformation:
             G.add_node(node1)
             G.add_node(node2)
             G.add_edge(node1, node2)
-            nx.set_edge_attributes(G, {(node1, node2):{'bondorder': bo}})
+            nx.set_edge_attributes(G, {(node1, node2): {"bondorder": bo}})
         return G
-    
+
     def split_in_subgraphs(self):
-        """ 
+        """
         creates list of seperate networkx Graph objects, which correspond to subgraphs of self.complete_graph, meaning not connected by edges, thus seperate molecules in a structure.
         """
         G = self.complete_graph
         S = [G.subgraph(c).copy() for c in nx.connected_components(G)]
         for graph in S:
-            nodes = {node: {'id_in_subgraph': idx} for idx, node in enumerate(graph.nodes(), start=1)}
+            nodes = {
+                node: {"id_in_subgraph": idx}
+                for idx, node in enumerate(graph.nodes(), start=1)
+            }
             nx.set_node_attributes(graph, nodes)
             # print(graph.nodes(data=True))
         return S
 
 
-
 @dataclass
 class Structure:
-    '''
+    """
     Complete information about a given Structure.
-    path: Path strings to all related files.
-    ff: Force field data
-    info: structural information like connectivities, atom count or geometrical structure.
-    '''
-    path: StructurePath 
+
+    Variables:
+        path (StructurePath): Path strings to all related files.
+        ff (ForceField): Force field data
+        info (StructuralInformation): structural information like connectivities, atom count or geometrical structure.
+    """
+
+    path: StructurePath
     ff: ForceField
     info: StructuralInformation

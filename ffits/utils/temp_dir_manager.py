@@ -10,7 +10,6 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -28,6 +27,7 @@ class TempDirManager:
             True if DEBUG logging is enabled
 
     """
+
     def __init__(self, work_dir: Optional[Path] = None):
         """
         Initialize the temporary directory manager.
@@ -105,7 +105,9 @@ class TempDirManager:
             return None
 
         if not temp_path.exists():
-            logger.warning(f"Temporary directory {temp_path} does not exist, skipping copy")
+            logger.warning(
+                f"Temporary directory {temp_path} does not exist, skipping copy"
+            )
             return None
 
         debug_subdir = self.debug_dir / step_name

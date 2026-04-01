@@ -2,7 +2,9 @@ import numpy as np
 import pandas as pd
 from ffits.datatype.structure_data import StructuralInformation, ForceField
 from ffits.utils.geometry_calc import angle, bondlength, dihedral_angle
+import logging
 
+logger = logging.getLogger(__name__)
 
 
 def canonical_dihedral(i, j, l, m):
@@ -19,10 +21,10 @@ def _normalize_improper(dihedral: tuple) -> tuple:
     """
     Normalize improper dihedral to canonical form: (central_atom, *sorted_terminals).
     This ensures all permutations of terminal atoms map to the same representation.
-    
+
     Args:
         dihedral: tuple of (central_atom, terminal1, terminal2, terminal3)
-    
+
     Returns:
         canonical form with terminals sorted
     """
@@ -34,22 +36,26 @@ def _normalize_improper(dihedral: tuple) -> tuple:
 def _sort_candidates_canonical(atoms: set, priorities: dict) -> list:
     """
     Sort atoms by canonical ordering: highest priority first, then lowest index for ties.
-    
+
     Args:
         atoms: set of atom indices
         priorities: dict mapping atom index to priority value
-    
+
     Returns:
         list of atoms sorted by (-priority, index)
     """
-    return sorted(atoms, key=lambda a: (-priorities.get(a, 0), a)) # first then second criterion 
+    return sorted(
+        atoms, key=lambda a: (-priorities.get(a, 0), a)
+    )  # first then second criterion
 
 
-def _create_improper_dihedrals(central_atom: int, candidates: list, result: list) -> None:
+def _create_improper_dihedrals(
+    central_atom: int, candidates: list, result: list
+) -> None:
     """
     Create improper dihedrals from candidates and append to result.
     Processes candidates in groups of 3 from the end until fewer than 3 remain.
-    
+
     Args:
         central_atom: the central atom index for the improper dihedral
         candidates: sorted list of terminal atoms (will be modified)
@@ -57,14 +63,14 @@ def _create_improper_dihedrals(central_atom: int, candidates: list, result: list
     """
     central_atom = int(central_atom)
     while len(candidates) >= 3:
-        # if len = 1, means that only the atom from the proper dihedral remained 
-        # if len = 2, there are not enough atoms to form an improper dihedral 
-        
+        # if len = 1, means that only the atom from the proper dihedral remained
+        # if len = 2, there are not enough atoms to form an improper dihedral
+
         # these if statements are here for more complicated cases with many bonds like metal centers
         # generally: I start from the back, so the candidate atoms with lower priority are used first
-        if len(candidates) >= 6 or len(candidates) == 3: 
+        if len(candidates) >= 6 or len(candidates) == 3:
             result.append(((central_atom, *[int(c) for c in candidates[-3:]]), False))
-        elif len(candidates) == 4:  
+        elif len(candidates) == 4:
             result.append(((central_atom, *[int(c) for c in candidates[-3:]]), False))
         else:
             result.append(((central_atom, *[int(c) for c in candidates[-3:]]), False))
@@ -76,16 +82,16 @@ def _remove_duplicate_improper_dihedrals(dihedrals: list) -> list:
     """
     Remove duplicate improper dihedrals by normalizing to canonical form.
     All permutations of terminal atoms are treated as duplicates.
-    
+
     Args:
         dihedrals: list of tuples (dihedral, is_proper) where dihedral is a tuple of atom indices and is_proper is a boolean
-    
+
     Returns:
         list without duplicate improper dihedrals; proper dihedrals are not affected
     """
     seen = set()
     result = []
-    
+
     for dihedral, is_proper in dihedrals:
         if is_proper:
             result.append((dihedral, is_proper))
@@ -94,27 +100,27 @@ def _remove_duplicate_improper_dihedrals(dihedrals: list) -> list:
             if canonical_form not in seen:
                 result.append((canonical_form, is_proper))
                 seen.add(canonical_form)
-    
+
     return result
 
 
-def filter_dihedrals(dihedrals: list, priorities: dict, A: np.ndarray) -> list: 
+def filter_dihedrals(dihedrals: list, priorities: dict, A: np.ndarray) -> list:
     """
     Filter dihedrals to keep one proper dihedral per central atom pair.
     Create improper dihedrals for remaining atoms around each central atom.
     Each improper dihedral only uses terminal atoms bonded to the central atom.
-    
+
     Args:
         dihedrals: list of dihedral tuples (i, j, l, m) where j and l are central atoms
         priorities: dict mapping atom index to priority value
         A: adjacency matrix for connectivity checking
-    
+
     Returns:
         list of tuples [(dihedral, is_proper), ...] where is_proper indicates whether
         the dihedral is a proper (True) or improper (False) dihedral
     """
     from collections import defaultdict
-    
+
     # Group dihedrals by central atom pair
     central_pair_groups = defaultdict(list)
     for dihedral in dihedrals:
@@ -122,23 +128,23 @@ def filter_dihedrals(dihedrals: list, priorities: dict, A: np.ndarray) -> list:
         central_pair = tuple([j, l])
         central_pair_groups[central_pair].append(dihedral)
     result = []
-    
+
     for central_pair, dihedral_group in central_pair_groups.items():
         # proper dihedral with highest combined terminal atom priority
         proper_dihedral = max(
             dihedral_group,
-            key=lambda d: priorities.get(d[0], 0) + priorities.get(d[3], 0)
+            key=lambda d: priorities.get(d[0], 0) + priorities.get(d[3], 0),
         )
         result.append((proper_dihedral, True))
         i_sel, j_sel, l_sel, m_sel = proper_dihedral
-        
+
         # Collect all terminal atoms bonded to each central atom by picking it from the adjacency matrix A
         atoms_bonded_to_l = set(np.where(A[l_sel])[0])
         atoms_bonded_to_j = set(np.where(A[j_sel])[0])
-        
+
         candidates_j = _sort_candidates_canonical(atoms_bonded_to_j, priorities)
         candidates_l = _sort_candidates_canonical(atoms_bonded_to_l, priorities)
-        
+
         # remove the second central atom and put at the beginning of the list
         candidates_j.remove(l_sel)
         candidates_j.insert(0, l_sel)
@@ -147,17 +153,18 @@ def filter_dihedrals(dihedrals: list, priorities: dict, A: np.ndarray) -> list:
 
         _create_improper_dihedrals(j_sel, candidates_j, result)
         _create_improper_dihedrals(l_sel, candidates_l, result)
-    
+
     return _remove_duplicate_improper_dihedrals(result)
+
 
 def _remove_duplicate_proper_dihedrals(dihedrals: list) -> list:
     """
     Remove duplicate dihedrals keeping improper (False) over proper (True) when duplicates exist.
     Also sorts the dihedrals by atom indices.
-    
+
     Args:
         dihedrals: list of tuples (dihedral, is_proper) where dihedral is a tuple of atom indices
-    
+
     Returns:
         list of tuples [(dihedral, is_proper), ...] with duplicates removed and sorted
     """
@@ -170,15 +177,24 @@ def _remove_duplicate_proper_dihedrals(dihedrals: list) -> list:
             deduplicated.append((atoms, is_proper_val))
         else:
             # Keep improper (False) over proper (True)
-            if not is_proper_val and seen[atoms]:  # Current is improper, existing is proper
+            if (
+                not is_proper_val and seen[atoms]
+            ):  # Current is improper, existing is proper
                 # Replace the existing one
                 deduplicated = [(a, p) for a, p in deduplicated if a != atoms]
                 deduplicated.append((atoms, is_proper_val))
                 seen[atoms] = is_proper_val
-    
+
     return deduplicated
 
-def fill_ff(ff: ForceField, info: StructuralInformation, priorities: dict = None, repulsive_start: float = 0.01, bo_threshold: float = 0.0) -> None:
+
+def fill_ff(
+    ff: ForceField,
+    info: StructuralInformation,
+    priorities: dict = None,
+    repulsive_start: float = 0.01,
+    bo_threshold: float = 0.0,
+) -> None:
     """Fills the ForceField object with bonds, angles, dihedrals, and repulsive terms based on the structural information. The function defines the connectivity using a bond order threshold and calculates reference values and parameters for each term. If priorities are provided, it filters dihedrals to keep one proper dihedral per central atom pair and creates improper dihedrals for remaining atoms around each central atom.
 
     Args:
@@ -192,7 +208,7 @@ def fill_ff(ff: ForceField, info: StructuralInformation, priorities: dict = None
         ZeroDivisionError: When the bond order or bond length is zero for a bond or angle, which would lead to division by zero in parameter calculations.
 
     Returns:
-        None: ForceField object is modified in place 
+        None: ForceField object is modified in place
     """
     n = ff.nat
     wbo = info.bo_matrix
@@ -242,7 +258,7 @@ def fill_ff(ff: ForceField, info: StructuralInformation, priorities: dict = None
 
     def get_repulsive_atoms(A):
         all_i, all_j = np.triu_indices(n, 1)
-        mask = (A[all_i, all_j] == 0)
+        mask = A[all_i, all_j] == 0
         pairs = np.stack([all_i[mask], all_j[mask]], axis=1)
         pairs = pairs[np.lexsort((pairs[:, 1], pairs[:, 0]))]
         return [tuple(int(x) for x in pair) for pair in pairs]
@@ -262,7 +278,9 @@ def fill_ff(ff: ForceField, info: StructuralInformation, priorities: dict = None
 
     def ref_repulsive(atoms):
         i, j = atoms
-        return round(info.vander_matrix[i, j], 8) # / (2 ** (1 / 6)) For some reason we dont need this and i dont know why
+        return round(
+            info.vander_matrix[i, j], 8
+        )  # / (2 ** (1 / 6)) For some reason we dont need this and i dont know why
 
     # ---- Parameter calculations ----
     def param_bond(atoms):
@@ -288,10 +306,10 @@ def fill_ff(ff: ForceField, info: StructuralInformation, priorities: dict = None
         bl1 = bondlength(info.fortran_xyz, i, j)
         bl2 = bondlength(info.fortran_xyz, j, k)
         bl3 = bondlength(info.fortran_xyz, k, l)
-        # for improper dihedrals 
+        # for improper dihedrals
         if temp_bo[i, j] == 0:
             temp_bo[i, j] = 0.5
-        if temp_bo[j,k] == 0:
+        if temp_bo[j, k] == 0:
             temp_bo[j, k] = 0.5
         if temp_bo[k, l] == 0:
             temp_bo[k, l] = 0.5
@@ -307,41 +325,30 @@ def fill_ff(ff: ForceField, info: StructuralInformation, priorities: dict = None
     # Assemble ForceField DataFrames
     # =============================================================
 
-    ff.bonds = pd.DataFrame({
-        "type": "bonds",
-        "atoms": get_bond_atoms(A)
-    })
+    ff.bonds = pd.DataFrame({"type": "bonds", "atoms": get_bond_atoms(A)})
     ff.bonds["reference_value"] = ff.bonds["atoms"].apply(ref_bond)
     ff.bonds["parameter"] = ff.bonds["atoms"].apply(param_bond)
 
-    ff.angles = pd.DataFrame({
-        "type": "angles",
-        "atoms": get_angle_atoms(A)
-    })
+    ff.angles = pd.DataFrame({"type": "angles", "atoms": get_angle_atoms(A)})
     ff.angles["reference_value"] = ff.angles["atoms"].apply(ref_angle)
     ff.angles["parameter"] = ff.angles["atoms"].apply(param_angle)
 
-    ff.dihedrals = pd.DataFrame({
-        "type": "dihedrals",
-        "atoms": get_dihedral_atoms(A)
-    })
+    ff.dihedrals = pd.DataFrame({"type": "dihedrals", "atoms": get_dihedral_atoms(A)})
 
     if priorities is not None:
-        filtered_result = filter_dihedrals(ff.dihedrals["atoms"].tolist(), priorities, A)
+        filtered_result = filter_dihedrals(
+            ff.dihedrals["atoms"].tolist(), priorities, A
+        )
         filtered_result = _remove_duplicate_proper_dihedrals(filtered_result)
         atoms_list = [d[0] for d in filtered_result]
         is_proper = [d[1] for d in filtered_result]
-        ff.dihedrals = pd.DataFrame({
-            "type": "dihedrals",
-            "atoms": atoms_list,
-            "proper_dihedral": is_proper
-        })
+        logger.debug(f"The results are: {filtered_result}")
+        ff.dihedrals = pd.DataFrame(
+            {"type": "dihedrals", "atoms": atoms_list, "proper_dihedral": is_proper}
+        )
     ff.dihedrals["reference_value"] = ff.dihedrals["atoms"].apply(ref_dihedral)
     ff.dihedrals["parameter"] = ff.dihedrals["atoms"].apply(param_dihedral)
 
-    ff.repulsive = pd.DataFrame({
-        "type": "repulsive",
-        "atoms": get_repulsive_atoms(A)
-    })
+    ff.repulsive = pd.DataFrame({"type": "repulsive", "atoms": get_repulsive_atoms(A)})
     ff.repulsive["reference_value"] = ff.repulsive["atoms"].apply(ref_repulsive)
     ff.repulsive["parameter"] = ff.repulsive["atoms"].apply(param_repulsive)

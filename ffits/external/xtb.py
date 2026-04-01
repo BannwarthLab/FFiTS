@@ -13,7 +13,6 @@ from importlib import resources
 from typing import Tuple, List, Dict, Optional
 import numpy as np
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -21,14 +20,23 @@ class Xtb:
     """
     xTB program caller and wrapper, calculations are performed in temporary directories
     """
-    #TODO add lömi
 
-    def __init__(self, chrg: int, mult: int, xtb_alpb_solvent: str | None = None, xtb_input_name: str | None = None, xtb_path: str = 'xtb', temp_dir_manager: Optional[TempDirManager] = None) -> None:
+    # TODO add lömi
+
+    def __init__(
+        self,
+        chrg: int,
+        mult: int,
+        xtb_alpb_solvent: str | None = None,
+        xtb_input_name: str | None = None,
+        xtb_path: str = "xtb",
+        temp_dir_manager: Optional[TempDirManager] = None,
+    ) -> None:
         # If xtb_path not provided, try to find it
-        
+
         self.xtb_path = xtb_path
         self.chrg = chrg
-        self.uhf = mult - 1 # multiplicity = number of unpaired electrons + 1
+        self.uhf = mult - 1  # multiplicity = number of unpaired electrons + 1
         self.xtb_input_name = xtb_input_name
         self.xtb_alpb_solvent = xtb_alpb_solvent
         self.temp_dir_manager = temp_dir_manager
@@ -36,7 +44,9 @@ class Xtb:
         logger.info(f"xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
         logger.info(f"Using xTB executable: {self.xtb_path}")
         if self.xtb_alpb_solvent is not None:
-            logger.info(f"Using ALPB solvent model with solvent: {self.xtb_alpb_solvent}")
+            logger.info(
+                f"Using ALPB solvent model with solvent: {self.xtb_alpb_solvent}"
+            )
         if self.xtb_input_name is not None:
             logger.info(f"Using xTB input file: {self.xtb_input_name}")
 
@@ -76,16 +86,20 @@ class Xtb:
         )
         print(stderr.read_text())
         if result.returncode != 0:
-            raise RuntimeError(f"xTB command {command} failed with code {result.returncode}. See {stderr}")
+            raise RuntimeError(
+                f"xTB command {command} failed with code {result.returncode}. See {stderr}"
+            )
         return result.returncode
 
     def _get_command(self, input_xyz: Path, keyword: str) -> str:
         """Build xTB command string."""
         if self.xtb_alpb_solvent is not None:
-            keyword += f" --alpb {self.xtb_alpb_solvent}"   
+            keyword += f" --alpb {self.xtb_alpb_solvent}"
         if self.xtb_input_name is not None:
             keyword += f" --input {self.xtb_input_name}"
-        return f"{self.xtb_path} {input_xyz} --uhf {self.uhf} --chrg {self.chrg} {keyword}"
+        return (
+            f"{self.xtb_path} {input_xyz} --uhf {self.uhf} --chrg {self.chrg} {keyword}"
+        )
 
     # ------------------------------------------------------------------
     # --- CORE CALCULATIONS --------------------------------------------
@@ -103,7 +117,9 @@ class Xtb:
             shutil.copy(tmp / "xtb.out", f"{output_name}_singlepoint.out")
             return energy
 
-    def geomopt(self, input_xyz: str, output_filename: str, output_dir: str | None = None) -> Tuple[int, str, np.ndarray, List[str]]:
+    def geomopt(
+        self, input_xyz: str, output_filename: str, output_dir: str | None = None
+    ) -> Tuple[int, str, np.ndarray, List[str]]:
         """
         Run xTB geometry optimization and save optimized geometry.
         If output_dir is provided, save output there, otherwise use a temporary directory.
@@ -143,7 +159,9 @@ class Xtb:
                 self.temp_dir_manager.copy_temp_to_debug(tmp, step_name)
 
             (tmp / "xtbrestart").unlink(missing_ok=True)
-            logger.info(f'Geometry optimization of {input_xyz} to {output_filename} finished successfully.')
+            logger.info(
+                f"Geometry optimization of {input_xyz} to {output_filename} finished successfully."
+            )
 
             return readin_xyz(f"{output_filename}")
 
@@ -154,8 +172,8 @@ class Xtb:
         input:
             input_xyz: path to input geometry file (xyz format)
             output_filename: name of the hessian file to be saved
-            output_dir: optional directory to save all xtb output files 
-        returns: 
+            output_dir: optional directory to save all xtb output files
+        returns:
             parsed Hessian matrix as a numpy array
         """
         cwd = Path(input_xyz).parent
@@ -177,19 +195,23 @@ class Xtb:
                 step_name = f"xtb_hess_{Path(output_name).stem}"
                 self.temp_dir_manager.copy_temp_to_debug(tmp, step_name)
 
-            shutil.copy(hess_file, cwd / output_name) # copy hessian to original directory for later reading
-            logger.info(f'Hessian calculation for {input_xyz} finished successfully.')
+            shutil.copy(
+                hess_file, cwd / output_name
+            )  # copy hessian to original directory for later reading
+            logger.info(f"Hessian calculation for {input_xyz} finished successfully.")
             return read_xtb_hessian(f"{cwd / output_name}")
 
-    def wbocalc(self, input_xyz: str, output_name: str, output_dir: str | None = None)  -> Dict[Tuple[int, int], float]:
+    def wbocalc(
+        self, input_xyz: str, output_name: str, output_dir: str | None = None
+    ) -> Dict[Tuple[int, int], float]:
         """
         Run xTB geometry optimization and save optimized geometry.
         If output_dir is provided, save output there, otherwise use a temporary directory.
         input:
             input_xyz: path to input geometry file (xyz format)
             output_name: name of the WBO file to be saved
-            output_dir: optional directory to save all xtb output files 
-        returns: 
+            output_dir: optional directory to save all xtb output files
+        returns:
             parsed WBO data as a dictionary with keys as tuples of atom indices and values as WBOs
         """
         cwd = Path(input_xyz).parent
@@ -212,35 +234,47 @@ class Xtb:
             if not wbo_file.exists():
                 raise RuntimeError("No WBO file generated.")
             shutil.copy(wbo_file, cwd / output_name)
-            logger.info(f'WBO calculation for {input_xyz} finished successfully.')
+            logger.info(f"WBO calculation for {input_xyz} finished successfully.")
             return read_wbo_file(f"{output_name}")
-        
-    def geomopt_with_topology_check(self, input_xyz: str, output_basename: str, wbo_output_basename: str, threshold: float = 0.2) -> Tuple[str, Dict[Tuple[int, int], float]]:
+
+    def geomopt_with_topology_check(
+        self,
+        input_xyz: str,
+        output_basename: str,
+        wbo_output_basename: str,
+        threshold: float = 0.2,
+    ) -> Tuple[str, Dict[Tuple[int, int], float]]:
         """
         Perform geometry optimization and check if topology (WBOs) changed.
-        
+
         Args:
             input_xyz: path to input geometry file (xyz format)
             output_basename: path/basename for the optimized geometry file
             wbo_output_basename: path/basename for WBO output files
             threshold: threshold for WBO change to flag topology change
-            
+
         Returns:
             Tuple of (path to optimized xyz file, dictionary of final WBOs)
             If topology changes significantly, prints warning but still returns both values.
         """
         output_base_path = Path(output_basename)
         wbo_base_path = Path(wbo_output_basename)
-        
-        output_dir = output_base_path.parent if output_base_path.parent != Path(".") else Path(".")
-        wbo_dir = wbo_base_path.parent if wbo_base_path.parent != Path(".") else Path(".")
-        
+
+        output_dir = (
+            output_base_path.parent
+            if output_base_path.parent != Path(".")
+            else Path(".")
+        )
+        wbo_dir = (
+            wbo_base_path.parent if wbo_base_path.parent != Path(".") else Path(".")
+        )
+
         wbo_before_file = str(wbo_dir / f"before_{wbo_base_path.name}")
         wbo_before = self.wbocalc(input_xyz, wbo_before_file)
-        
+
         opt_filename = str(output_dir / f"opt_{output_base_path.name}")
         nat, comment, coordinates, atom_types = self.geomopt(input_xyz, opt_filename)
-        
+
         wbo_after_file = str(wbo_dir / f"after_{wbo_base_path.name}")
         wbo_after = self.wbocalc(opt_filename, wbo_after_file)
 
@@ -248,33 +282,39 @@ class Xtb:
         for bond, before_val in wbo_before.items():
             after_val = wbo_after.get(bond, 0.0)
             if abs(after_val - before_val) > threshold:
-                topology_changes.append(f"Bond {bond}: {before_val:.4f} -> {after_val:.4f} (change: {abs(after_val - before_val):.4f})")
-        
+                topology_changes.append(
+                    f"Bond {bond}: {before_val:.4f} -> {after_val:.4f} (change: {abs(after_val - before_val):.4f})"
+                )
+
         new_bonds = []
         for bond, after_val in wbo_after.items():
             if bond not in wbo_before:
                 new_bonds.append(f"Bond {bond}: formed with WBO {after_val:.4f}")
-        
+
         disappeared_bonds = []
         for bond, before_val in wbo_before.items():
             if bond not in wbo_after:
-                disappeared_bonds.append(f"Bond {bond}: disappeared (was {before_val:.4f})")
-        
+                disappeared_bonds.append(
+                    f"Bond {bond}: disappeared (was {before_val:.4f})"
+                )
+
         if topology_changes:
             print(wbo_after, wbo_before)
             for change in topology_changes:
-                print(f'[WARNING] Topology changed significantly during geometry optimization: {change}')
-        
+                print(
+                    f"[WARNING] Topology changed significantly during geometry optimization: {change}"
+                )
+
         if new_bonds:
-            print(f'[WARNING] New bonds formed during geometry optimization:')
+            print(f"[WARNING] New bonds formed during geometry optimization:")
             for bond in new_bonds:
-                print(f'  {bond}')
-        
+                print(f"  {bond}")
+
         if disappeared_bonds:
-            print(f'[WARNING] Bonds disappeared during geometry optimization:')
+            print(f"[WARNING] Bonds disappeared during geometry optimization:")
             for bond in disappeared_bonds:
-                print(f'  {bond}')
-        
+                print(f"  {bond}")
+
         return readin_xyz(opt_filename)
 
     # ------------------------------------------------------------------

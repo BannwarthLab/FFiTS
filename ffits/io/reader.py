@@ -19,12 +19,16 @@ def readin_xyz(xyz_path: str) -> Tuple[int, str, np.ndarray, List[str]]:
         lines = [line.strip() for line in file]  # skip empty lines
 
     if len(lines) < 2:
-        raise ValueError(f"Invalid XYZ file: {xyz_path}. Must contain at least 2 lines.")
+        raise ValueError(
+            f"Invalid XYZ file: {xyz_path}. Must contain at least 2 lines."
+        )
 
     try:
         nat = int(lines[0])
     except ValueError:
-        raise ValueError(f"First line of XYZ file must be an integer (number of atoms).")
+        raise ValueError(
+            f"First line of XYZ file must be an integer (number of atoms)."
+        )
     comment = lines[1]
     atom_lines = lines[2:]
     if len(atom_lines) != nat:
@@ -52,9 +56,9 @@ def readin_xyz(xyz_path: str) -> Tuple[int, str, np.ndarray, List[str]]:
 def read_wbo_file(wbo_path: str) -> Dict[Tuple[int, int], float]:
     """
     Reads xtb-style WBO (Wiberg Bond Order) data from a file and parses it into a dictionary.
-    
+
     Returns a dictionary where keys are tuples of atom indices (sorted) and values are WBOs.
-    
+
     Example line in file:
         1 2 0.95
     """
@@ -81,29 +85,34 @@ def read_wbo_file(wbo_path: str) -> Dict[Tuple[int, int], float]:
 
     return wbo_dict
 
+
 def read_xtb_hessian(file_path):
     """
-    Reads a Hessian matrix from the xtb output format 
+    Reads a Hessian matrix from the xtb output format
     """
-    
-    with open(file_path, 'r') as f:
+
+    with open(file_path, "r") as f:
         lines = f.readlines()
-    
-    data_lines = [line.strip() for line in lines if not line.lower().startswith("$hessian")]
-    
+
+    data_lines = [
+        line.strip() for line in lines if not line.lower().startswith("$hessian")
+    ]
+
     numbers = []
     for line in data_lines:
         if line:  # skip empty lines
             numbers.extend(map(float, line.split()))
-    
+
     total_values = len(numbers)
     dim = int(np.sqrt(total_values))
-    
+
     if dim * dim != total_values:
-        raise ValueError(f"The number of Hessian elements ({total_values}) does not form a square matrix.")
-    
+        raise ValueError(
+            f"The number of Hessian elements ({total_values}) does not form a square matrix."
+        )
+
     if dim % 3 != 0 or dim == 0:
         raise ValueError(f"The Hessian dimensions ({dim}x{dim}) is not divisible by 3.")
-    
+
     hessian = np.array(numbers).reshape((dim, dim))
     return hessian
