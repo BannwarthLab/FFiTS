@@ -2,6 +2,7 @@ import numpy as np
 from ffits.data.elements import atom_symbol_to_number
 from ffits.utils.geometry import angstrom2bohr
 
+# van der Waals radii in Angstroms for elements 1-86 (H to Rn) are taken from the program CREST
 VANDER_VALUES = np.array(
     [
         0.91,
@@ -103,9 +104,8 @@ def get_vander_matrix(at: np.ndarray, vander_values=VANDER_VALUES, factor=1):
         vander_values (np.ndarray): Reference van der Waals radii (length 86).
         factor (float): Scaling factor.
 
-    Returns
-    -------
-    vander_matrix : np.ndarray (nat x nat)
+    Returns:
+        vander_matrix (np.ndarray): The van der Waals interaction matrix (nat,nat).
     """
     # Convert atomic numbers to 0-based indices
     radii = np.array(

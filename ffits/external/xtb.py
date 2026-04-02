@@ -2,14 +2,12 @@
 
 import logging
 import subprocess
-import os
 from ffits.io.reader import read_wbo_file, read_xtb_hessian, readin_xyz
 from ffits.utils.temp_dir_manager import TempDirManager
 import subprocess
 import tempfile
 import shutil
 from pathlib import Path
-from importlib import resources
 from typing import Tuple, List, Dict, Optional
 import numpy as np
 
@@ -17,11 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class Xtb:
-    """
-    xTB program caller and wrapper, calculations are performed in temporary directories
-    """
-
-    # TODO add lömi
+    """Class to interface with program xtb"""
 
     def __init__(
         self,
@@ -32,6 +26,16 @@ class Xtb:
         xtb_path: str = "xtb",
         temp_dir_manager: Optional[TempDirManager] = None,
     ) -> None:
+        """_summary_
+
+        Args:
+            chrg (int): charge of the system
+            mult (int): multiplicity of the system
+            xtb_alpb_solvent (str | None, optional): _description_. Defaults to None.
+            xtb_input_name (str | None, optional): _description_. Defaults to None.
+            xtb_path (str, optional): _description_. Defaults to "xtb".
+            temp_dir_manager (Optional[TempDirManager], optional): _description_. Defaults to None.
+        """
         # If xtb_path not provided, try to find it
 
         self.xtb_path = xtb_path
@@ -48,7 +52,7 @@ class Xtb:
                 f"Using ALPB solvent model with solvent: {self.xtb_alpb_solvent}"
             )
         if self.xtb_input_name is not None:
-            logger.info(f"Using xTB input file: {self.xtb_input_name}")
+            logger.info(f"Using xtb input file: {self.xtb_input_name}")
 
     # ------------------------------------------------------------------
     # --- UTILITIES ----------------------------------------------------
@@ -56,12 +60,13 @@ class Xtb:
 
     def _check_xtb_loaded(self):
         """Check if xTB executable is available."""
-        result = subprocess.run(
-            [self.xtb_path, "--help"],
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode != 0:
+        try:
+            result = subprocess.run(
+                [self.xtb_path, "--help"],
+                capture_output=True,
+                text=True,
+            )
+        except (FileNotFoundError, PermissionError, OSError) as e:
             error_msg = (
                 f"xTB executable '{self.xtb_path}' not found or not working.\n"
                 f"Make sure xTB is installed and accessible.\n"
@@ -69,9 +74,9 @@ class Xtb:
                 f"  1. Load the module: module load xtb\n"
                 f"  2. Add xtb to PATH: export PATH=/path/to/xtb/bin:$PATH\n"
                 f"  3. Change variable [system] >> xtb_path in config file to the full path of the xtb executable\n"
-                f"Stderr: {result.stderr}"
+                f"Error: {e}"
             )
-            raise RuntimeError(error_msg)
+            raise RuntimeError(error_msg) from e
 
     def _run_xtb(self, command: str, cwd: Path):
         """Run an xTB command inside cwd and handle errors."""
@@ -299,21 +304,22 @@ class Xtb:
                 )
 
         if topology_changes:
-            print(wbo_after, wbo_before)
+            logger.debug(f"WBOs before optimization:\n{wbo_before}")
+            logger.debug(f"WBOs after optimization:\n{wbo_after}")
             for change in topology_changes:
-                print(
-                    f"[WARNING] Topology changed significantly during geometry optimization: {change}"
+                logger.warning(
+                    f"Significant topology change detected during geometry optimization: {change}"
                 )
 
         if new_bonds:
-            print(f"[WARNING] New bonds formed during geometry optimization:")
+            logger.warning(f"New bonds formed during geometry optimization:")
             for bond in new_bonds:
-                print(f"  {bond}")
+                logger.warning(f"  {bond}")
 
         if disappeared_bonds:
-            print(f"[WARNING] Bonds disappeared during geometry optimization:")
+            logger.warning(f"Bonds disappeared during geometry optimization:")
             for bond in disappeared_bonds:
-                print(f"  {bond}")
+                logger.warning(f"  {bond}")
 
         return readin_xyz(opt_filename)
 

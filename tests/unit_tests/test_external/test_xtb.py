@@ -345,7 +345,7 @@ class TestXtbTopologyCheck:
         assert coordinates.shape == (3, 3)
 
     def test_geomopt_with_topology_check_detects_warning(
-        self, change_to_tmp_path, capsys
+        self, change_to_tmp_path, caplog
     ):
         """Test that topology changes during optimization are detected and warned about."""
         strained_xyz = change_to_tmp_path / "strained.xyz"
@@ -354,6 +354,7 @@ class TestXtbTopologyCheck:
         )
 
         xtb = Xtb(chrg=0, mult=1)
+        caplog.set_level(logging.WARNING)
 
         result = xtb.geomopt_with_topology_check(
             str(strained_xyz), "strained_opt.xyz", "strained_wbo", threshold=0.1
@@ -362,19 +363,25 @@ class TestXtbTopologyCheck:
         nat, comment, coordinates, atom_types = result
         assert nat == 5, "Should have 5 atoms for SiH4"
 
-        captured = capsys.readouterr()
+        # Check for warning messages in captured logs
+        warning_messages = [
+            record.message for record in caplog.records if record.levelname == "WARNING"
+        ]
+        warning_text = " ".join(warning_messages)
 
-        has_wbo_changes = "[WARNING] Topology changed significantly" in captured.out
-        has_new_bonds = "[WARNING] New bonds formed" in captured.out
-        has_disappeared_bonds = "[WARNING] Bonds disappeared" in captured.out
+        has_wbo_changes = "Topology changed significantly" in warning_text
+        has_new_bonds = "New bonds formed" in warning_text
+        has_disappeared_bonds = "Bonds disappeared" in warning_text
 
         if has_wbo_changes or has_new_bonds or has_disappeared_bonds:
             if has_wbo_changes:
-                assert "Bond" in captured.out and "change:" in captured.out
+                assert any(
+                    "Bond" in msg and "change:" in msg for msg in warning_messages
+                )
             if has_new_bonds:
-                assert "formed with WBO" in captured.out
+                assert any("formed with WBO" in msg for msg in warning_messages)
             if has_disappeared_bonds:
-                assert "disappeared" in captured.out
+                assert any("disappeared" in msg for msg in warning_messages)
 
     def test_geomopt_with_topology_check_invalid_input(self, tmp_path):
         """Test geometry optimization with topology check using invalid geometry that causes xTB to fail."""

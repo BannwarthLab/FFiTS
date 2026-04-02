@@ -224,6 +224,9 @@ class StructuralInformation:
             self.complete_graph: nx.Graph = self._create_graph_from_wbo()
             self.seperate_molecule_list = self._split_in_subgraphs()
             self.molecule_count = len(self.seperate_molecule_list)
+            logger.info(
+                f"This structure has {self.molecule_count} seperate molecule(s) based on the WBO data and the defined bond order threshold of {self.bo_threshold}."
+            )
         self.vander_matrix: np.ndarray = get_vander_matrix(self.atom_types)
 
     def _create_bomatrix_from_wbo(self) -> np.ndarray:
@@ -244,6 +247,7 @@ class StructuralInformation:
                 raise Exception("Double entry is present in wbo file.")
             bo_matrix[i, j] = val
             bo_matrix[j, i] = val
+        logger.debug(f"Bond order matrix created from WBO dictionary:\n{bo_matrix}")
         return bo_matrix
 
     def scipy_optimizer_callback(self, xk: np.ndarray) -> None:
@@ -272,6 +276,9 @@ class StructuralInformation:
             G.add_node(node2)
             G.add_edge(node1, node2)
             nx.set_edge_attributes(G, {(node1, node2): {"bondorder": bo}})
+        logger.debug(
+            f"Graph created from WBO data with {G.number_of_nodes()} nodes and {G.number_of_edges()} edges."
+        )
         return G
 
     def _split_in_subgraphs(self):
@@ -287,6 +294,9 @@ class StructuralInformation:
             }
             nx.set_node_attributes(graph, nodes)
             # print(graph.nodes(data=True))
+        logger.debug(
+            f"Structure split into {len(S)} subgraph(s) based on connectivity."
+        )
         return S
 
 

@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import logging
 from ffits.datatype.structure_data import ForceField, StructuralInformation
 from molbar.utils.optimizer import optimize_geometry
 
@@ -7,6 +8,8 @@ from scipy.optimize import minimize
 from molbar.topology.priorities import _calculate_priorities
 from molbar.topology.topology import _get_topology_barcode
 from molbar.molecule.molecule import Molecule
+
+logger = logging.getLogger(__name__)
 
 
 def _define_bonds_for_molbar(
@@ -121,7 +124,9 @@ def failed_anc_opt(filename: str) -> bool:
         lines = f.readlines()
     for line in lines:
         if "Final gradient norm: nan" in line.strip():
-            print(f"[WARNING] ANC optimization failed.")
+            logger.warning(
+                f"ANC optimization failed due to NaN gradient. Check {filename} for details."
+            )
             return True
     return False
 
