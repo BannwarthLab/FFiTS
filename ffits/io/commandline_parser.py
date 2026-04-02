@@ -1,6 +1,9 @@
 import argparse
 import os
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def _get_version():
@@ -114,12 +117,12 @@ def parse_args():
             raise FileNotFoundError(f"Config file not found: {args.config}")
 
     if args.config is not None and args.multiplicity is not None:
-        print(
-            f"[WARNING] Multiplicity given in the input file differs from command line multiplicity."
+        logger.warning(
+            f"Multiplicity given in the input file differs from command line multiplicity."
         )
     if args.config is not None and args.charge is not None:
-        print(
-            f"[WARNING] Charge given in the input file differs from command line charge."
+        logger.warning(
+            f"Charge given in the input file differs from command line charge."
         )
 
     return {

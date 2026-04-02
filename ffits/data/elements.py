@@ -336,6 +336,18 @@ PERIODIC_TABLE = {
 
 # function from element symbol to atomic weight
 def element_to_weight(element: str) -> float:
+    """
+    Convert an element symbol to its atomic weight.
+
+    Args:
+        element (str): The element symbol.
+
+    Raises:
+        ValueError: If the element symbol is not found in the ELEMENTS_MASSES dictionary.
+
+    Returns:
+        weight (float): The atomic weight of the element.
+    """
     element = element.upper()
     if element in ELEMENTS_MASSES:
         return ELEMENTS_MASSES[element]
@@ -343,11 +355,20 @@ def element_to_weight(element: str) -> float:
         raise ValueError(f"Element '{element}' not found in ELEMENTS_MASSES.")
 
 
-def atom_symbol_to_number(symbol: str) -> int:
+def atom_symbol_to_number(element: str) -> int:
     """
-    Convert an element symbol (e.g. 'C') to its atomic number (e.g. 6).
+    Convert an element symbol to its atomic number.
+
+    Args:
+        element (str): The element symbol.
+
+    Raises:
+        ValueError: If the element symbol is not found in the PERIODIC_TABLE dictionary.
+
+    Returns:
+        int: The atomic number of the element.
     """
     try:
-        return PERIODIC_TABLE[symbol.capitalize()]
+        return PERIODIC_TABLE[element.capitalize()]
     except KeyError:
-        raise ValueError(f"Unknown atom symbol: {symbol}")
+        raise ValueError(f"Unknown atom symbol: {element}")
