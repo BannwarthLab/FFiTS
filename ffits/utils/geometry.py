@@ -1,6 +1,22 @@
 import numpy as np
 
 
+def convert_xyz_to_fortranstyle(xyz: np.ndarray) -> np.ndarray:
+    """
+    Converts xyz to column-major.
+    """
+    return np.asarray(xyz, dtype=float, order="F").T
+
+
+def angstrom2bohr(val: float | np.ndarray):
+    """
+    Convert a value or array from Angstroms to Bohr.
+    """
+    if type(val) == np.array:
+        return np.divide(val, 1 / 1.8897259)
+    return val / (1 / 1.8897259)
+
+
 def bondlength(geometry: np.array, atom1: int, atom2: int):
     """
     Returns bond length between atom1 and atom2.

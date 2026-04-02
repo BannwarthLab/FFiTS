@@ -8,71 +8,16 @@ import os
 import pandas as pd
 import re
 from collections.abc import Callable
-from ffits.data.vanderwaals_radii import VANDER_VALUES
-from ffits.data.elements import PERIODIC_TABLE
+from ffits.data.vanderwaals_radii import get_vander_matrix
+from ffits.utils.geometry import angstrom2bohr, convert_xyz_to_fortranstyle
 
 logger = logging.getLogger(__name__)
-
-
-def convert_xyz_to_fortranstyle(nat: int, xyz: np.ndarray) -> np.ndarray:
-    """
-    Converts xyz to column-major.
-    """
-    return np.asarray(xyz, dtype=float, order="F").T
-
-
-def angstrom2bohr(val: float | np.ndarray):
-    """
-    Convert a value or array from Angstroms to Bohr.
-    """
-    if type(val) == np.array:
-        return np.divide(val, 1 / 1.8897259)
-    return val / (1 / 1.8897259)
-
-
-def atom_symbol_to_number(symbol: str) -> int:
-    """
-    Convert an element symbol (e.g. 'C') to its atomic number (e.g. 6).
-    """
-    try:
-        return PERIODIC_TABLE[symbol.capitalize()]
-    except KeyError:
-        raise ValueError(f"Unknown atom symbol: {symbol}")
-
-
-def get_vander_matrix(at: np.ndarray, vander_values=VANDER_VALUES, factor=1.8897259):
-    """
-    Build van der Waals interaction matrix.
-
-    Parameters
-    ----------
-    nat : int
-        Number of atoms.
-    at : array-like of str
-    vander_values : np.ndarray
-        Reference van der Waals radii (length 86).
-    factor : float
-        Scaling factor.
-
-    Returns
-    -------
-    vander_matrix : np.ndarray (nat x nat)
-    """
-    # Convert atomic numbers to 0-based indices
-    radii = np.array(
-        [vander_values[atom_symbol_to_number(sym) - 1] * factor for sym in at]
-    )
-
-    # Build the full symmetric matrix (outer sum)
-    vander_matrix = radii[:, None] + radii[None, :]
-
-    return vander_matrix
 
 
 @dataclass
 class StructurePath:
     """
-    Paths/Filenames and ID for a given structure.
+    Paths/Filenames for a given structure.
     """
 
     xyz_filename: str
@@ -122,7 +67,7 @@ class ForceField:
         """
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.energy_calculator(
-                angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)),
+                angstrom2bohr(convert_xyz_to_fortranstyle(xyz_displaced)),
                 self,
             )
         if len(xyz_displaced) == self.nat * 3:
@@ -143,7 +88,7 @@ class ForceField:
         """
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.gradient_calculator(
-                angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)),
+                angstrom2bohr(convert_xyz_to_fortranstyle(xyz_displaced)),
                 self,
             )
         if len(xyz_displaced) == self.nat * 3:
@@ -164,7 +109,7 @@ class ForceField:
         """
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.hessian_calculator(
-                angstrom2bohr(convert_xyz_to_fortranstyle(self.nat, xyz_displaced)),
+                angstrom2bohr(convert_xyz_to_fortranstyle(xyz_displaced)),
                 self,
             )
         if len(xyz_displaced) == self.nat * 3:
@@ -261,16 +206,12 @@ class StructuralInformation:
         if self.wbo != {}:
             self.bo_matrix: np.ndarray = self.create_bomatrix_from_wbo()
             self.fortran_xyz: np.ndarray = angstrom2bohr(
-                self.convert_xyz_to_fortranstyle(self.xyz)
+                convert_xyz_to_fortranstyle(self.xyz)
             )
             self.complete_graph: nx.Graph = self.create_graph_from_wbo()
             self.seperate_molecule_list = self.split_in_subgraphs()
             self.molecule_count = len(self.seperate_molecule_list)
         self.vander_matrix: np.ndarray = get_vander_matrix(self.atom_types)
-
-    def convert_xyz_to_fortranstyle(self, xyz) -> np.array:
-        """returns column major version of xyz"""
-        return np.asarray(xyz, dtype=float, order="F").T
 
     def create_bomatrix_from_wbo(self) -> np.ndarray:
         bo_matrix = np.zeros((self.nat, self.nat))

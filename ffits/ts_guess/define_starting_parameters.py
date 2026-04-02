@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from ffits.datatype.structure_data import StructuralInformation, ForceField
-from ffits.utils.geometry_calc import angle, bondlength, dihedral_angle
+from ffits.utils.geometry import angle, bondlength, dihedral_angle
 import logging
 
 logger = logging.getLogger(__name__)
