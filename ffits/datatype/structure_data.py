@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class StructurePath:
     """
-    Paths/Filenames for a given structure.
+    Paths/Filenames for a given structure. This class mirrors PathData.
     """
 
     xyz_filename: str
@@ -52,8 +52,7 @@ class ForceField:
         self.energy_calculator = energy_calculator
         self.gradient_calculator = gradient_calculator
         self.hessian_calculator = hessian_calculator
-        ## only relevant for TS FF
-        self.start_from_reactant: bool = True
+        self.start_from_reactant: bool = True # only relevant for TS FF
 
     def get_energy(self, xyz_displaced: np.ndarray) -> float:
         """

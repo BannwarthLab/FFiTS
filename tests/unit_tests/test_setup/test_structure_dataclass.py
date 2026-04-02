@@ -10,13 +10,12 @@ from ffits.datatype.structure_data import (
     StructurePath,
     ForceField,
     StructuralInformation,
-    Structure,
-    get_vander_matrix,
-    atom_symbol_to_number,
-    angstrom2bohr,
-    convert_xyz_to_fortranstyle,
+    Structure
 )
 from ffits.io.reader import readin_xyz, read_wbo_file
+from ffits.data.vanderwaals_radii import get_vander_matrix
+from ffits.data.elements import atom_symbol_to_number
+from ffits.utils.geometry import angstrom2bohr, convert_xyz_to_fortranstyle
 
 import numpy as np
 
