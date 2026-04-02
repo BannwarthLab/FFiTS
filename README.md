@@ -1,4 +1,6 @@
-FFiTS
+![FFiTS logo](logo.png)
+
+# FFiTS
 ==============
 
 ***Force Field-interpolated Transition States***
