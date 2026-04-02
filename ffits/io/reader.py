@@ -2,21 +2,37 @@ from __future__ import annotations
 import os
 import numpy as np
 from typing import Tuple, List, Dict
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def readin_xyz(xyz_path: str) -> Tuple[int, str, np.ndarray, List[str]]:
     """
-    Reads an XYZ file and returns:
-    - number of atoms
-    - comment line
-    - coordinates as a NumPy array of shape (N, 3)
-    - list of atom types
+    Reads an XYZ file and returns the number of atoms, comment line, coordinates, and atom types. It is assumed that the XYZ file follows the standard format where the first line contains the number of atoms, the second line is a comment, and the subsequent lines contain the atom type followed by x, y, z coordinates, given in Angström.
+
+    Args:
+        xyz_path (str): path to xyz file
+
+    Raises:
+        FileNotFoundError: xyz_path does not exist
+        ValueError: xyz_path is invalid
+        ValueError: xyz_path contains invalid data
+        ValueError: xyz_path has mismatched atom count
+        ValueError: xyz_path has malformed lines
+        ValueError: xyz_path has invalid numeric values
+
+    Returns:
+        Tuple[int, str, np.ndarray, List[str]]: nat, comment, coordinates , atom types
     """
     if not os.path.isfile(xyz_path):
         raise FileNotFoundError(f"XYZ file not found: {xyz_path}")
 
     with open(xyz_path, "r", encoding="utf-8") as file:
-        lines = [line.strip() for line in file]  # skip empty lines
+        lines = [line.strip() for line in file]
+
+    while lines and not lines[-1]:
+        lines.pop()
 
     if len(lines) < 2:
         raise ValueError(

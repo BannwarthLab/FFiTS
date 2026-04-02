@@ -113,6 +113,29 @@ H -2.351 4.357 0.516
             assert len(atoms) == 7
             assert coords.shape == (7, 3)
 
+    def test_readin_emptylastline(self, tmp_path):
+        """Test reading a larger molecule."""
+        xyz_content = """7
+Ethanol-like
+C -2.333 3.312 0.201
+C -0.916 2.859 -0.043
+O  0.063 3.559 0.089
+H -2.926 3.184 -0.713
+H -2.797 2.680 0.968
+H -0.815 1.797 -0.367
+H -2.351 4.357 0.516
+
+"""
+        with TemporaryDirectory() as tmpdir:
+            file_path = os.path.join(tmpdir, "ethanol.xyz")
+            write_file(file_path, xyz_content)
+
+            nat, comment, coords, atoms = readin_xyz(file_path)
+
+            assert nat == 7
+            assert len(atoms) == 7
+            assert coords.shape == (7, 3)
+
 
 # ============================================================================
 # WBO READER TESTS

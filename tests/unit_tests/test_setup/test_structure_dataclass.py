@@ -10,7 +10,7 @@ from ffits.datatype.structure_data import (
     StructurePath,
     ForceField,
     StructuralInformation,
-    Structure
+    Structure,
 )
 from ffits.io.reader import readin_xyz, read_wbo_file
 from ffits.data.vanderwaals_radii import get_vander_matrix
