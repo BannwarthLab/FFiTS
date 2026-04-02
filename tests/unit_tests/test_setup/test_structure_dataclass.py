@@ -85,7 +85,7 @@ class TestAtomConversionFunctions:
     def test_convert_xyz_to_fortranstyle(self):
         """Test XYZ to Fortran-style column-major conversion."""
         xyz = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-        result = convert_xyz_to_fortranstyle(2, xyz)
+        result = convert_xyz_to_fortranstyle(xyz)
         expected = np.array([[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]], order="F")
         np.testing.assert_array_almost_equal(result, expected)
 

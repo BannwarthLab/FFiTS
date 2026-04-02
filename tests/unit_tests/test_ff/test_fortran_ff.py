@@ -8,7 +8,7 @@ from ffits.datatype.structure_data import (
     angstrom2bohr,
     convert_xyz_to_fortranstyle,
 )
-from ffits.utils.geometry_calc import bondlength
+from ffits.utils.geometry import bondlength
 from ffits.io.reader import readin_xyz
 import scipy as sc
 import numpy as np
@@ -135,7 +135,7 @@ def test_numerical_gradient():
     _, _, xyz_start, _ = readin_xyz(path2)
     analytical_gradient = ff.get_gradient(xyz_start)
     num_gradient = numerical_gradient(
-        angstrom2bohr(convert_xyz_to_fortranstyle(ff.nat, xyz_start)), ff
+        angstrom2bohr(convert_xyz_to_fortranstyle(xyz_start)), ff
     )
     np.testing.assert_allclose(analytical_gradient, num_gradient, rtol=1e-6)
 
@@ -155,7 +155,7 @@ def test_numerical_hessian():
         hessian_calculator=complete_hessian,
     )
     _, _, xyz_start, _ = readin_xyz(path2)
-    xyz = angstrom2bohr(convert_xyz_to_fortranstyle(7, xyz_start))
+    xyz = angstrom2bohr(convert_xyz_to_fortranstyle(xyz_start))
     analytical_hessian = ff.get_hessian(xyz)
     num_hessian = numerical_hessian(7, ff.get_energy, xyz, delta=1e-4)
     for i in range(21):

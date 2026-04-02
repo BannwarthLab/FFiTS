@@ -82,7 +82,7 @@ def read_wbo_file(wbo_path: str) -> Dict[Tuple[int, int], float]:
                 wbo_value = float(parts[2])
             except ValueError:
                 raise ValueError(f"Invalid numeric values in line: '{line.strip()}'")
-            bond = tuple(sorted((atom1-1, atom2-1)))
+            bond = tuple(sorted((atom1 - 1, atom2 - 1)))
             wbo_dict[bond] = wbo_value
 
     return wbo_dict

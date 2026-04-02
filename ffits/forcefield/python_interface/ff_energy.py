@@ -1,6 +1,6 @@
 import ffits.forcefield.python_interface.fortran_bindings as fb
 from ffits.datatype.structure_data import ForceField
-from ffits.utils.geometry_calc import angle, bondlength, dihedral_angle
+from ffits.utils.geometry import angle, bondlength, dihedral_angle
 import numpy as np
 
 

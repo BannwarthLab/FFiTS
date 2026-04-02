@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 import pandas as pd
-from ffits.utils.geometry_calc import bondlength, angle, dihedral_angle
+from ffits.utils.geometry import bondlength, angle, dihedral_angle
 from ffits.datatype.structure_data import ForceField, StructuralInformation
 from ffits.datatype.calculation_data import CalculationData
 from ffits.utils.wbo_analysis import compare_wbo_differences
