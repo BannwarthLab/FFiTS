@@ -284,10 +284,25 @@ class TestStructuralInformation:
             xyz=np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]], dtype=float),
             wbo_dict=wbo_with_low,
             atom_types=np.array(["C", "C", "C"]),
+            bo_threshold=0.1,
         )
         graph = info.complete_graph
-        # Only the strong bond should appear
         assert graph.number_of_edges() == 1
+
+    def test_structuralinfo_create_graph_no_bo_threshold(self):
+        """Test that bonds with very low WBO are excluded from graph."""
+        wbo_with_low = {
+            (0, 1): 1.0,  # Strong bond
+            (1, 2): 0.05,  # Very weak bond (below threshold)
+        }
+        info = StructuralInformation(
+            nat=3,
+            xyz=np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]], dtype=float),
+            wbo_dict=wbo_with_low,
+            atom_types=np.array(["C", "C", "C"]),
+        )
+        graph = info.complete_graph
+        assert graph.number_of_edges() == 2
 
 
 class TestStructure:

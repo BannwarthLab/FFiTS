@@ -109,7 +109,10 @@ def get_vander_matrix(at: np.ndarray, vander_values=VANDER_VALUES, factor=1):
     """
     # Convert atomic numbers to 0-based indices
     radii = np.array(
-        [angstrom2bohr(vander_values[atom_symbol_to_number(sym) - 1]) * factor for sym in at]
+        [
+            angstrom2bohr(vander_values[atom_symbol_to_number(sym) - 1]) * factor
+            for sym in at
+        ]
     )
 
     # Build the full symmetric matrix (outer sum)

@@ -136,6 +136,9 @@ class ForceField:
     def readin(self, filename: str):
         """
         Reads a force field csv file and fills defines the ForceField object accordingly.
+
+        Args:
+            filename (str): path to the force field csv file. The file should have columns atoms, parameter, reference_value and type, where type can be bonds, angles, dihedrals or repulsive. The atoms column should contain a tuple of 0-based atom indices, which are involved in the corresponding term. For example, for a bond between atom 0 and 1, the atoms column should contain (0,1).
         """
         try:
 
@@ -176,7 +179,7 @@ class ForceField:
 
 class StructuralInformation:
     """
-    Information on the given structure.
+    Structural information on the given structure.
     """
 
     def __init__(
@@ -186,6 +189,7 @@ class StructuralInformation:
         wbo_dict: dict,
         atom_types: np.ndarray,
         hessian: np.ndarray = None,
+        bo_threshold: float = 0.0,
     ):
         """
         Initialization of StructuralInformation object
@@ -196,16 +200,22 @@ class StructuralInformation:
             wbo_dict (dict): Dictionary (atom1, atom2: wbo_value) with 0-based atom indices
             atom_types (np.ndarray): array of element symbols for each atom
             hessian (np.ndarray, optional): Hessian of structure. Defaults to None.
+            bo_threshold (float, optional): Threshold for bond order to consider a bond as existing. Defaults to 0.0.
 
-        Creates:
+        Attributes:
             bo_matrix (np.ndarray): bond order matrix derived from wbo_dict
             fortran_xyz (np.ndarray): coordinates in fortran style (shape (3, nat)) and bohr units
+            complete_graph (nx.Graph): graph with atoms as nodes and bonds as edges, where bond order is an edge attribute
+            seperate_molecule_list (list of nx.Graph): list of seperate graphs for each molecule in the structure
+            molecule_count (int): number of seperate molecules in the structure
+            vander_matrix (np.ndarray): van der Waals matrix of shape (nat, nat)
         """
         self.nat = nat
         self.wbo = wbo_dict
         self.xyz = xyz
         self.atom_types = atom_types
         self.hessian: np.ndarray = hessian
+        self.bo_threshold = bo_threshold
         if self.wbo != {}:
             self.bo_matrix: np.ndarray = self._create_bomatrix_from_wbo()
             self.fortran_xyz: np.ndarray = angstrom2bohr(
@@ -218,13 +228,13 @@ class StructuralInformation:
 
     def _create_bomatrix_from_wbo(self) -> np.ndarray:
         """
-        Creates bond order matrix from wbo dictionary. The wbo dictionary has keys as tuples of atom indices (0-based) and values as the corresponding WBOs. 
+        Creates bond order matrix from wbo dictionary. The wbo dictionary has keys as tuples of atom indices (0-based) and values as the corresponding WBOs.
 
         Raises:
             Exception: Double entry in wbo dictionary (i.e., if the same bond is defined more than once).
 
         Returns:
-            np.ndarray: bond order matrix of shape (nat, nat) where element (i, j) is the WBO between atoms i and j, and 0 if no bond is defined. 
+            np.ndarray: bond order matrix of shape (nat, nat) where element (i, j) is the WBO between atoms i and j, and 0 if no bond is defined.
         """
         bo_matrix = np.zeros((self.nat, self.nat))
         for atoms, val in self.wbo.items():
@@ -256,7 +266,7 @@ class StructuralInformation:
         G = nx.Graph()
         for node1, node2 in self.wbo:
             bo = self.wbo[(node1, node2)]
-            if bo < 0.1:
+            if bo < self.bo_threshold:
                 continue
             G.add_node(node1)
             G.add_node(node2)
@@ -266,7 +276,7 @@ class StructuralInformation:
 
     def _split_in_subgraphs(self):
         """
-        creates list of seperate networkx Graph objects, which correspond to subgraphs of self.complete_graph, meaning not connected by edges, thus seperate molecules in a structure.
+        Creates list of seperate networkx Graph objects, which correspond to subgraphs of self.complete_graph, meaning not connected by edges, thus seperate molecules in a structure.
         """
         G = self.complete_graph
         S = [G.subgraph(c).copy() for c in nx.connected_components(G)]
