@@ -1,4 +1,8 @@
-![FFiTS logo](logo.png)
+<div align="center">
+<img src="logo.png" alt="logo" width="400" />
+</div>
+
+
 
 # FFiTS
 ==============
