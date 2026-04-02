@@ -132,7 +132,7 @@ class TestWboReader:
             write_file(file_path, content)
 
             result = read_wbo_file(file_path)
-            expected = {(1, 2): 0.95, (2, 3): 1.12}
+            expected = {(0, 1): 0.95, (1, 2): 1.12}
 
             assert result == expected
 
@@ -148,7 +148,7 @@ class TestWboReader:
             write_file(file_path, content)
 
             result = read_wbo_file(file_path)
-            expected = {(1, 2): 0.95, (2, 3): 1.12}
+            expected = {(0, 1): 0.95, (1, 2): 1.12}
 
             assert result == expected
 
@@ -211,8 +211,8 @@ bad line
             result = read_wbo_file(file_path)
 
             assert len(result) == 6
-            assert result[(1, 2)] == 1.027
-            assert result[(2, 3)] == 1.928
+            assert result[(0, 1)] == 1.027
+            assert result[(1, 2)] == 1.928
 
 
 # ============================================================================

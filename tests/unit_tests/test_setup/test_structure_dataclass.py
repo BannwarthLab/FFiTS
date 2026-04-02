@@ -34,12 +34,12 @@ XYZ = np.array(
 )
 
 WBO = {
-    (1, 2): 1.02668632226515,
-    (2, 3): 1.92755303185758,
-    (1, 4): 0.955689824153634,
-    (1, 5): 0.955863695522291,
-    (2, 6): 0.933812077856736,
-    (1, 7): 0.982636418257069,
+    (0, 1): 1.02668632226515,
+    (1, 2): 1.92755303185758,
+    (0, 3): 0.955689824153634,
+    (0, 4): 0.955863695522291,
+    (1, 5): 0.933812077856736,
+    (0, 6): 0.982636418257069,
 }
 
 ATOM_TYPES = ["C", "C", "O", "H", "H", "H", "H"]
@@ -244,8 +244,8 @@ class TestStructuralInformation:
         assert bo_matrix.shape == (NAT, NAT)
         np.testing.assert_array_equal(bo_matrix, bo_matrix.T)
 
-        assert bo_matrix[0, 1] == WBO[(1, 2)]
-        assert bo_matrix[1, 2] == WBO[(2, 3)]
+        assert bo_matrix[0, 1] == WBO[(0, 1)]
+        assert bo_matrix[1, 2] == WBO[(1, 2)]
 
     def test_structural_information_fortran_xyz(self, structural_info):
         """Test Fortran-style XYZ coordinates."""
@@ -274,17 +274,11 @@ class TestStructuralInformation:
         bo_matrix = structural_info.bo_matrix
         np.testing.assert_array_equal(bo_matrix, bo_matrix.T)
 
-    def test_structuralinfo_angstrom2bohr_method(self, structural_info):
-        """Test angstrom to bohr conversion method."""
-        result = structural_info.angstrom2bohr(1.0)
-        assert isinstance(result, (float, np.ndarray))
-        assert result > 0
-
     def test_structuralinfo_create_graph_low_bo_threshold(self):
         """Test that bonds with very low WBO are excluded from graph."""
         wbo_with_low = {
-            (1, 2): 1.0,  # Strong bond
-            (2, 3): 0.05,  # Very weak bond (below threshold)
+            (0, 1): 1.0,  # Strong bond
+            (1, 2): 0.05,  # Very weak bond (below threshold)
         }
         info = StructuralInformation(
             nat=3,
@@ -419,8 +413,8 @@ class TestStructuralInformationGraphOperations:
         """Test separation of multiple molecules."""
         # Create WBO for two separate molecules (no connection)
         wbo_separate = {
-            (1, 2): 1.0,  # Molecule 1
-            (4, 5): 1.0,  # Molecule 2
+            (0, 1): 1.0,  # Molecule 1
+            (3, 4): 1.0,  # Molecule 2
         }
 
         info = StructuralInformation(

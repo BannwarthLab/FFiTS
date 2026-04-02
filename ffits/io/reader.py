@@ -59,6 +59,8 @@ def read_wbo_file(wbo_path: str) -> Dict[Tuple[int, int], float]:
 
     Returns a dictionary where keys are tuples of atom indices (sorted) and values are WBOs.
 
+    Atoms are directly converted to 0-based indexing when stored in the dictionary.
+
     Example line in file:
         1 2 0.95
     """
@@ -80,7 +82,7 @@ def read_wbo_file(wbo_path: str) -> Dict[Tuple[int, int], float]:
                 wbo_value = float(parts[2])
             except ValueError:
                 raise ValueError(f"Invalid numeric values in line: '{line.strip()}'")
-            bond = tuple(sorted((atom1, atom2)))
+            bond = tuple(sorted((atom1-1, atom2-1)))
             wbo_dict[bond] = wbo_value
 
     return wbo_dict

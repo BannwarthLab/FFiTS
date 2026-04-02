@@ -8,46 +8,11 @@ import os
 import pandas as pd
 import re
 from collections.abc import Callable
-
+from ffits.data.vanderwaals_radii import VANDER_VALUES
+from ffits.data.elements import PERIODIC_TABLE
 
 logger = logging.getLogger(__name__)
 
-
-VANDER_VALUES = np.array([
-0.91, 0.92, # H, He
-0.75, 1.28, 1.35, 1.32, 1.27, 1.22, 1.17, 1.13, # Li-Ne
-1.04, 1.24, 1.49, 1.56, 1.55, 1.53, 1.49, 1.45, # Na-Ar
-1.35, 1.34, # K, Ca
-1.42, 1.42, 1.42, 1.42, 1.42, # Sc-Zn
-1.42, 1.42, 1.42, 1.42, 1.42,
-1.50, 1.57, 1.60, 1.61, 1.59, 1.57, # Ga-Kr
-1.48, 1.46, # Rb, Sr
-1.49, 1.49, 1.49, 1.49, 1.49, # Y-Cd
-1.49, 1.49, 1.49, 1.49, 1.49,
-1.52, 1.64, 1.71, 1.72, 1.72, 1.71, # In-Xe
-2.00, 2.00,
-2.00, 2.00, 2.00, 2.00, 2.00, 2.00, 2.00, # La-Yb
-2.00, 2.00, 2.00, 2.00, 2.00, 2.00, 2.00,
-2.00, 2.00, 2.00, 2.00, 2.00, # Lu-Hg
-2.00, 2.00, 2.00, 2.00, 2.00,
-2.00, 2.00, 2.00, 2.00, 2.00, 2.00 # Tl-Rn
-])
-
-PERIODIC_TABLE = {
-    "H": 1,  "He": 2,
-    "Li": 3, "Be": 4, "B": 5,  "C": 6,  "N": 7,  "O": 8,  "F": 9,  "Ne": 10,
-    "Na": 11, "Mg": 12, "Al": 13, "Si": 14, "P": 15, "S": 16, "Cl": 17, "Ar": 18,
-    "K": 19, "Ca": 20, "Sc": 21, "Ti": 22, "V": 23, "Cr": 24, "Mn": 25, "Fe": 26,
-    "Co": 27, "Ni": 28, "Cu": 29, "Zn": 30, "Ga": 31, "Ge": 32, "As": 33, "Se": 34,
-    "Br": 35, "Kr": 36,
-    "Rb": 37, "Sr": 38, "Y": 39, "Zr": 40, "Nb": 41, "Mo": 42, "Tc": 43, "Ru": 44,
-    "Rh": 45, "Pd": 46, "Ag": 47, "Cd": 48, "In": 49, "Sn": 50, "Sb": 51, "Te": 52,
-    "I": 53, "Xe": 54,
-    "Cs": 55, "Ba": 56, "La": 57, "Ce": 58, "Pr": 59, "Nd": 60, "Pm": 61, "Sm": 62,
-    "Eu": 63, "Gd": 64, "Tb": 65, "Dy": 66, "Ho": 67, "Er": 68, "Tm": 69, "Yb": 70,
-    "Lu": 71, "Hf": 72, "Ta": 73, "W": 74, "Re": 75, "Os": 76, "Ir": 77, "Pt": 78,
-    "Au": 79, "Hg": 80, "Tl": 81, "Pb": 82, "Bi": 83, "Po": 84, "At": 85, "Rn": 86
-}
 
 def convert_xyz_to_fortranstyle(nat: int, xyz: np.ndarray) -> np.ndarray:
     """
@@ -272,10 +237,12 @@ class StructuralInformation:
     Variables:
         nat (int): number of atoms
         xyz (np.ndarray): coordinates in bohr
-        wbo (dict): Wilberg Bond Order as dictionary of bond pairs and corresponding WBO values
+        atom_types (np.ndarray): array of element symbols for each atom
+        wbo (dict): Wilberg Bond Order as dictionary of bond pairs (0-based) and corresponding WBO values
         complete_graph (nx.Graph): networkx Graph object with atoms as nodes and bond order larger than 0 as edges.
         seperate_molecule_list (list): List of subgraphs not connected by edges in complete_graph.
         molecule_count (int): number of separate molecules in structure.
+        vander_matrix (np.ndarray): matrix of sum of van der Waals radii for each atom pair.
     """
 
     def __init__(
@@ -293,7 +260,7 @@ class StructuralInformation:
         self.hessian: np.ndarray = hessian
         if self.wbo != {}:
             self.bo_matrix: np.ndarray = self.create_bomatrix_from_wbo()
-            self.fortran_xyz: np.ndarray = self.angstrom2bohr(
+            self.fortran_xyz: np.ndarray = angstrom2bohr(
                 self.convert_xyz_to_fortranstyle(self.xyz)
             )
             self.complete_graph: nx.Graph = self.create_graph_from_wbo()
@@ -305,20 +272,15 @@ class StructuralInformation:
         """returns column major version of xyz"""
         return np.asarray(xyz, dtype=float, order="F").T
 
-    def angstrom2bohr(self, val: float | np.ndarray):
-        if type(val) == np.array:
-            return np.divide(val, 1 / 1.8897259)
-        return val / (1 / 1.8897259)
-
     def create_bomatrix_from_wbo(self) -> np.ndarray:
         bo_matrix = np.zeros((self.nat, self.nat))
         for atoms, val in self.wbo.items():
             i = atoms[0]
             j = atoms[1]
-            if bo_matrix[i - 1, j - 1] != 0:
+            if bo_matrix[i, j] != 0:
                 raise Exception("Double entry is present in wbo file.")
-            bo_matrix[i - 1, j - 1] = val
-            bo_matrix[j - 1, i - 1] = val
+            bo_matrix[i, j] = val
+            bo_matrix[j, i] = val
         return bo_matrix
 
     def scipy_optimizer_callback(self, xk: np.ndarray) -> None:
