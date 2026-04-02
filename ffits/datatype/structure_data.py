@@ -52,7 +52,7 @@ class ForceField:
         self.energy_calculator = energy_calculator
         self.gradient_calculator = gradient_calculator
         self.hessian_calculator = hessian_calculator
-        self.start_from_reactant: bool = True # only relevant for TS FF
+        self.start_from_reactant: bool = True  # only relevant for TS FF
 
     def get_energy(self, xyz_displaced: np.ndarray) -> float:
         """
@@ -177,42 +177,55 @@ class ForceField:
 class StructuralInformation:
     """
     Information on the given structure.
-
-    Variables:
-        nat (int): number of atoms
-        xyz (np.ndarray): coordinates in bohr
-        atom_types (np.ndarray): array of element symbols for each atom
-        wbo (dict): Wilberg Bond Order as dictionary of bond pairs (0-based) and corresponding WBO values
-        complete_graph (nx.Graph): networkx Graph object with atoms as nodes and bond order larger than 0 as edges.
-        seperate_molecule_list (list): List of subgraphs not connected by edges in complete_graph.
-        molecule_count (int): number of separate molecules in structure.
-        vander_matrix (np.ndarray): matrix of sum of van der Waals radii for each atom pair.
     """
 
     def __init__(
         self,
         nat: int,
-        xyz: np.array,
+        xyz: np.ndarray,
         wbo_dict: dict,
-        atom_types: np.array,
+        atom_types: np.ndarray,
         hessian: np.ndarray = None,
     ):
+        """
+        Initialization of StructuralInformation object
+
+        Args:
+            nat (int): number of atoms
+            xyz (np.ndarray): coordinates in Angström in shape (nat, 3)
+            wbo_dict (dict): Dictionary (atom1, atom2: wbo_value) with 0-based atom indices
+            atom_types (np.ndarray): array of element symbols for each atom
+            hessian (np.ndarray, optional): Hessian of structure. Defaults to None.
+
+        Creates:
+            bo_matrix (np.ndarray): bond order matrix derived from wbo_dict
+            fortran_xyz (np.ndarray): coordinates in fortran style (shape (3, nat)) and bohr units
+        """
         self.nat = nat
         self.wbo = wbo_dict
         self.xyz = xyz
         self.atom_types = atom_types
         self.hessian: np.ndarray = hessian
         if self.wbo != {}:
-            self.bo_matrix: np.ndarray = self.create_bomatrix_from_wbo()
+            self.bo_matrix: np.ndarray = self._create_bomatrix_from_wbo()
             self.fortran_xyz: np.ndarray = angstrom2bohr(
                 convert_xyz_to_fortranstyle(self.xyz)
             )
-            self.complete_graph: nx.Graph = self.create_graph_from_wbo()
-            self.seperate_molecule_list = self.split_in_subgraphs()
+            self.complete_graph: nx.Graph = self._create_graph_from_wbo()
+            self.seperate_molecule_list = self._split_in_subgraphs()
             self.molecule_count = len(self.seperate_molecule_list)
         self.vander_matrix: np.ndarray = get_vander_matrix(self.atom_types)
 
-    def create_bomatrix_from_wbo(self) -> np.ndarray:
+    def _create_bomatrix_from_wbo(self) -> np.ndarray:
+        """
+        Creates bond order matrix from wbo dictionary. The wbo dictionary has keys as tuples of atom indices (0-based) and values as the corresponding WBOs. 
+
+        Raises:
+            Exception: Double entry in wbo dictionary (i.e., if the same bond is defined more than once).
+
+        Returns:
+            np.ndarray: bond order matrix of shape (nat, nat) where element (i, j) is the WBO between atoms i and j, and 0 if no bond is defined. 
+        """
         bo_matrix = np.zeros((self.nat, self.nat))
         for atoms, val in self.wbo.items():
             i = atoms[0]
@@ -236,7 +249,7 @@ class StructuralInformation:
             for e, c in zip(elements, coordinates):
                 f.write(f"{e} {c[0]:.6f} {c[1]:.6f} {c[2]:.6f}\n")
 
-    def create_graph_from_wbo(self) -> nx.Graph:
+    def _create_graph_from_wbo(self) -> nx.Graph:
         """
         creates networkx Graph object with atoms as nodes and bond order values larger then 0 as edges.
         """
@@ -251,7 +264,7 @@ class StructuralInformation:
             nx.set_edge_attributes(G, {(node1, node2): {"bondorder": bo}})
         return G
 
-    def split_in_subgraphs(self):
+    def _split_in_subgraphs(self):
         """
         creates list of seperate networkx Graph objects, which correspond to subgraphs of self.complete_graph, meaning not connected by edges, thus seperate molecules in a structure.
         """

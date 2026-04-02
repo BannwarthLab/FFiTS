@@ -1,5 +1,6 @@
 import numpy as np
 from ffits.data.elements import atom_symbol_to_number
+from ffits.utils.geometry import angstrom2bohr
 
 VANDER_VALUES = np.array(
     [
@@ -93,19 +94,14 @@ VANDER_VALUES = np.array(
 )
 
 
-def get_vander_matrix(at: np.ndarray, vander_values=VANDER_VALUES, factor=1.8897259):
+def get_vander_matrix(at: np.ndarray, vander_values=VANDER_VALUES, factor=1):
     """
-    Build van der Waals interaction matrix.
+    Build van der Waals interaction matrix. Automatically scales to bohr.
 
-    Parameters
-    ----------
-    nat : int
-        Number of atoms.
-    at : array-like of str
-    vander_values : np.ndarray
-        Reference van der Waals radii (length 86).
-    factor : float
-        Scaling factor.
+    Args:
+        at (np.ndarray): Array of atomic symbols (length nat).
+        vander_values (np.ndarray): Reference van der Waals radii (length 86).
+        factor (float): Scaling factor.
 
     Returns
     -------
@@ -113,7 +109,7 @@ def get_vander_matrix(at: np.ndarray, vander_values=VANDER_VALUES, factor=1.8897
     """
     # Convert atomic numbers to 0-based indices
     radii = np.array(
-        [vander_values[atom_symbol_to_number(sym) - 1] * factor for sym in at]
+        [angstrom2bohr(vander_values[atom_symbol_to_number(sym) - 1]) * factor for sym in at]
     )
 
     # Build the full symmetric matrix (outer sum)

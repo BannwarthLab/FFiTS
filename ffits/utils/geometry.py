@@ -13,8 +13,8 @@ def angstrom2bohr(val: float | np.ndarray):
     Convert a value or array from Angstroms to Bohr.
     """
     if type(val) == np.array:
-        return np.divide(val, 1 / 1.8897259)
-    return val / (1 / 1.8897259)
+        return np.multiply(val, 1.8897259)
+    return val * 1.8897259
 
 
 def bondlength(geometry: np.array, atom1: int, atom2: int):
