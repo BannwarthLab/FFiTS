@@ -82,6 +82,24 @@ def anc_optimizer(
     trajectory_filename: str = "trajectory.xyz",
     final_geometry_filename: str = "optimized.xyz",
 ):
+    """Optimization using the ANC optimizer from MolBar.
+
+    Args:
+        xyz_start (np.ndarray): starting geometry for the optimization, shape (nat, 3)
+        ff (ForceField): Force field with defined energy, gradient and hessian calculator
+        atom_types (np.ndarray): Array of atom types, shape (nat,)
+        e_tol (float, optional): Energy tolerance for convergence. Defaults to 1e-4.
+        x_tol (float, optional): Displacement tolerance for convergence. Defaults to 1e-3.
+        max_micro_steps (int, optional): Maximum number of micro-steps for each optimization iteration. Defaults to 1.
+        trajectory_filename (str, optional): Filename for the trajectory file. Defaults to "trajectory.xyz".
+        final_geometry_filename (str, optional): Filename for the final geometry file. Defaults to "optimized.xyz".
+
+    Raises:
+        Exception: Energy, gradient and hessian calculators need to be defined in the ForceField object when using the ANC optimization.
+
+    Returns:
+        _type_: _description_
+    """
     if ff.energy_calculator == None:
         raise Exception(
             "Function for energy calculation needs to be defined in FF object when using the ANC optimization."
@@ -119,7 +137,15 @@ def anc_optimizer(
     return converged, energy, final_geom, steps, time, message
 
 
-def failed_anc_opt(filename: str) -> bool:
+def failed_anc_opt(filename: str) -> bool: # TODO change this to just checking the message 
+    """Checks, whether the ANC optimization from the anc_optimizer function was successfull or not by checking its output
+
+    Args:
+        filename (str): filename of the output file of the ANC optimization
+
+    Returns:
+        bool: True, if the optimization failed due to NaN gradient, False otherwise
+    """
     with open(filename, "r") as f:
         lines = f.readlines()
     for line in lines:
@@ -135,6 +161,12 @@ def write_last_valid_xyz(
     trajectory_filename: str = "trajectory.xyz",
     final_geometry_filename: str = "optimized.xyz",
 ):
+    """Writes out the last valid geometry from the trajectory file of the ANC optimization to a separate file. 
+
+    Args:
+        trajectory_filename (str, optional): filename of the trajectory file. Defaults to "trajectory.xyz".
+        final_geometry_filename (str, optional): filename of the final geometry file, where the last valid geometry will be written. Defaults to "optimized.xyz".
+    """
     with open(trajectory_filename, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -153,6 +185,28 @@ def write_last_valid_xyz(
 def scipy_optimizer(
     xyz_start: np.ndarray, ff: ForceField, struc: StructuralInformation
 ):
+    """Geometry optimization using scipy
+
+    Args:
+        xyz_start (np.ndarray): starting geometry, shape (nat, 3)
+        ff (ForceField): Force field with defined energy, gradient and hessian calculator
+        struc (StructuralInformation): Structural information
+
+    Returns:
+        tuple: Optimization result
+    """
+    if ff.energy_calculator == None:
+        raise Exception(
+            "Function for energy calculation needs to be defined in FF object when using the ANC optimization."
+        )
+    if ff.gradient_calculator == None:
+        raise Exception(
+            "Function for gradient calculation needs to be defined in FF object when using the ANC optimization."
+        )
+    if ff.hessian_calculator == None:
+        raise Exception(
+            "Function for hessian calculation needs to be defined in FF object when using the ANC optimization."
+        )
     x0 = xyz_start.flatten()
 
     # Run scipy optimization
