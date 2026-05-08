@@ -174,6 +174,7 @@ class Xtb:
         """
         Run xTB hessian calculation and save hessian.
         If output_dir is provided, save output there, otherwise use a temporary directory.
+
         input:
             input_xyz: path to input geometry file (xyz format)
             output_filename: name of the hessian file to be saved
@@ -212,11 +213,13 @@ class Xtb:
         """
         Run xTB geometry optimization and save optimized geometry.
         If output_dir is provided, save output there, otherwise use a temporary directory.
-        input:
+        
+        Args:
             input_xyz: path to input geometry file (xyz format)
             output_name: name of the WBO file to be saved
             output_dir: optional directory to save all xtb output files
-        returns:
+
+        Returns:
             parsed WBO data as a dictionary with keys as tuples of atom indices and values as WBOs
         """
         cwd = Path(input_xyz).parent

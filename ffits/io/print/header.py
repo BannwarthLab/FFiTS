@@ -115,10 +115,12 @@ def print_program_header(version: str = None):
     print("-" * 70)
 
     # --- Reference / Citation Info TODO ---
-    citation = textwrap.dedent("""
+    citation = textwrap.dedent(
+        """
         If you use FFiTS in your work, please cite:
         [1] A future paper 
-    """).strip()
+    """
+    ).strip()
 
     print(citation)
     print("=" * 70 + "\n")
