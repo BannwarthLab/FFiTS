@@ -1,11 +1,7 @@
 import pytest
-import builtins
 from pathlib import Path
-import tempfile
 import os
 import numpy as np
-
-import ffits.io.reader as reader
 from ffits.external.xtb import Xtb  # adjust import to your actual module path
 import logging
 

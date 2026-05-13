@@ -1,5 +1,4 @@
 import os
-import numpy as np
 import copy
 import pandas as pd
 import pytest

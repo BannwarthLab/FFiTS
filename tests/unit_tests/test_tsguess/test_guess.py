@@ -1,21 +1,8 @@
 from ffits.ts_guess.guess import get_ts_guess
-
-from ffits.external.molbar import anc_optimizer
-from ffits.forcefield.python_interface.ff_energy import (
-    complete_gradient,
-    complete_hessian,
-)
 from ffits.datatype.structure_data import (
     ForceField,
-    StructuralInformation,
     Structure,
-    StructurePath,
 )
-from ffits.datatype.calculation_data import TSCalculationOptions
-from ffits.io.reader import read_wbo_file, read_xtb_hessian, readin_xyz
-from ffits.ts_guess.define_starting_parameters import fill_ff
-from ffits.forcefield.python_interface.ff_energy import ForceField, energy_ff
-from ffits.utils.temp_dir_manager import TempDirManager
 import numpy as np
 import pytest
 import os

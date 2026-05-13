@@ -1,14 +1,3 @@
-"""
-Unit tests for molecular geometry optimization using molbar library.
-
-This module tests two optimization methods:
-- ANC (Approximate Normal Coordinate) optimizer: Uses Hessian information and trust radius
-- SciPy optimizer: Uses Newton-CG method with gradient and Hessian
-
-Tests validate convergence behavior, energy reduction, coordinate validity,
-return value formats, and robustness to different starting geometries.
-"""
-
 import numpy as np
 import os
 import shutil

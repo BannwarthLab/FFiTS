@@ -4,8 +4,6 @@ import numpy as np
 import networkx as nx
 from tempfile import TemporaryDirectory
 from pathlib import Path
-import logging
-
 from ffits.datatype.structure_data import (
     StructurePath,
     ForceField,
@@ -17,7 +15,6 @@ from ffits.data.vanderwaals_radii import get_vander_matrix
 from ffits.data.elements import atom_symbol_to_number
 from ffits.utils.geometry import angstrom2bohr, convert_xyz_to_fortranstyle
 from tests.test_utils import NAT, XYZ, WBO, ATOM_TYPES
-import numpy as np
 
 
 class TestAtomConversionFunctions:
