@@ -1,4 +1,4 @@
-'Fortran Bindings for FF Gradient and Hessian Calculation. This module provides Python functions that serve as interfaces to the Fortran implementations of gradient and hessian calculations for bonds, angles, dihedrals and repulsive interactions in the force field. These functions take care of converting atom indices from zero-based to one-based format as required by the Fortran code and call the appropriate Fortran subroutines to perform the calculations, adding the results to the provided gradient and hessian arrays in place.'
+"Fortran Bindings for FF Gradient and Hessian Calculation. This module provides Python functions that serve as interfaces to the Fortran implementations of gradient and hessian calculations for bonds, angles, dihedrals and repulsive interactions in the force field. These functions take care of converting atom indices from zero-based to one-based format as required by the Fortran code and call the appropriate Fortran subroutines to perform the calculations, adding the results to the provided gradient and hessian arrays in place."
 
 import ffits.forcefield.fortran.fortran_forcefield as fortran_ff
 import numpy as np
@@ -86,7 +86,6 @@ def get_single_repulsive_gradient(
     c: float,
     gradient: np.ndarray,
 ):
-
     """Calculates the gradient for a single repulsive term on a given displaced geometry and adds it to the provided gradient array in place. The repulsive term is defined by the indices of the two atoms involved and the current distance. The gradient is calculated using the Fortran FF implementation.
 
     Args:
@@ -120,7 +119,7 @@ def get_single_bond_hessian(
         c (float): force constant
         hessian (np.ndarray): FF hessian array to which the calculated hessian will be added in place (shape: [nat*3, nat*3])
     """
-    
+
     bond_atoms_onebased = np.zeros(2)
     bond_atoms_onebased[0] = bond_atoms[0] + 1
     bond_atoms_onebased[1] = bond_atoms[1] + 1

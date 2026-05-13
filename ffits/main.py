@@ -13,7 +13,9 @@ from ffits.ts_guess.guess import get_ts_guess
 from ffits.io.print.config import print_calculation_data, print_header_setup
 from ffits.io.print.header import print_program_header
 from ffits.io.print.summary import print_run_summary
-from ffits.forcefield.python_interface.optimization import optimize_xyz_with_forcefield
+from ffits.forcefield.python_interface.optimization import (
+    optimize_with_forcefield_from_file,
+)
 from ffits.external.molbar import anc_optimizer, get_combinded_priorities
 import sys
 
@@ -33,12 +35,11 @@ def run_optimizer_mode(args, temp_dir_manager):
     )
     # print_calculation_data(calcdata)
 
-    optimize_xyz_with_forcefield(
+    optimize_with_forcefield_from_file(
         args["structures"][0],
         args["optff"],
-        calcdata.ts_calc,
-        anc_optimizer,
-        temp_dir_manager,
+        optimizer = anc_optimizer,
+        calcoptions = calcdata.ts_calc,
     )
     # read in FF and define energy terms
     # run optimizer as with calculation of TS guess through TS FF

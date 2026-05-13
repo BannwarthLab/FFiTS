@@ -137,7 +137,9 @@ def anc_optimizer(
     return converged, energy, final_geom, steps, time, message
 
 
-def failed_anc_opt(filename: str) -> bool: # TODO change this to just checking the message 
+def failed_anc_opt(
+    filename: str,
+) -> bool:  # TODO change this to just checking the message
     """Checks, whether the ANC optimization from the anc_optimizer function was successfull or not by checking its output
 
     Args:
@@ -161,7 +163,7 @@ def write_last_valid_xyz(
     trajectory_filename: str = "trajectory.xyz",
     final_geometry_filename: str = "optimized.xyz",
 ):
-    """Writes out the last valid geometry from the trajectory file of the ANC optimization to a separate file. 
+    """Writes out the last valid geometry from the trajectory file of the ANC optimization to a separate file.
 
     Args:
         trajectory_filename (str, optional): filename of the trajectory file. Defaults to "trajectory.xyz".
