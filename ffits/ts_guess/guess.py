@@ -35,7 +35,7 @@ def get_ts_guess(
             "No calculation data provided for TS guess generation. Using default values."
         )
         calcdata = CalculationData()
-        calcdata.ts_path.ff_filename = 'tsff.csv'
+        calcdata.ts_path.ff_filename = "tsff.csv"
 
     trajectory_filename: str = "trajectory.xyz"
     final_geometry_filename: str = "optimized.xyz"

@@ -45,8 +45,6 @@ def test_molecule_data():
 def test_optimize_with_forcefield_without_calcoptions(test_molecule_data):
     """Test that optimize_with_forcefield works without given calculation options."""
 
-   
-
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         converged, energy, final_geom = optimize_with_forcefield(

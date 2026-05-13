@@ -38,8 +38,8 @@ def run_optimizer_mode(args, temp_dir_manager):
     optimize_with_forcefield_from_file(
         args["structures"][0],
         args["optff"],
-        optimizer = anc_optimizer,
-        calcoptions = calcdata.ts_calc,
+        optimizer=anc_optimizer,
+        calcoptions=calcdata.ts_calc,
     )
     # read in FF and define energy terms
     # run optimizer as with calculation of TS guess through TS FF

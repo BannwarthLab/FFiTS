@@ -13,9 +13,7 @@ def _get_build_date():
     Get the build/installation date from the ffits package directory.
 
     Returns
-    -------
-    str
-        Build date as "YYYY-MM-DD HH:MM" based on package modification time.
+        (str): Build date as "YYYY-MM-DD HH:MM" based on package modification time.
     """
     try:
         # Get the ffits package directory
