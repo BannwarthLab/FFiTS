@@ -20,11 +20,12 @@ def energy_ff(xyz_displaced: np.ndarray, ff: ForceField) -> float:
     if np.shape(xyz_displaced) == (ff.nat, 3):
         raise Exception("Please give xyz in column-major format.")
 
-    if np.shape(xyz_displaced)[0] != ff.nat:
+    if np.shape(xyz_displaced)[1] != ff.nat:
+        print("HALLOOOO", np.shape(xyz_displaced))
         raise Exception(
-            f"Number of atoms in the geometry ({np.shape(xyz_displaced)[0]}) does not match the number of atoms in the force field ({ff.nat})."
+            f"Number of atoms in the geometry ({np.shape(xyz_displaced)[1]}) does not match the number of atoms in the force field ({ff.nat})."
         )
-    
+
     fact_bond = 1.0
     fact_ang = 1.0
     fact_dih = 1.0
@@ -166,7 +167,7 @@ def repulsive_gradient(xyz: np.array, ff: ForceField, gradient: np.ndarray) -> N
 
 
 def complete_gradient(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
-    """Calculates complete FF gradient of the given displaced geometry. 
+    """Calculates complete FF gradient of the given displaced geometry.
 
     Args:
         xyz_displaced (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -181,11 +182,11 @@ def complete_gradient(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
     if np.shape(xyz_displaced) == (ff.nat, 3):
         raise Exception("Please give xyz in column-major format.")
 
-    if np.shape(xyz_displaced)[0] != ff.nat:
+    if np.shape(xyz_displaced)[1] != ff.nat:
         raise Exception(
-            f"Number of atoms in the geometry ({np.shape(xyz_displaced)[0]}) does not match the number of atoms in the force field ({ff.nat})."
+            f"Number of atoms in the geometry ({np.shape(xyz_displaced)[1]}) does not match the number of atoms in the force field ({ff.nat})."
         )
-    
+
     gradient = np.zeros((ff.nat * 3), order="F")
 
     bond_gradient(xyz_displaced, ff, gradient)
@@ -271,7 +272,7 @@ def repulsive_hessian(xyz: np.array, ff: ForceField, hessian: np.ndarray) -> Non
 
 
 def complete_hessian(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
-    """Calculates complete FF hessian of the given displaced geometry. 
+    """Calculates complete FF hessian of the given displaced geometry.
 
     Args:
         xyz_displaced (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -286,11 +287,11 @@ def complete_hessian(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
     if np.shape(xyz_displaced) == (ff.nat, 3):
         raise Exception("Please give xyz in column-major format.")
 
-    if np.shape(xyz_displaced)[0] != ff.nat:
+    if np.shape(xyz_displaced)[1] != ff.nat:
         raise Exception(
-            f"Number of atoms in the geometry ({np.shape(xyz_displaced)[0]}) does not match the number of atoms in the force field ({ff.nat})."
+            f"Number of atoms in the geometry ({np.shape(xyz_displaced)[1]}) does not match the number of atoms in the force field ({ff.nat})."
         )
-    
+
     hessian = np.zeros((ff.nat * 3, ff.nat * 3), order="F")
 
     bond_hessian(xyz_displaced, ff, hessian)

@@ -213,7 +213,7 @@ class Xtb:
         """
         Run xTB geometry optimization and save optimized geometry.
         If output_dir is provided, save output there, otherwise use a temporary directory.
-        
+
         Args:
             input_xyz: path to input geometry file (xyz format)
             output_name: name of the WBO file to be saved

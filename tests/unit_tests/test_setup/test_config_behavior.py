@@ -15,12 +15,10 @@ class TestFFParameterizationBehavior:
     def test_fit_ff_receives_maxiteration_from_config(self):
         """Verify that ff_parameterization_maxiteration from config is passed to fit_ff_to_hessian."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.calculation]
 ff_parameterization_maxiteration = 2500
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -35,13 +33,11 @@ ff_parameterization_maxiteration = 2500
     def test_fit_ff_receives_stepsize_from_config(self):
         """Verify that ff_parameterization_stepsize from config is passed correctly."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [product.calculation]
 ff_parameterization_stepsize = 0.30
 ff_parameterization_threshold = 0.0002
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -56,15 +52,13 @@ ff_parameterization_threshold = 0.0002
     def test_constant_repulsion_flag_affects_behavior(self):
         """Verify that constant_repulsion flag can be toggled via config."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.calculation]
 ff_parameterization_constant_repulsion = false
 
 [product.calculation]
 ff_parameterization_constant_repulsion = true
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -87,12 +81,10 @@ class TestTSGuessOptimizerBehavior:
         """Verify that optimizer choice from config can switch between molbar and scipy."""
         # Test molbar-optimizer
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.calculation]
 optimizer = "molbar-optimizer"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -104,12 +96,10 @@ optimizer = "molbar-optimizer"
 
         # Test scipy-optimizer
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.calculation]
 optimizer = "scipy-optimizer"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -122,13 +112,11 @@ optimizer = "scipy-optimizer"
     def test_ts_factors_affect_ff_mixing(self):
         """Verify that factor_reactant and factor_product from config control FF mixing."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.calculation]
 factor_reactant = 0.3
 factor_product = 0.7
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -153,14 +141,12 @@ factor_product = 0.7
     def test_optimizer_tolerances_from_config(self):
         """Verify that molbar optimizer tolerances are loaded from config."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.calculation]
 molbar_optimizer_e_tol = 1e-5
 molbar_optimizer_x_tol = 1e-5
 molbar_optimizer_max_micro_steps = 10
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -177,13 +163,11 @@ molbar_optimizer_max_micro_steps = 10
     def test_two_optimizations_flag_affects_behavior(self):
         """Verify that perform_two_optimizations flag can be toggled."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.calculation]
 perform_two_optimizations = true
 energy_threshold_two_optimizations = 0.25
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -202,15 +186,13 @@ class TestCalculationFlagsAffectBehavior:
     def test_geometry_optimization_flag(self):
         """Verify geometry_optimization flag can be toggled in config."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.calculation]
 geometry_optimization = true
 
 [product.calculation]
 geometry_optimization = false
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -226,15 +208,13 @@ geometry_optimization = false
     def test_wbo_calculation_flag(self):
         """Verify wbo_calc flag controls whether WBO is calculated or read."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.calculation]
 wbo_calc = true
 
 [product.calculation]
 wbo_calc = false
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -251,15 +231,13 @@ wbo_calc = false
     def test_hessian_calculation_flag(self):
         """Verify hessian_calc flag controls whether Hessian is calculated or read."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.calculation]
 hessian_calc = false
 
 [product.calculation]
 hessian_calc = true
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -282,15 +260,13 @@ hessian_calc = true
     def test_ff_parameterization_flag(self):
         """Verify ff_parameterization flag controls whether FF is parameterized or read."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.calculation]
 ff_parameterization = true
 
 [product.calculation]
 ff_parameterization = false
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -307,15 +283,13 @@ ff_parameterization = false
     def test_test_parameterization_flag(self):
         """Verify test_parameterization flag controls validation step."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.calculation]
 test_parameterization = true
 
 [product.calculation]
 test_parameterization = false
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -334,12 +308,10 @@ class TestSystemParametersAffectBehavior:
     def test_system_charge_affects_calculations(self):
         """Verify that system charge from config is used in calculations."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [system]
 charge = -2
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -354,12 +326,10 @@ charge = -2
     def test_system_multiplicity_affects_calculations(self):
         """Verify that system multiplicity from config is used in calculations."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [system]
 multiplicity = 3
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -378,12 +348,10 @@ class TestFilenamesAffectBehavior:
     def test_reactant_wbo_filename_from_config(self):
         """Verify that reactant WBO filename from config is used."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.path]
 wbo_filename = "reactant_custom.wbo"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -397,12 +365,10 @@ wbo_filename = "reactant_custom.wbo"
     def test_product_wbo_filename_from_config(self):
         """Verify that product WBO filename from config is used."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [product.path]
 wbo_filename = "product_bonds.wbo"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -416,12 +382,10 @@ wbo_filename = "product_bonds.wbo"
     def test_reactant_hessian_filename_from_config(self):
         """Verify that reactant Hessian filename from config is used."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.path]
 hessian_filename = "reactant_hessian_matrix.hess"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -438,12 +402,10 @@ hessian_filename = "reactant_hessian_matrix.hess"
     def test_product_hessian_filename_from_config(self):
         """Verify that product Hessian filename from config is used."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [product.path]
 hessian_filename = "product.hess"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -457,12 +419,10 @@ hessian_filename = "product.hess"
     def test_reactant_forcefield_filename_from_config(self):
         """Verify that reactant force field filename from config is used."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.path]
 ff_filename = "reactant_force_field_params.csv"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -478,12 +438,10 @@ ff_filename = "reactant_force_field_params.csv"
     def test_product_forcefield_filename_from_config(self):
         """Verify that product force field filename from config is used."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [product.path]
 ff_filename = "product_ff.csv"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -497,12 +455,10 @@ ff_filename = "product_ff.csv"
     def test_ts_hessian_filename_from_config(self):
         """Verify that TS Hessian filename from config is used."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.path]
 hessian_filename = "ts_hessian.hess"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -516,12 +472,10 @@ hessian_filename = "ts_hessian.hess"
     def test_ts_forcefield_filename_from_config(self):
         """Verify that TS force field filename from config is used."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [ts_guess_calculation.path]
 ff_filename = "ts_forcefield.csv"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -535,8 +489,7 @@ ff_filename = "ts_forcefield.csv"
     def test_all_filenames_different(self):
         """Verify that different filenames can be used for different structures."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.path]
 wbo_filename = "reactant.wbo"
 hessian_filename = "reactant.hess"
@@ -550,8 +503,7 @@ ff_filename = "product_ff.csv"
 [ts_guess_calculation.path]
 hessian_filename = "ts.hess"
 ff_filename = "ts_ff.csv"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
@@ -577,8 +529,7 @@ ff_filename = "ts_ff.csv"
     def test_custom_directory_paths_in_filenames(self):
         """Verify that custom directory paths in filenames are preserved."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                """
+            f.write("""
 [reactant.path]
 wbo_filename = "data/reactants/bonds.wbo"
 hessian_filename = "data/reactants/hessian.hess"
@@ -588,8 +539,7 @@ ff_filename = "data/reactants/forcefield.csv"
 wbo_filename = "data/products/bonds.wbo"
 hessian_filename = "data/products/hessian.hess"
 ff_filename = "data/products/forcefield.csv"
-"""
-            )
+""")
             f.flush()
             temp_path = f.name
 
