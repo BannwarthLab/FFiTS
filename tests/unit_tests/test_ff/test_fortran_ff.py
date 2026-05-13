@@ -1,5 +1,4 @@
-from ffits.forcefield.python_interface.fortran_bindings import get_single_bond_gradient
-from ffits.forcefield.python_interface.ff_energy import *
+from ffits.forcefield.python_interface.ff_energy import (energy_ff, complete_gradient, complete_hessian)
 
 # from tests.component_tests.static_data import XYZ, WBO, ATOM_TYPES
 from ffits.datatype.structure_data import (
@@ -8,7 +7,6 @@ from ffits.datatype.structure_data import (
     angstrom2bohr,
     convert_xyz_to_fortranstyle,
 )
-from ffits.utils.geometry import bondlength
 from ffits.io.reader import readin_xyz
 import scipy as sc
 import numpy as np

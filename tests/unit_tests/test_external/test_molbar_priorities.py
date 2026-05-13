@@ -1,5 +1,4 @@
 import numpy as np
-from pathlib import Path
 import pytest
 from ffits.external.molbar import get_combinded_priorities, _define_bonds_for_molbar
 from molbar.molecule.molecule import Molecule

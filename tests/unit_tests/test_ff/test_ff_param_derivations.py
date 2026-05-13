@@ -3,8 +3,6 @@ import os
 from ffits.datatype.structure_data import (
     ForceField,
     StructuralInformation,
-    Structure,
-    StructurePath,
 )
 from ffits.ts_guess.parameterize_ff import (
     derivative_c_first_atomwise,

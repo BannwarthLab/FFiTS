@@ -6,14 +6,6 @@ Tests compare_wbo_differences and related functions.
 
 import pytest
 import numpy as np
-from pathlib import Path
-from ffits.io.reader import read_xtb_hessian, readin_xyz, read_wbo_file
-from ffits.datatype.structure_data import (
-    Structure,
-    StructurePath,
-    ForceField,
-    StructuralInformation,
-)
 from ffits.utils.wbo_analysis import (
     get_wbo_matrix_difference,
 )

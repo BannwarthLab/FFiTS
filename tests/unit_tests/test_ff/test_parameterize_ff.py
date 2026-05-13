@@ -9,9 +9,7 @@ Tests cover:
 """
 
 import numpy as np
-import os
 import pytest
-import copy
 from ffits.datatype.structure_data import ForceField, StructuralInformation
 from ffits.ts_guess.parameterize_ff import (
     calculate_hessian_rmsd,

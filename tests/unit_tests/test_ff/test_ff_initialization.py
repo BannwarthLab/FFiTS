@@ -1,13 +1,3 @@
-"""
-Unit tests for force field initialization functionality.
-
-Tests cover:
-- Force field object creation and loading
-- Structural information calculation
-- Van der Waals matrix generation
-- Force field parameter filling from structural data
-"""
-
 from ffits.datatype.structure_data import (
     ForceField,
     StructuralInformation,
@@ -17,7 +7,6 @@ from ffits.datatype.structure_data import (
 import numpy as np
 import pandas as pd
 import os
-import pytest
 from ffits.ts_guess.define_starting_parameters import fill_ff
 from ffits.forcefield.python_interface.ff_energy import (
     energy_ff,

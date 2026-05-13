@@ -1,9 +1,7 @@
-import subprocess
 import tempfile
 import shutil
 import os
 from pathlib import Path
-import pytest
 from ffits.io.reader import readin_xyz
 from ffits.utils.rmsd import kabsch_rmsd
 from tests.test_utils import run_ffits_as_subprocess
