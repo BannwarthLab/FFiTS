@@ -41,7 +41,7 @@ def get_ts_guess(
     final_geometry_filename: str = "optimized.xyz"
     print_ts_optimization_start()
     #### ------- Create TS Force Field by mixing reactant and product FFs ------- ####
-    tsff: ForceField = create_tsff(
+    res = create_tsff(
         ff1=struc1.ff,
         info1=struc1.info,
         ff2=struc2.ff,
@@ -50,6 +50,7 @@ def get_ts_guess(
         fact2=calcdata.ts_calc.factor_product,
         calcdata=calcdata,
     )
+    tsff: ForceField = res["tsff"]
     tsff.energy_calculator = energy_ff
     tsff.gradient_calculator = complete_gradient
     tsff.hessian_calculator = complete_hessian

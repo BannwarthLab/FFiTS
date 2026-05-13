@@ -18,7 +18,7 @@ def create_tsff(
     fact2: float,
     calcdata: CalculationData,
     weigh_bonds_with_hessian: bool = True,
-) -> ForceField:
+) -> dict[ForceField, dict]:
 
     # TODO add parameter transfer for averaginc dg and add that in printout too
     tsff = ForceField(ff1.nat, calcdata.ts_path.ff_filename, readff=False)
@@ -78,7 +78,7 @@ def create_tsff(
 
     logger.info(f"TS FF generation finished.")
     tsff.write()
-    return tsff, params_mix
+    return {"tsff": tsff, "params_mix": params_mix}
 
 
 def combine_ff_atoms(

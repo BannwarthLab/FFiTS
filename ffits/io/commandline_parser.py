@@ -11,9 +11,7 @@ def _get_version():
     Get version from pyproject.toml.
 
     Returns
-    -------
-    str
-        Version string from pyproject.toml, or "unknown" if not found.
+        version (str): Version string from pyproject.toml, or "unknown" if not found.
     """
     try:
         import tomllib

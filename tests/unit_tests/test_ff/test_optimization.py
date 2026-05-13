@@ -18,28 +18,14 @@ import pytest
 import os
 import tempfile
 from pathlib import Path
+from tests.test_utils import reactant_structure_main
 
 
 @pytest.fixture
 def test_molecule_data():
     """Load test molecule data (small_single_molecule example)."""
-    path1 = os.path.join(os.getcwd(), "tests/examples/small_single_molecule")
-    nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, "struc1.xyz"))
-    wbo = read_wbo_file(os.path.join(path1, "wbo1"))
-    hessian = read_xtb_hessian(os.path.join(path1, "struc1.hess"))
-
-    info = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
-    ff = ForceField(
-        nat,
-        os.path.join(path1, "ff1.csv"),
-        readff=False,
-        energy_calculator=energy_ff,
-        gradient_calculator=complete_gradient,
-        hessian_calculator=complete_hessian,
-    )
-    fill_ff(ff, info, repulsive_start=0.0)
-
-    return {"info": info, "ff": ff, "nat": nat}
+    data = reactant_structure_main()
+    return {"info": data.info, "ff": data.ff, "nat": data.ff.nat}
 
 
 def test_optimize_with_forcefield_without_calcoptions(test_molecule_data):

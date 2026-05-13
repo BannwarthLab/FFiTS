@@ -1,81 +1,19 @@
 import numpy as np
 from pathlib import Path
 import pytest
-from ffits.datatype.structure_data import ForceField, StructuralInformation
-from ffits.io.reader import readin_xyz, read_wbo_file, read_xtb_hessian
 from ffits.external.molbar import get_combinded_priorities, _define_bonds_for_molbar
-from ffits.datatype.structure_data import (
-    Structure,
-    StructurePath,
-    ForceField,
-    StructuralInformation,
-)
 from molbar.molecule.molecule import Molecule
+from tests.test_utils import reactant_structure_main, product_structure_main
 
 
 @pytest.fixture
 def reactant_structure():
-    """Create a reactant structure for testing using real example files."""
-    test_dir = (
-        Path(__file__).parent.parent.parent / "examples" / "small_single_molecule"
-    )
-
-    xyz_file = str(test_dir / "struc1.xyz")
-    wbo_file = str(test_dir / "wbo1")
-    ff_file = str(test_dir / "ff1.csv")
-    hessian_file = str(test_dir / "struc1.hess")
-
-    nat, _, xyz, atom_types = readin_xyz(xyz_file)
-    wbo = read_wbo_file(wbo_file)
-    hessian = read_xtb_hessian(hessian_file)
-
-    path = StructurePath(
-        xyz_filename=xyz_file,
-        wbo_filename=wbo_file,
-        hessian_filename=hessian_file,
-        ff_filename=ff_file,
-    )
-    ff = ForceField(nat=nat, ff_filename=ff_file, readff=True)
-    info = StructuralInformation(
-        nat=nat,
-        xyz=xyz,
-        wbo_dict=wbo,
-        atom_types=np.array(atom_types),
-        hessian=hessian,
-    )
-    return Structure(path=path, ff=ff, info=info)
+    return reactant_structure_main()
 
 
 @pytest.fixture
 def product_structure():
-    """Create a product structure for testing using real example files."""
-    test_dir = (
-        Path(__file__).parent.parent.parent / "examples" / "small_single_molecule"
-    )
-
-    xyz_file = str(test_dir / "struc2.xyz")
-    wbo_file = str(test_dir / "wbo2")
-    ff_file = str(test_dir / "ff2.csv")
-    hessian_file = str(test_dir / "struc2.hess")
-    nat, _, xyz, atom_types = readin_xyz(xyz_file)
-    wbo = read_wbo_file(wbo_file)
-    hessian = read_xtb_hessian(hessian_file)
-
-    path = StructurePath(
-        xyz_filename=xyz_file,
-        wbo_filename=wbo_file,
-        hessian_filename=hessian_file,
-        ff_filename=ff_file,
-    )
-    ff = ForceField(nat=nat, ff_filename=ff_file, readff=True)
-    info = StructuralInformation(
-        nat=nat,
-        xyz=xyz,
-        wbo_dict=wbo,
-        atom_types=np.array(atom_types),
-        hessian=hessian,
-    )
-    return Structure(path=path, ff=ff, info=info)
+    return product_structure_main()
 
 
 class TestDefineBondsForMolbar:
