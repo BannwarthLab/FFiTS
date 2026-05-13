@@ -6,14 +6,7 @@ from pathlib import Path
 import pytest
 from ffits.io.reader import readin_xyz
 from ffits.utils.rmsd import kabsch_rmsd
-
-
-# Code which calls ffits as a subprocess
-def run_ffits_as_subprocess(args):
-    command = "ffits " + " ".join(args)
-    print(command)
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
-    return result.stdout, result.stderr, result.returncode
+from tests.test_utils import run_ffits_as_subprocess
 
 
 def test_ffits_standard_tsguess_run():

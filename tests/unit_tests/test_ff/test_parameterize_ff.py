@@ -28,30 +28,14 @@ from ffits.ts_guess.parameterize_ff import (
 from ffits.forcefield.python_interface.ff_energy import complete_hessian
 from ffits.io.reader import readin_xyz, read_wbo_file, read_xtb_hessian
 from ffits.ts_guess.define_starting_parameters import fill_ff
-
-# ============================================================================
-# Test fixtures and helper data
-# ============================================================================
+from tests.test_utils import reactant_structure_main
 
 
 @pytest.fixture
 def test_molecule_data():
     """Load test molecule data (small_single_molecule example)."""
-    path1 = os.path.join(os.getcwd(), "tests/examples/small_single_molecule")
-    nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, "struc1.xyz"))
-    wbo = read_wbo_file(os.path.join(path1, "wbo1"))
-    hessian = read_xtb_hessian(os.path.join(path1, "struc1.hess"))
-
-    info = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
-    ff = ForceField(
-        nat,
-        os.path.join(path1, "ff1.csv"),
-        readff=False,
-        hessian_calculator=complete_hessian,
-    )
-    fill_ff(ff, info, repulsive_start=0.0)
-
-    return {"info": info, "ff": ff, "nat": nat}
+    data = reactant_structure_main()
+    return {"info": data.info, "ff": data.ff, "nat": data.ff.nat}
 
 
 # ============================================================================

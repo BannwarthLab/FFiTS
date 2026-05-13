@@ -24,31 +24,7 @@ from ffits.forcefield.python_interface.ff_energy import (
     complete_gradient,
     complete_hessian,
 )
-
-# Static test data to avoid relying on external functions
-TEST_XYZ = np.array(
-    [
-        [-2.33287094, 3.31176687, 0.20110100],
-        [-0.91630217, 2.85867268, -0.04327585],
-        [0.06256276, 3.55862185, 0.08938727],
-        [-2.92591176, 3.18375556, -0.71288068],
-        [-2.79725946, 2.67965821, 0.96793335],
-        [-0.81484498, 1.79716556, -0.36699673],
-        [-2.35087245, 4.35655928, 0.51563164],
-    ]
-)
-
-TEST_WBO = {
-    (0, 1): 1.02668632226515,
-    (1, 2): 1.92755303185758,
-    (0, 3): 0.955689824153634,
-    (0, 4): 0.955863695522291,
-    (1, 5): 0.933812077856736,
-    (0, 6): 0.982636418257069,
-}
-
-TEST_ATOM_TYPES = np.array(["C", "C", "O", "H", "H", "H", "H"])
-TEST_NAT = 7
+from tests.test_utils import NAT, XYZ, WBO, ATOM_TYPES
 
 
 class TestForceFieldObjectCreation:
@@ -60,7 +36,7 @@ class TestForceFieldObjectCreation:
             os.getcwd(), "tests/examples/small_single_molecule", "ff1.csv"
         )
         ff = ForceField(
-            TEST_NAT,
+            NAT,
             path,
             readff=True,
             energy_calculator=energy_ff,
@@ -68,14 +44,14 @@ class TestForceFieldObjectCreation:
             hessian_calculator=complete_hessian,
         )
         assert ff is not None
-        assert ff.nat == TEST_NAT
+        assert ff.nat == NAT
 
     def test_ff_object_has_required_dataframes(self):
         """Test that ForceField object contains all required dataframes."""
         path2ff = os.path.join(
             os.getcwd(), "tests/examples/small_single_molecule/ff1.csv"
         )
-        ff = ForceField(TEST_NAT, path2ff)
+        ff = ForceField(NAT, path2ff)
 
         # Check all required components exist
         assert hasattr(ff, "bonds")
@@ -92,7 +68,7 @@ class TestForceFieldObjectCreation:
         path2ff = os.path.join(
             os.getcwd(), "tests/examples/small_single_molecule/ff1.csv"
         )
-        ff = ForceField(TEST_NAT, path2ff, readff=True)
+        ff = ForceField(NAT, path2ff, readff=True)
 
         # Verify bonds were loaded correctly (non-zero if file exists and was read)
         if len(ff.bonds) > 0:
@@ -104,14 +80,14 @@ class TestForceFieldObjectCreation:
             assert all(ff.dihedrals["type"] == "dihedrals")
         else:
             # File may not exist or may be empty, skip detailed checks
-            assert ff.nat == TEST_NAT
+            assert ff.nat == NAT
 
     def test_ff_object_bonds_structure(self):
         """Test that bonds dataframe has correct structure."""
         path2ff = os.path.join(
             os.getcwd(), "tests/examples/small_single_molecule/ff1.csv"
         )
-        ff = ForceField(TEST_NAT, path2ff)
+        ff = ForceField(NAT, path2ff)
         required_columns = ["type", "atoms", "reference_value", "parameter"]
         for col in required_columns:
             assert col in ff.bonds.columns, f"Missing column '{col}' in bonds dataframe"
@@ -122,7 +98,7 @@ class TestForceFieldObjectCreation:
         path2ff = os.path.join(
             os.getcwd(), "tests/examples/small_single_molecule/ff1.csv"
         )
-        ff = ForceField(TEST_NAT, path2ff)
+        ff = ForceField(NAT, path2ff)
         required_columns = ["type", "atoms", "reference_value", "parameter"]
         for col in required_columns:
             assert (
@@ -135,7 +111,7 @@ class TestForceFieldObjectCreation:
         path2ff = os.path.join(
             os.getcwd(), "tests/examples/small_single_molecule/ff1.csv"
         )
-        ff = ForceField(TEST_NAT, path2ff)
+        ff = ForceField(NAT, path2ff)
         required_columns = ["type", "atoms", "reference_value", "parameter"]
         for col in required_columns:
             assert (
@@ -149,14 +125,14 @@ class TestStructuralInformation:
 
     def test_structural_information_creation(self):
         """Test creating StructuralInformation object."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
 
         assert info is not None
-        assert info.nat == TEST_NAT
+        assert info.nat == NAT
 
     def test_molecule_count_calculation(self):
         """Test that molecule_count is correctly calculated."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
 
         assert info.molecule_count == 1
 
@@ -182,18 +158,18 @@ class TestStructuralInformation:
             ]
         )
 
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
         np.testing.assert_allclose(info.bo_matrix, expected_bo_matrix, rtol=1e-7)
 
     def test_bo_matrix_diagonal_is_zero(self):
         """Test that diagonal of bond order matrix is zero."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        np.testing.assert_array_equal(np.diag(info.bo_matrix), np.zeros(TEST_NAT))
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        np.testing.assert_array_equal(np.diag(info.bo_matrix), np.zeros(NAT))
 
     def test_bo_matrix_shape(self):
         """Test that bond order matrix has correct shape."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        assert info.bo_matrix.shape == (TEST_NAT, TEST_NAT)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        assert info.bo_matrix.shape == (NAT, NAT)
 
 
 class TestVanDerWaalsMatrix:
@@ -214,24 +190,24 @@ class TestVanDerWaalsMatrix:
                 ]
             )
         )
-        vander_matrix = get_vander_matrix(TEST_ATOM_TYPES)
+        vander_matrix = get_vander_matrix(ATOM_TYPES)
         np.testing.assert_allclose(vander_matrix, expected_vander_matrix, rtol=1e-7)
 
     def test_vander_matrix_shape(self):
         """Test that Van der Waals matrix has correct shape."""
-        vander_matrix = get_vander_matrix(TEST_ATOM_TYPES)
+        vander_matrix = get_vander_matrix(ATOM_TYPES)
 
-        assert vander_matrix.shape == (TEST_NAT, TEST_NAT)
+        assert vander_matrix.shape == (NAT, NAT)
 
     def test_vander_matrix_symmetry(self):
         """Test that Van der Waals matrix is symmetric."""
-        vander_matrix = get_vander_matrix(TEST_ATOM_TYPES)
+        vander_matrix = get_vander_matrix(ATOM_TYPES)
 
         np.testing.assert_allclose(vander_matrix, vander_matrix.T, rtol=1e-7)
 
     def test_vander_matrix_positive_values(self):
         """Test that all Van der Waals values are positive."""
-        vander_matrix = get_vander_matrix(TEST_ATOM_TYPES)
+        vander_matrix = get_vander_matrix(ATOM_TYPES)
 
         assert np.all(vander_matrix > 0)
 
@@ -242,7 +218,7 @@ class TestFillForceField:
     @staticmethod
     def _create_reference_ff() -> ForceField:
         """Helper to create reference force field for comparison."""
-        ff_ref = ForceField(TEST_NAT, "dummy_path", readff=False)
+        ff_ref = ForceField(NAT, "dummy_path", readff=False)
 
         ff_ref.bonds = pd.DataFrame(
             {
@@ -382,8 +358,8 @@ class TestFillForceField:
 
     def test_fill_ff_bonds_structure(self):
         """Test that fill_ff correctly generates bond structure."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        ff = ForceField(TEST_NAT, "dummy_path", readff=False)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        ff = ForceField(NAT, "dummy_path", readff=False)
         fill_ff(ff, info, repulsive_start=0.01)
 
         # Check bonds were created
@@ -392,8 +368,8 @@ class TestFillForceField:
 
     def test_fill_ff_angles_structure(self):
         """Test that fill_ff correctly generates angle structure."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        ff = ForceField(TEST_NAT, "dummy_path", readff=False)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        ff = ForceField(NAT, "dummy_path", readff=False)
         fill_ff(ff, info, repulsive_start=0.01)
 
         # Check angles were created
@@ -402,8 +378,8 @@ class TestFillForceField:
 
     def test_fill_ff_dihedrals_structure(self):
         """Test that fill_ff correctly generates dihedral structure."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        ff = ForceField(TEST_NAT, "dummy_path", readff=False)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        ff = ForceField(NAT, "dummy_path", readff=False)
         fill_ff(ff, info, repulsive_start=0.01)
 
         # Check dihedrals were created
@@ -412,8 +388,8 @@ class TestFillForceField:
 
     def test_fill_ff_repulsive_structure(self):
         """Test that fill_ff correctly generates repulsive term structure."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        ff = ForceField(TEST_NAT, "dummy_path", readff=False)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        ff = ForceField(NAT, "dummy_path", readff=False)
         fill_ff(ff, info, repulsive_start=0.01)
 
         # Check repulsive terms were created
@@ -422,32 +398,32 @@ class TestFillForceField:
 
     def test_fill_ff_bond_count(self):
         """Test that correct number of bonds are identified."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        ff = ForceField(TEST_NAT, "dummy_path", readff=False)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        ff = ForceField(NAT, "dummy_path", readff=False)
         fill_ff(ff, info, repulsive_start=0.0)
 
         assert len(ff.bonds) == 6
 
     def test_fill_ff_angle_count(self):
         """Test that correct number of angles are identified."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        ff = ForceField(TEST_NAT, "dummy_path", readff=False)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        ff = ForceField(NAT, "dummy_path", readff=False)
         fill_ff(ff, info, repulsive_start=0.0)
 
         assert len(ff.angles) == 9
 
     def test_fill_ff_dihedral_count(self):
         """Test that correct number of dihedrals are identified."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        ff = ForceField(TEST_NAT, "dummy_path", readff=False)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        ff = ForceField(NAT, "dummy_path", readff=False)
         fill_ff(ff, info, repulsive_start=0.0)
 
         assert len(ff.dihedrals) == 6
 
     def test_fill_ff_repulsive_count(self):
         """Test that correct number of repulsive terms are identified."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        ff = ForceField(TEST_NAT, "dummy_path", readff=False)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        ff = ForceField(NAT, "dummy_path", readff=False)
         fill_ff(ff, info, repulsive_start=0.0)
 
         # Should have one repulsive term for every non-bonded pair
@@ -455,8 +431,8 @@ class TestFillForceField:
 
     def test_fill_ff_complete_comparison(self):
         """Test that filled FF matches reference FF completely for key properties."""
-        info = StructuralInformation(TEST_NAT, TEST_XYZ, TEST_WBO, TEST_ATOM_TYPES)
-        ff = ForceField(TEST_NAT, "dummy_path", readff=False)
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        ff = ForceField(NAT, "dummy_path", readff=False)
         fill_ff(ff, info, repulsive_start=0.0)
 
         ff_ref = self._create_reference_ff()

@@ -11,6 +11,7 @@ Tests cover:
 import os
 import pandas as pd
 import numpy as np
+import pytest
 from ffits.ts_guess.mix_ff import (
     combine_ff_atoms,
     remove_bonds_from_repulsive,
@@ -23,29 +24,35 @@ from ffits.datatype.structure_data import ForceField, StructuralInformation
 from ffits.io.reader import readin_xyz, read_wbo_file, read_xtb_hessian
 from ffits.ts_guess.define_starting_parameters import fill_ff
 from ffits.utils.wbo_analysis import compare_wbo_differences
+from tests.test_utils import reactant_structure_main, product_structure_main
 
 
-def _define_ff_examples():
-    """Load example force fields for testing."""
-    ### ff1
-    path1 = os.path.join(os.getcwd(), "tests/examples/small_single_molecule")
-    nat, _, xyz, atom_types = readin_xyz(os.path.join(path1, "struc1.xyz"))
-    wbo = read_wbo_file(os.path.join(path1, "wbo1"))
-    hessian = read_xtb_hessian(os.path.join(path1, "struc1.hess"))
-    info1 = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
-    ff1 = ForceField(nat, os.path.join(path1, "ff1.csv"), readff=False)
-    fill_ff(ff1, info1, repulsive_start=0.0)
+@pytest.fixture
+def ff1():
+    """Fixture for first test force field."""
+    struc = reactant_structure_main()
+    return struc.ff
 
-    ### ff2
-    path2 = os.path.join(os.getcwd(), "tests/examples/small_single_molecule")
-    nat, _, xyz, atom_types = readin_xyz(os.path.join(path2, "struc2.xyz"))
-    wbo = read_wbo_file(os.path.join(path2, "wbo2"))
-    hessian = read_xtb_hessian(os.path.join(path2, "struc2.hess"))
-    info2 = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
-    ff2 = ForceField(nat, os.path.join(path2, "ff2.csv"), readff=False)
-    fill_ff(ff2, info2, repulsive_start=0.0)
 
-    return ff1, info1, ff2, info2
+@pytest.fixture
+def ff2():
+    """Fixture for second test force field."""
+    struc = product_structure_main()
+    return struc.ff
+
+
+@pytest.fixture
+def info1():
+    """Fixture for first test structural information."""
+    struc = reactant_structure_main()
+    return struc.info
+
+
+@pytest.fixture
+def info2():
+    """Fixture for second test structural information."""
+    struc = product_structure_main()
+    return struc.info
 
 
 def _all_values_in_either(tsff_ref: pd.Series, ff1_ref: pd.Series, ff2_ref: pd.Series):
@@ -58,9 +65,8 @@ def _all_values_in_either(tsff_ref: pd.Series, ff1_ref: pd.Series, ff2_ref: pd.S
 class TestCombineFFTerms:
     """Tests for combining force field terms from multiple force fields."""
 
-    def test_combine_bonds_atoms(self):
+    def test_combine_bonds_atoms(self, ff1, ff2):
         """Test that bond atoms from both FFs are combined correctly."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
 
         # Check that atoms from both FFs are present
@@ -74,36 +80,32 @@ class TestCombineFFTerms:
         assert "parameter" in combined_bonds.columns
         assert "reference_value" in combined_bonds.columns
 
-    def test_combine_angles_atoms(self):
+    def test_combine_angles_atoms(self, ff1, ff2):
         """Test that angle atoms from both FFs are combined correctly."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_angles = combine_ff_atoms(ff1.angles, ff2.angles)
 
         assert _all_values_in_either(
             combined_angles["atoms"], ff1.angles["atoms"], ff2.angles["atoms"]
         ), "Not all combined angles are from ff1 or ff2"
 
-    def test_combine_dihedrals_atoms(self):
+    def test_combine_dihedrals_atoms(self, ff1, ff2):
         """Test that dihedral atoms from both FFs are combined correctly."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
 
         assert _all_values_in_either(
             combined_dihedrals["atoms"], ff1.dihedrals["atoms"], ff2.dihedrals["atoms"]
         ), "Not all combined dihedrals are from ff1 or ff2"
 
-    def test_combine_repulsive_atoms(self):
+    def test_combine_repulsive_atoms(self, ff1, ff2):
         """Test that repulsive atoms from both FFs are combined correctly."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
 
         assert _all_values_in_either(
             combined_repulsive["atoms"], ff1.repulsive["atoms"], ff2.repulsive["atoms"]
         ), "Not all combined repulsive terms are from ff1 or ff2"
 
-    def test_combine_terms_non_empty(self):
+    def test_combine_terms_non_empty(self, ff1, ff2):
         """Test that combining non-empty FFs produces non-empty results."""
-        ff1, _, ff2, _ = _define_ff_examples()
 
         combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
         combined_angles = combine_ff_atoms(ff1.angles, ff2.angles)
@@ -117,9 +119,8 @@ class TestCombineFFTerms:
 class TestRemoveBondsFromRepulsive:
     """Tests for removing bonded atom pairs from repulsive term lists."""
 
-    def test_remove_bonds_from_repulsive_basic(self):
+    def test_remove_bonds_from_repulsive_basic(self, ff1, ff2):
         """Test that bonded atoms are removed from repulsive list."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
         combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
 
@@ -134,9 +135,8 @@ class TestRemoveBondsFromRepulsive:
                     repulsive_atoms, bond_atoms
                 ), f"Bond atoms {bond_atoms} should not be in repulsive list"
 
-    def test_remove_bonds_from_repulsive_no_ff1_bonds(self):
+    def test_remove_bonds_from_repulsive_no_ff1_bonds(self, ff1, ff2):
         """Test removal when checking against ff1 bonds."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
 
         filtered_repulsive = remove_bonds_from_repulsive(combined_repulsive, ff1.bonds)
@@ -148,9 +148,8 @@ class TestRemoveBondsFromRepulsive:
                     repulsive_atoms, bond_atoms
                 ), f"FF1 bond atoms {bond_atoms} should not be in repulsive list"
 
-    def test_remove_bonds_from_repulsive_no_ff2_bonds(self):
+    def test_remove_bonds_from_repulsive_no_ff2_bonds(self, ff1, ff2):
         """Test removal when checking against ff2 bonds."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
 
         filtered_repulsive = remove_bonds_from_repulsive(combined_repulsive, ff2.bonds)
@@ -162,9 +161,8 @@ class TestRemoveBondsFromRepulsive:
                     repulsive_atoms, bond_atoms
                 ), f"FF2 bond atoms {bond_atoms} should not be in repulsive list"
 
-    def test_remove_bonds_maintains_structure(self):
+    def test_remove_bonds_maintains_structure(self, ff1, ff2):
         """Test that removing bonds maintains dataframe structure."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
         combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
 
@@ -183,9 +181,8 @@ class TestRemoveBondsFromRepulsive:
             filtered_repulsive["type"] == "repulsive"
         ), "All repulsive terms should have type 'repulsive'"
 
-    def test_remove_bonds_reduces_list_size(self):
+    def test_remove_bonds_reduces_list_size(self, ff1, ff2):
         """Test that removing bonds reduces the repulsive list size."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
         combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
 
@@ -204,9 +201,8 @@ class TestRemoveBondsFromRepulsive:
 class TestMixParameters:
     """Tests for mixing force field parameters from two force fields."""
 
-    def test_mix_bond_parameters(self):
+    def test_mix_bond_parameters(self, ff1, ff2):
         """Test mixing bond parameters with equal weights."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
 
         mix_parameters(combined_bonds, ff1.bonds, ff2.bonds, 0.5, 0.5)
@@ -222,9 +218,8 @@ class TestMixParameters:
             combined_bonds["parameter"] > 0
         ), "Bond parameters should be positive"
 
-    def test_mix_angle_parameters(self):
+    def test_mix_angle_parameters(self, ff1, ff2):
         """Test mixing angle parameters with equal weights."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_angles = combine_ff_atoms(ff1.angles, ff2.angles)
 
         mix_parameters(combined_angles, ff1.angles, ff2.angles, 0.5, 0.5)
@@ -239,9 +234,8 @@ class TestMixParameters:
             combined_angles["parameter"] > 0
         ), "Angle parameters should be positive"
 
-    def test_mix_dihedral_parameters(self):
+    def test_mix_dihedral_parameters(self, ff1, ff2):
         """Test mixing dihedral parameters with equal weights."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
 
         mix_parameters(combined_dihedrals, ff1.dihedrals, ff2.dihedrals, 0.5, 0.5)
@@ -256,9 +250,8 @@ class TestMixParameters:
             combined_dihedrals["parameter"] > 0
         ), "Dihedral parameters should be positive"
 
-    def test_mix_repulsive_parameters(self):
+    def test_mix_repulsive_parameters(self, ff1, ff2):
         """Test mixing repulsive parameters with equal weights."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_repulsive = combine_ff_atoms(ff1.repulsive, ff2.repulsive)
 
         mix_parameters(combined_repulsive, ff1.repulsive, ff2.repulsive, 0.5, 0.5)
@@ -275,9 +268,8 @@ class TestMixParameters:
             combined_repulsive["parameter"] >= 0
         ), "Repulsive parameters should be non-negative"
 
-    def test_mix_parameters_unequal_weights(self):
+    def test_mix_parameters_unequal_weights(self, ff1, ff2):
         """Test mixing parameters with unequal weights."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
 
         mix_parameters(combined_bonds, ff1.bonds, ff2.bonds, 0.7, 0.3)
@@ -285,9 +277,8 @@ class TestMixParameters:
         assert not combined_bonds["parameter"].isnull().any()
         assert not np.isnan(combined_bonds["parameter"]).any()
 
-    def test_mix_parameters_single_source_weights(self):
+    def test_mix_parameters_single_source_weights(self, ff1, ff2):
         """Test mixing with weights that favor one source (0.9/0.1)."""
-        ff1, _, ff2, _ = _define_ff_examples()
         combined_bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
         original_len = len(combined_bonds)
 
@@ -301,9 +292,8 @@ class TestMixParameters:
 class TestMixReferenceValues:
     """Tests for mixing reference values with physical constraints."""
 
-    def test_mix_reference_values_complete(self):
+    def test_mix_reference_values_complete(self, ff1, ff2, info1, info2):
         """Test mixing reference values for all FF term types."""
-        ff1, info1, ff2, info2 = _define_ff_examples()
         tsff = ForceField(7, "temp", readff=False)
 
         tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
@@ -330,9 +320,8 @@ class TestMixReferenceValues:
             tsff.repulsive["parameter"]
         ).any(), "Repulsive parameters should not contain NaN"
 
-    def test_mix_reference_values_bond_constraints(self):
+    def test_mix_reference_values_bond_constraints(self, ff1, ff2, info1, info2):
         """Test that mixed bond lengths respect physical constraints."""
-        ff1, info1, ff2, info2 = _define_ff_examples()
         tsff = ForceField(7, "temp", readff=False)
 
         tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
@@ -354,9 +343,8 @@ class TestMixReferenceValues:
             )
         ), "All bond lengths should be shorter than vdW distance"
 
-    def test_mix_reference_values_angle_constraints(self):
+    def test_mix_reference_values_angle_constraints(self, ff1, ff2, info1, info2):
         """Test that mixed angles respect physical constraints."""
-        ff1, info1, ff2, info2 = _define_ff_examples()
         tsff = ForceField(7, "temp", readff=False)
 
         tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
@@ -374,9 +362,8 @@ class TestMixReferenceValues:
             tsff.angles.apply(lambda row: 0 <= row.reference_value <= np.pi, axis=1)
         ), "All angles should be between 0 and π"
 
-    def test_mix_reference_values_repulsive_constraints(self):
+    def test_mix_reference_values_repulsive_constraints(self, ff1, ff2, info1, info2):
         """Test that mixed repulsive distances are calculated correctly."""
-        ff1, info1, ff2, info2 = _define_ff_examples()
         tsff = ForceField(7, "temp", readff=False)
 
         tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
@@ -399,9 +386,8 @@ class TestMixReferenceValues:
             tsff.repulsive["reference_value"] > 3.0
         ), "Repulsive distances should be > 3 Bohr"
 
-    def test_mix_reference_values_unequal_weights(self):
+    def test_mix_reference_values_unequal_weights(self, ff1, ff2, info1, info2):
         """Test mixing reference values with unequal weights."""
-        ff1, info1, ff2, info2 = _define_ff_examples()
         tsff = ForceField(7, "temp", readff=False)
 
         tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
@@ -420,9 +406,8 @@ class TestMixReferenceValues:
         assert not np.isnan(tsff.dihedrals["parameter"]).any()
         assert not np.isnan(tsff.repulsive["parameter"]).any()
 
-    def test_mix_reference_values_structure_maintained(self):
+    def test_mix_reference_values_structure_maintained(self, ff1, ff2, info1, info2):
         """Test that mixing maintains the FF structure integrity."""
-        ff1, info1, ff2, info2 = _define_ff_examples()
         tsff = ForceField(7, "temp", readff=False)
 
         tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
@@ -450,9 +435,8 @@ class TestMixReferenceValues:
 class TestCompleteFFMixing:
     """Integration tests for complete force field mixing workflow."""
 
-    def test_complete_mixing_workflow(self):
+    def test_complete_mixing_workflow(self, ff1, ff2, info1, info2):
         """Test complete workflow: combine -> remove bonds -> mix params -> mix refs."""
-        ff1, info1, ff2, info2 = _define_ff_examples()
         tsff = ForceField(7, "temp", readff=False)
 
         # Step 1: Combine terms
@@ -486,9 +470,8 @@ class TestCompleteFFMixing:
         assert not np.isnan(tsff.dihedrals["parameter"]).any()
         assert not np.isnan(tsff.repulsive["parameter"]).any()
 
-    def test_mixing_preserves_bond_types(self):
+    def test_mixing_preserves_bond_types(self, ff1, ff2, info1, info2):
         """Test that mixing preserves the type of each term."""
-        ff1, info1, ff2, info2 = _define_ff_examples()
         tsff = ForceField(7, "temp", readff=False)
 
         tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
