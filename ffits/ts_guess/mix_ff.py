@@ -67,14 +67,18 @@ def create_tsff(
     )
 
     # print out the mixing factors to file
-    with open(f"{calcdata.ts_path.ff_filename[:-4]}.mixing_factors.txt", "w") as f:
-        f.write("Bond/Angle/Dihedral\tMixing Factor (Reactant)\n")
-        for term, factor in params_mix.items():
-            f.write(f"{term}\t{factor:.4f}\n")
+    if logger.level <= logging.DEBUG:
+        logger.debug(
+            f"Mixing factors written to {calcdata.ts_path.ff_filename[:-4]}.mixing_factors.txt"
+        )
+        with open(f"{calcdata.ts_path.ff_filename[:-4]}.mixing_factors.txt", "w") as f:
+            f.write("Bond/Angle/Dihedral\tMixing Factor (Reactant)\n")
+            for term, factor in params_mix.items():
+                f.write(f"{term}\t{factor:.4f}\n")
 
     logger.info(f"TS FF generation finished.")
     tsff.write()
-    return tsff
+    return tsff, params_mix
 
 
 def combine_ff_atoms(

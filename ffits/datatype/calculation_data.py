@@ -99,7 +99,7 @@ class Postprocessing:
 
 
 @dataclass
-class  CalculationData:
+class CalculationData:
     """
     Summary class for all calculation information.
     """

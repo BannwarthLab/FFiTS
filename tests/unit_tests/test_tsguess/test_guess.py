@@ -8,7 +8,12 @@ from ffits.forcefield.python_interface.ff_energy import (
     complete_gradient,
     complete_hessian,
 )
-from ffits.datatype.structure_data import ForceField, StructuralInformation, Structure, StructurePath
+from ffits.datatype.structure_data import (
+    ForceField,
+    StructuralInformation,
+    Structure,
+    StructurePath,
+)
 from ffits.datatype.calculation_data import TSCalculationOptions
 from ffits.io.reader import read_wbo_file, read_xtb_hessian, readin_xyz
 from ffits.ts_guess.define_starting_parameters import fill_ff
@@ -30,7 +35,7 @@ def test_molecule_data1():
     xyzpath = os.path.join(path1, "struc1.xyz")
     ffpath = os.path.join(path1, "ff1.csv")
     path = StructurePath(xyzpath, hesspath, wbopath, ffpath)
-    
+
     nat, _, xyz, atom_types = readin_xyz(xyzpath)
     wbo = read_wbo_file(wbopath)
     hessian = read_xtb_hessian(hesspath)
@@ -48,6 +53,7 @@ def test_molecule_data1():
     struc = Structure(path, ff, info)
 
     return {"struc": struc, "info": info, "ff": ff, "nat": nat}
+
 
 @pytest.fixture
 def test_molecule_data2():
@@ -90,13 +96,16 @@ def test_get_ts_guess_withoutcalcdata(test_molecule_data1, test_molecule_data2):
 
         struc1.ff.ff_filename = str(temp_path / "ff1.csv")
         struc2.ff.ff_filename = str(temp_path / "ff2.csv")
-        tsff, converged, energy, final_geom = get_ts_guess(
-            struc1,
-            struc2
-        )
+        tsff, converged, energy, final_geom = get_ts_guess(struc1, struc2)
 
-        assert isinstance(tsff, ForceField), "get_ts_guess did not return a ForceField object."
+        assert isinstance(
+            tsff, ForceField
+        ), "get_ts_guess did not return a ForceField object."
         assert converged is True, "TS guess optimization did not converge."
-        assert isinstance(energy, float), "get_ts_guess did not return a float for energy."
-        assert isinstance(final_geom, np.ndarray), "get_ts_guess did not return a numpy array for final geometry."
+        assert isinstance(
+            energy, float
+        ), "get_ts_guess did not return a float for energy."
+        assert isinstance(
+            final_geom, np.ndarray
+        ), "get_ts_guess did not return a numpy array for final geometry."
         os.chdir(cwd)
