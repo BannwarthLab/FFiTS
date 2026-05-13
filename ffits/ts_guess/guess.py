@@ -26,14 +26,20 @@ logger = logging.getLogger(__name__)
 def get_ts_guess(
     struc1: Structure,
     struc2: Structure,
-    calcdata: CalculationData,
+    calcdata: CalculationData = None,
     optimizer: Callable = anc_optimizer,
     temp_dir_manager: Optional[TempDirManager] = None,
-):
+) -> tuple[ForceField, bool, float, np.ndarray]:
+    if calcdata is None:
+        logger.warning(
+            "No calculation data provided for TS guess generation. Using default values."
+        )
+        calcdata = CalculationData()
+        calcdata.ts_path.ff_filename = 'tsff.csv'
+
     trajectory_filename: str = "trajectory.xyz"
     final_geometry_filename: str = "optimized.xyz"
     print_ts_optimization_start()
-
     #### ------- Create TS Force Field by mixing reactant and product FFs ------- ####
     tsff: ForceField = create_tsff(
         ff1=struc1.ff,
