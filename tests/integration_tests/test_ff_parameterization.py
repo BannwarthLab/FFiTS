@@ -5,12 +5,13 @@ import pytest
 import shutil
 from tempfile import TemporaryDirectory
 from pathlib import Path
+from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.structure_data import (
-    ForceField,
     StructuralInformation,
     StructurePath,
     Structure,
 )
+
 from ffits.ts_guess.parameterize_ff import (
     update_bond,
     update_angle,

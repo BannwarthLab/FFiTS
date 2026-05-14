@@ -1,7 +1,8 @@
 import numpy as np
 import os
 import logging
-from ffits.datatype.structure_data import ForceField, StructuralInformation
+from ffits.datatype.forcefield_data import ForceField
+from ffits.datatype.structure_data import StructuralInformation
 from molbar.utils.optimizer import optimize_geometry
 
 from scipy.optimize import minimize

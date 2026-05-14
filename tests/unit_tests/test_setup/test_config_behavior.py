@@ -5,8 +5,8 @@ in main calculation functions.
 
 import pytest
 import tempfile
-import os
-from ffits.io.toml_parser import load_calculation_data
+import os 
+from ffits.datatype.calculation_data import CalculationData
 
 
 class TestFFParameterizationBehavior:
@@ -23,7 +23,7 @@ ff_parameterization_maxiteration = 2500
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             # Verify the value was loaded correctly from config
             assert calcdata.reactant_calc.ff_parameterization_maxiteration == 2500
@@ -42,7 +42,7 @@ ff_parameterization_threshold = 0.0002
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             assert calcdata.product_calc.ff_parameterization_stepsize == 0.30
             assert calcdata.product_calc.ff_parameterization_threshold == 0.0002
@@ -63,7 +63,7 @@ ff_parameterization_constant_repulsion = true
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             # Different configs should result in different values
             assert (
@@ -89,7 +89,7 @@ optimizer = "molbar-optimizer"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
             assert calcdata.ts_calc.optimizer == "molbar-optimizer"
         finally:
             os.unlink(temp_path)
@@ -104,7 +104,7 @@ optimizer = "scipy-optimizer"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
             assert calcdata.ts_calc.optimizer == "scipy-optimizer"
         finally:
             os.unlink(temp_path)
@@ -121,7 +121,7 @@ factor_product = 0.7
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             # These factors should control how FF is mixed in create_tsff
             assert calcdata.ts_calc.factor_reactant == 0.3
@@ -151,7 +151,7 @@ molbar_optimizer_max_micro_steps = 10
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             # These tolerances should be passed to the optimizer
             assert calcdata.ts_calc.molbar_optimizer_e_tol == 1e-5
@@ -172,7 +172,7 @@ energy_threshold_two_optimizations = 0.25
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             assert calcdata.ts_calc.perform_two_optimizations is True
             assert calcdata.ts_calc.energy_threshold_two_optimizations == 0.25
@@ -197,7 +197,7 @@ geometry_optimization = false
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             # Different configs should result in different behavior flags
             assert calcdata.reactant_calc.geometry_optimization is True
@@ -219,7 +219,7 @@ wbo_calc = false
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             # When wbo_calc is true, calculation will run
             assert calcdata.reactant_calc.wbo_calc is True
@@ -246,9 +246,9 @@ hessian_calc = true
                 FileNotFoundError,
                 match="No Hessian calculation requested, but file .* not found.",
             ):
-                calcdata = load_calculation_data(temp_path)
+                calcdata = CalculationData.from_config(temp_path)
 
-            calcdata = load_calculation_data(temp_path, test=True)
+            calcdata = CalculationData.from_config(temp_path, test=True)
 
             # When false, will read from file
             assert calcdata.reactant_calc.hessian_calc is False
@@ -271,7 +271,7 @@ ff_parameterization = false
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             # When true, FF will be parameterized
             assert calcdata.reactant_calc.ff_parameterization is True
@@ -294,7 +294,7 @@ test_parameterization = false
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             assert calcdata.reactant_calc.test_parameterization is True
             assert calcdata.product_calc.test_parameterization is False
@@ -316,7 +316,7 @@ charge = -2
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             # Charge should be passed to get_preliminary_information
             assert calcdata.system.charge == -2
@@ -334,7 +334,7 @@ multiplicity = 3
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             # Multiplicity should be passed to get_preliminary_information
             assert calcdata.system.multiplicity == 3
@@ -356,7 +356,7 @@ wbo_filename = "reactant_custom.wbo"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path)
+            calcdata = CalculationData.from_config(temp_path)
 
             assert calcdata.reactant_path.wbo_filename == "reactant_custom.wbo"
         finally:
@@ -373,7 +373,7 @@ wbo_filename = "product_bonds.wbo"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path, test=True)
+            calcdata = CalculationData.from_config(temp_path, test=True)
 
             assert calcdata.product_path.wbo_filename == "product_bonds.wbo"
         finally:
@@ -390,7 +390,7 @@ hessian_filename = "reactant_hessian_matrix.hess"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path, test=True)
+            calcdata = CalculationData.from_config(temp_path, test=True)
 
             assert (
                 calcdata.reactant_path.hessian_filename
@@ -410,7 +410,7 @@ hessian_filename = "product.hess"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path, test=True)
+            calcdata = CalculationData.from_config(temp_path, test=True)
 
             assert calcdata.product_path.hessian_filename == "product.hess"
         finally:
@@ -427,7 +427,7 @@ ff_filename = "reactant_force_field_params.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path, test=True)
+            calcdata = CalculationData.from_config(temp_path, test=True)
 
             assert (
                 calcdata.reactant_path.ff_filename == "reactant_force_field_params.csv"
@@ -446,7 +446,7 @@ ff_filename = "product_ff.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path, test=True)
+            calcdata = CalculationData.from_config(temp_path, test=True)
 
             assert calcdata.product_path.ff_filename == "product_ff.csv"
         finally:
@@ -463,7 +463,7 @@ hessian_filename = "ts_hessian.hess"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path, test=True)
+            calcdata = CalculationData.from_config(temp_path, test=True)
 
             assert calcdata.ts_path.hessian_filename == "ts_hessian.hess"
         finally:
@@ -480,7 +480,7 @@ ff_filename = "ts_forcefield.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path, test=True)
+            calcdata = CalculationData.from_config(temp_path, test=True)
 
             assert calcdata.ts_path.ff_filename == "ts_forcefield.csv"
         finally:
@@ -508,7 +508,7 @@ ff_filename = "ts_ff.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path, test=True)
+            calcdata = CalculationData.from_config(temp_path, test=True)
 
             # Reactant filenames
             assert calcdata.reactant_path.wbo_filename == "reactant.wbo"
@@ -544,7 +544,7 @@ ff_filename = "data/products/forcefield.csv"
             temp_path = f.name
 
         try:
-            calcdata = load_calculation_data(temp_path, test=True)
+            calcdata = CalculationData.from_config(temp_path, test=True)
 
             # Check that directory paths are preserved
             assert calcdata.reactant_path.wbo_filename == "data/reactants/bonds.wbo"

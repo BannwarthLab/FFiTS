@@ -1,5 +1,8 @@
 import logging
-from ffits.datatype.structure_data import ForceField, StructuralInformation, Structure
+from ffits.ts_guess.define_starting_parameters import fill_ff
+from ffits.datatype.calculation_data import CalculationOptions
+from ffits.datatype.forcefield_data import ForceField
+from ffits.datatype.structure_data import StructuralInformation, Structure
 from ffits.forcefield.python_interface.ff_energy import complete_hessian
 import ffits.forcefield.python_interface.fortran_bindings as fb
 from ffits.io.print.details import print_ff_fitting
@@ -9,6 +12,30 @@ import warnings
 
 logger = logging.getLogger(__name__)
 
+def parameterize_ff(struc: Structure, calcopt: CalculationOptions, priorities):
+    """
+    Parameterizes the FF of the given structure by fitting to the reference Hessian. The fitting process iteratively updates the FF parameters (bonds, angles, dihedrals, and optionally LJ repulsion) based on the difference between the current FF Hessian and the reference Hessian. FF object is filled in place.
+
+    Args:
+        struc (Structure): The structure whose FF is to be parameterized. Must have a reference Hessian in struc.info.hessian.
+        calcopt (CalculationOptions): Calculation options containing fitting parameters such as max iterations, stepsize, and threshold for convergence.
+        priorities (list): Atom priority information used for determining which parameters to update first (not implemented in this simplified version).        
+    """
+    fill_ff(
+        struc.ff,
+        struc.info,
+        repulsive_start=calcopt.ff_parameter_repulsion,
+        priorities=priorities,
+        bo_threshold=calcopt.bo_treshold,
+    )
+    fit_ff_to_hessian(
+        struc,
+        maxit=calcopt.ff_parameterization_maxiteration,
+        stepsize=calcopt.ff_parameterization_stepsize,
+        threshold=calcopt.ff_parameterization_threshold,
+        constant_repulsion=calcopt.ff_parameterization_constant_repulsion,
+    )
+    
 
 def calculate_hessian_rmsd(hessian_ff, hessian_ref, dim):
     """rmsd"""

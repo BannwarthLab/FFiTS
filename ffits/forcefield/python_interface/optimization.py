@@ -1,7 +1,8 @@
 import logging
 from collections.abc import Callable
 import numpy as np
-from ffits.datatype.structure_data import ForceField, StructuralInformation
+from ffits.datatype.forcefield_data import ForceField
+from ffits.datatype.structure_data import StructuralInformation
 from ffits.external.molbar import (
     anc_optimizer,
     failed_anc_opt,

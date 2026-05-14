@@ -9,7 +9,8 @@ from ffits.forcefield.python_interface.ff_energy import (
     complete_gradient,
     complete_hessian,
 )
-from ffits.datatype.structure_data import ForceField, StructuralInformation
+from ffits.datatype.forcefield_data import ForceField
+from ffits.datatype.structure_data import StructuralInformation
 from ffits.io.reader import readin_xyz
 from tests.test_utils import NAT, XYZ, WBO, ATOM_TYPES
 

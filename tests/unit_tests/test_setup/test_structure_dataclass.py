@@ -6,10 +6,10 @@ from tempfile import TemporaryDirectory
 from pathlib import Path
 from ffits.datatype.structure_data import (
     StructurePath,
-    ForceField,
     StructuralInformation,
     Structure,
 )
+from ffits.datatype.forcefield_data import ForceField
 from ffits.io.reader import readin_xyz, read_wbo_file
 from ffits.data.vanderwaals_radii import get_vander_matrix
 from ffits.data.elements import atom_symbol_to_number

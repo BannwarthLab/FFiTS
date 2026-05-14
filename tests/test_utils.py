@@ -2,15 +2,15 @@ import subprocess
 import numpy as np
 import pytest
 from pathlib import Path
-from ffits.datatype.structure_data import ForceField, StructuralInformation
+from ffits.datatype.forcefield_data import ForceField
 from ffits.io.reader import readin_xyz, read_wbo_file, read_xtb_hessian
 from ffits.external.molbar import get_combinded_priorities, _define_bonds_for_molbar
 from ffits.datatype.structure_data import (
     Structure,
     StructurePath,
-    ForceField,
     StructuralInformation,
 )
+from ffits.datatype.forcefield_data import ForceField
 from ffits.forcefield.python_interface.ff_energy import (
     energy_ff,
     complete_gradient,
