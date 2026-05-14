@@ -6,7 +6,6 @@ and programmatic configuration of log levels.
 """
 
 import logging
-import os
 import sys
 from typing import Optional
 
@@ -56,58 +55,3 @@ def setup_logger(log_level: Optional[str] = None) -> logging.Logger:
 
     _LOGGER = logger
     return logger
-
-
-# def get_logger(module_name: str) -> logging.Logger:
-#     """
-#     Get a logger for a specific module.
-
-#     Use this function in individual modules to get a logger with the
-#     module name for better organization and debugging.
-
-#     Parameters
-#     ----------
-#     module_name : str
-#         The module name, typically __name__
-
-#     Returns
-#     -------
-#     logging.Logger
-#         Logger instance for the specified module.
-
-#     Examples
-#     --------
-#     >>> logger = get_logger(__name__)
-#     >>> logger.debug("Debug message")
-#     """
-#     global _LOGGER
-
-#     # Ensure root logger is set up
-#     if _LOGGER is None:
-#         setup_logger()
-
-#     return logging.getLogger(module_name)
-
-
-# def set_log_level(log_level: str) -> None:
-#     """
-#     Change the log level after logger initialization.
-
-#     Parameters
-#     ----------
-#     log_level : str
-#         Log level as string: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
-
-#     Examples
-#     --------
-#     >>> set_log_level('DEBUG')
-#     """
-#     log_level = log_level.upper()
-#     numeric_level = getattr(logging, log_level, logging.INFO)
-
-#     root_logger = logging.getLogger("ffits")
-#     root_logger.setLevel(numeric_level)
-
-#     # Update handler level
-#     for handler in root_logger.handlers:
-#         handler.setLevel(numeric_level)

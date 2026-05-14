@@ -7,6 +7,7 @@ import tempfile
 import logging
 from ffits.datatype.calculation_data import CalculationData, load_toml
 
+
 class TestLoadToml:
     """Tests for load_toml function."""
 

@@ -39,6 +39,7 @@ def write_string2file(string, filename):
     with open(filename, "w") as text_file:
         text_file.write(string)
 
+
 def write_xyz_to_file(xyz: np.ndarray, filename: str) -> None:
     nat = xyz.shape[0]
     lines = [str(nat) + "\n", "\n"]
@@ -47,6 +48,7 @@ def write_xyz_to_file(xyz: np.ndarray, filename: str) -> None:
     with open(filename, "w") as file:
         for line in lines:
             file.write(line)
+
 
 def write_hessian_to_orcahessfile(
     nat: int, hessian: np.ndarray, xyz_with_masses: np.ndarray, filename: str

@@ -1,5 +1,3 @@
-"Fortran Bindings for FF Gradient and Hessian Calculation. This module provides Python functions that serve as interfaces to the Fortran implementations of gradient and hessian calculations for bonds, angles, dihedrals and repulsive interactions in the force field. These functions take care of converting atom indices from zero-based to one-based format as required by the Fortran code and call the appropriate Fortran subroutines to perform the calculations, adding the results to the provided gradient and hessian arrays in place."
-
 import ffits.forcefield.fortran.fortran_forcefield as fortran_ff
 import numpy as np
 

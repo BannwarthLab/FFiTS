@@ -16,7 +16,8 @@ from ffits.ts_guess.mix_ff import (
     combine_ff_atoms,
     remove_bonds_from_repulsive,
     mix_parameters,
-    mix_reference_values)
+    mix_reference_values,
+)
 from ffits.datatype.forcefield_data import ForceField
 from tests.test_utils import reactant_structure_main, product_structure_main
 

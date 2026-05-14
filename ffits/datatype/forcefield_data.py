@@ -37,7 +37,7 @@ class ForceField:
         self.gradient_calculator = gradient_calculator
         self.hessian_calculator = hessian_calculator
         self.start_from_reactant: bool = True  # only relevant for TS FF
-    
+
     def get_energy(self, xyz_displaced: np.ndarray) -> float:
         """
         Calculates energy with defined self.energy_calculator. Handles transfer in correct xyz format for said calculator.
@@ -159,4 +159,3 @@ class ForceField:
         self.angles = df[df["type"] == "angles"].copy()
         self.dihedrals = df[df["type"] == "dihedrals"].copy()
         self.repulsive = df[df["type"] == "repulsive"].copy()
-

@@ -44,8 +44,9 @@ NAT = 7
 
 SMALL_MOLECULE_DIR = Path(__file__).parent / "examples" / "small_single_molecule"
 
+
 def run_ffits_as_subprocess(args):
-    """Joins all args to a command and runs it as a subprocess, capturing stdout, stderr, and return code. 
+    """Joins all args to a command and runs it as a subprocess, capturing stdout, stderr, and return code.
 
     Args:
         args (list): string list of command line arguments to pass to ffits (excluding "ffits" itself)
@@ -57,6 +58,7 @@ def run_ffits_as_subprocess(args):
     print(command)
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     return result.stdout, result.stderr, result.returncode
+
 
 def check_for_string_in_file(file_path, expected_string):
     """Checks if the expected string is present in the file at the given path.
@@ -71,6 +73,7 @@ def check_for_string_in_file(file_path, expected_string):
     with open(file_path, "r") as f:
         content = f.read()
         return expected_string in content
+
 
 def reactant_structure_main():
     """Create a reactant structure for testing using real example files."""

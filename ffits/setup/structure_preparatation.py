@@ -1,13 +1,6 @@
 import logging
 
-from ffits.io.reader import read_xtb_hessian, read_wbo_file, readin_xyz
-from ffits.external.xtb import Xtb
-from ffits.utils.temp_dir_manager import TempDirManager
-from ffits.forcefield.python_interface.ff_energy import (
-    energy_ff,
-    complete_gradient,
-    complete_hessian,
-)
+
 from typing import Optional
 import numpy as np
 
@@ -45,7 +38,7 @@ def randomize_coordinates(
 #     id: int,
 #     random_seed: int | None = None,
 # ) -> Structure:
-#     """Creates Structure object 
+#     """Creates Structure object
 
 #     Args:
 #         cd (CalculationData): _description_
@@ -57,7 +50,7 @@ def randomize_coordinates(
 #     Returns:
 #         Structure: _description_
 #     """
-    
+
 #     xtbrunner = Xtb(
 #         chrg = cd.system.charge,
 #         mult = cd.system.multiplicity,
@@ -80,23 +73,23 @@ def randomize_coordinates(
 #     if random_seed is not None:
 #         xyz = randomize_coordinates(xyz, displacement=0.01, random_seed=random_seed)
 
-#     strucbuilder = StructureBuilder(xyz=xyz, 
-#                                     xyz_filename=pathdata.xyz_filename, 
+#     strucbuilder = StructureBuilder(xyz=xyz,
+#                                     xyz_filename=pathdata.xyz_filename,
 #                                     hessian_filename=pathdata.hessian_filename,
-#                                     wbo_filename=pathdata.wbo_filename, 
+#                                     wbo_filename=pathdata.wbo_filename,
 #                                     ff_filename=pathdata.ff_filename)
-    
+
 #     strucbuilder.nat(nat)
 #     strucbuilder.atom_types(atom_types)
-    
-#     if calcopt.hessian_calc: 
+
+#     if calcopt.hessian_calc:
 #         strucbuilder.hessian_from_xtb(xtbrunner)
 #     else:
 #         logger.info(
 #             f"Skipping Hessian calculation and reading in {pathdata.hessian_filename}."
 #         )
 #         strucbuilder.hessian_from_file()
-    
+
 #     if calcopt.wbo_calc:
 #         strucbuilder.wbo_from_xtb(xtbrunner)
 #     else:
