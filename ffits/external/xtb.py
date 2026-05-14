@@ -223,6 +223,8 @@ class Xtb:
             parsed WBO data as a dictionary with keys as tuples of atom indices and values as WBOs
         """
         cwd = Path(input_xyz).parent
+
+        #  TOOO remove context manager and check debug level to maybe not delete temp directory for easier debugging of wbo calculation if needed
         with tempfile.TemporaryDirectory(dir=".") as tmpdir:
             tmp = Path(tmpdir)
             shutil.copy(input_xyz, tmp / Path(input_xyz).name)

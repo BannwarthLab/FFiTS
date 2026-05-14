@@ -1,8 +1,8 @@
 from ffits.ts_guess.guess import get_ts_guess
 from ffits.datatype.structure_data import (
-    ForceField,
     Structure,
 )
+from ffits.datatype.forcefield_data import ForceField
 import numpy as np
 import pytest
 import os

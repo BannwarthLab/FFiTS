@@ -5,7 +5,8 @@ import numpy as np
 import sys
 from collections.abc import Callable
 from ffits.ts_guess.mix_ff import create_tsff
-from ffits.datatype.structure_data import Structure, ForceField
+from ffits.datatype.structure_data import Structure
+from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.calculation_data import CalculationData
 from ffits.external.molbar import anc_optimizer
 from ffits.forcefield.python_interface.ff_energy import (
@@ -28,7 +29,6 @@ def get_ts_guess(
     struc2: Structure,
     calcdata: CalculationData = None,
     optimizer: Callable = anc_optimizer,
-    temp_dir_manager: Optional[TempDirManager] = None,
 ) -> tuple[ForceField, bool, float, np.ndarray]:
     if calcdata is None:
         logger.warning(

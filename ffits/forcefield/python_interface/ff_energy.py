@@ -1,5 +1,5 @@
 import ffits.forcefield.python_interface.fortran_bindings as fb
-from ffits.datatype.structure_data import ForceField
+from ffits.datatype.forcefield_data import ForceField
 from ffits.utils.geometry import angle, bondlength, dihedral_angle
 import numpy as np
 
@@ -21,7 +21,6 @@ def energy_ff(xyz_displaced: np.ndarray, ff: ForceField) -> float:
         raise Exception("Please give xyz in column-major format.")
 
     if np.shape(xyz_displaced)[1] != ff.nat:
-        print("HALLOOOO", np.shape(xyz_displaced))
         raise Exception(
             f"Number of atoms in the geometry ({np.shape(xyz_displaced)[1]}) does not match the number of atoms in the force field ({ff.nat})."
         )

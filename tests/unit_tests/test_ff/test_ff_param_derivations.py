@@ -1,9 +1,10 @@
 import numpy as np
 import os
 from ffits.datatype.structure_data import (
-    ForceField,
     StructuralInformation,
 )
+
+from ffits.datatype.forcefield_data import ForceField
 from ffits.ts_guess.parameterize_ff import (
     derivative_c_first_atomwise,
     derivative_c_second_atomwise,

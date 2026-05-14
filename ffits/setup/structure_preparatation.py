@@ -1,16 +1,5 @@
 import logging
-from ffits.datatype.calculation_data import (
-    CalculationData,
-    CalculationOptions,
-    PathData,
-    System,
-)
-from ffits.datatype.structure_data import (
-    Structure,
-    StructuralInformation,
-    StructurePath,
-    ForceField,
-)
+
 from ffits.io.reader import read_xtb_hessian, read_wbo_file, readin_xyz
 from ffits.external.xtb import Xtb
 from ffits.utils.temp_dir_manager import TempDirManager
@@ -49,80 +38,77 @@ def randomize_coordinates(
     return randomized_xyz
 
 
-def get_preliminary_information(
-    calcopt: CalculationOptions,
-    pathdata: PathData,
-    id: int,
-    systemdata: System,
-    temp_dir_manager: Optional[TempDirManager] = None,
-    random_seed: int | None = None,
-) -> Structure:
-    """input is cd.reactant_calc and cd.reactant_path"""
-    chrg = systemdata.charge
-    mult = systemdata.multiplicity
-    path = StructurePath(
-        pathdata.xyz_filename,
-        pathdata.hessian_filename,
-        pathdata.wbo_filename,
-        pathdata.ff_filename,
-    )
-    xtbrunner = Xtb(
-        chrg,
-        mult,
-        xtb_path=systemdata.xtb_path,
-        xtb_alpb_solvent=systemdata.xtb_alpb_solvent,
-        xtb_input_name=systemdata.xtb_input_name,
-        temp_dir_manager=temp_dir_manager,
-    )
+# def get_preliminary_information(
+#     cd: CalculationData,
+#     calcopt: CalculationOptions,
+#     pathdata: PathData,
+#     id: int,
+#     random_seed: int | None = None,
+# ) -> Structure:
+#     """Creates Structure object 
 
-    # TODO add somewhere check that wbo and hess needs to be calculated if geomopt is performed
-    if calcopt.geometry_optimization:
-        new_xyz_filename, wbo = xtbrunner.geomopt_with_topology_check(
-            pathdata.xyz_filename, pathdata.xyz_filename, pathdata.wbo_filename
-        )
-        path.xyz_filename = (
-            new_xyz_filename  # need to change that, so that old file is ignored
-        )
-        calcopt.wbo_calc = False
+#     Args:
+#         cd (CalculationData): _description_
+#         calcopt (CalculationOptions): _description_
+#         pathdata (PathData): _description_
+#         id (int): _description_
+#         random_seed (int | None, optional): _description_. Defaults to None.
 
-    nat, _, xyz, atom_types = readin_xyz(path.xyz_filename)
+#     Returns:
+#         Structure: _description_
+#     """
+    
+#     xtbrunner = Xtb(
+#         chrg = cd.system.charge,
+#         mult = cd.system.multiplicity,
+#         xtb_path=cd.system.xtb_path,
+#         xtb_alpb_solvent=cd.system.xtb_alpb_solvent,
+#         xtb_input_name=cd.system.xtb_input_name,
+#     )
 
-    if random_seed is not None:
-        xyz = randomize_coordinates(xyz, displacement=0.01, random_seed=random_seed)
+#     if calcopt.geometry_optimization:
+#         new_xyz_filename, _ = xtbrunner.geomopt_with_topology_check(
+#             pathdata.xyz_filename, pathdata.xyz_filename, pathdata.wbo_filename
+#         )
+#         pathdata.xyz_filename = (
+#             new_xyz_filename  # I change that, so that old file is ignored
+#         )
+#         calcopt.wbo_calc = False
 
-    if calcopt.hessian_calc:
-        hessian = xtbrunner.hesscalc(path.xyz_filename, path.hessian_filename)
-    else:
-        logger.info(
-            f"Skipping Hessian calculation and reading in {path.hessian_filename}."
-        )
-        hessian = read_xtb_hessian(path.hessian_filename)
+#     nat, _, xyz, atom_types = readin_xyz(pathdata.xyz_filename)
 
-    if calcopt.wbo_calc:
-        wbo = xtbrunner.wbocalc(path.xyz_filename, path.wbo_filename)
-    else:
-        logger.info(f"Skipping WBO calculation and reading in {path.wbo_filename}.")
-        wbo = read_wbo_file(path.wbo_filename)
+#     if random_seed is not None:
+#         xyz = randomize_coordinates(xyz, displacement=0.01, random_seed=random_seed)
 
-    info = StructuralInformation(nat, xyz, wbo, atom_types, hessian)
+#     strucbuilder = StructureBuilder(xyz=xyz, 
+#                                     xyz_filename=pathdata.xyz_filename, 
+#                                     hessian_filename=pathdata.hessian_filename,
+#                                     wbo_filename=pathdata.wbo_filename, 
+#                                     ff_filename=pathdata.ff_filename)
+    
+#     strucbuilder.nat(nat)
+#     strucbuilder.atom_types(atom_types)
+    
+#     if calcopt.hessian_calc: 
+#         strucbuilder.hessian_from_xtb(xtbrunner)
+#     else:
+#         logger.info(
+#             f"Skipping Hessian calculation and reading in {pathdata.hessian_filename}."
+#         )
+#         strucbuilder.hessian_from_file()
+    
+#     if calcopt.wbo_calc:
+#         strucbuilder.wbo_from_xtb(xtbrunner)
+#     else:
+#         logger.info(f"Skipping WBO calculation and reading in {pathdata.wbo_filename}.")
+#         strucbuilder.wbo_from_file()
 
-    if calcopt.ff_parameterization:
-        ff = ForceField(
-            nat,
-            path.ff_filename,
-            energy_calculator=energy_ff,
-            gradient_calculator=complete_gradient,
-            hessian_calculator=complete_hessian,
-        )
-    else:
-        logger.info(f"Skipping FF parameterization and reading in {path.ff_filename}.")
-        ff = ForceField(
-            nat,
-            path.ff_filename,
-            readff=True,
-            energy_calculator=energy_ff,
-            gradient_calculator=complete_gradient,
-            hessian_calculator=complete_hessian,
-        )
+#     if calcopt.ff_parameterization:
+#         strucbuilder.ff_empty(energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
+#     else:
+#         logger.info(f"Skipping FF parameterization and reading in {pathdata.ff_filename}.")
+#         strucbuilder.ff_from_file(energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
 
-    return Structure(path, ff, info)
+#     struc = strucbuilder.build()
+
+#     return struc

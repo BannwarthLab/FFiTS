@@ -1,9 +1,10 @@
 from ffits.datatype.structure_data import (
-    ForceField,
     StructuralInformation,
     get_vander_matrix,
     angstrom2bohr,
 )
+
+from ffits.datatype.forcefield_data import ForceField
 import numpy as np
 import pandas as pd
 import os

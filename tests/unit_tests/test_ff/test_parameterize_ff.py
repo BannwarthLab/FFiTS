@@ -10,7 +10,8 @@ Tests cover:
 
 import numpy as np
 import pytest
-from ffits.datatype.structure_data import ForceField, StructuralInformation
+from ffits.datatype.forcefield_data import ForceField
+from ffits.datatype.structure_data import StructuralInformation
 from ffits.ts_guess.parameterize_ff import (
     calculate_hessian_rmsd,
     ff_fit_objective_function,

@@ -3,10 +3,11 @@ from ffits.forcefield.python_interface.ff_energy import (energy_ff, complete_gra
 # from tests.component_tests.static_data import XYZ, WBO, ATOM_TYPES
 from ffits.datatype.structure_data import (
     StructuralInformation,
-    ForceField,
     angstrom2bohr,
     convert_xyz_to_fortranstyle,
 )
+
+from ffits.datatype.forcefield_data import ForceField
 from ffits.io.reader import readin_xyz
 import scipy as sc
 import numpy as np
