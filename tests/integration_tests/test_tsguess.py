@@ -4,14 +4,14 @@ import os
 from pathlib import Path
 from ffits.io.reader import readin_xyz
 from ffits.utils.rmsd import kabsch_rmsd
-from tests.test_utils import run_ffits_as_subprocess
+from tests.test_utils import run_ffits_as_subprocess, SMALL_MOLECULE_DIR
 
 
 def test_ffits_standard_tsguess_run():
     """
     Test that ffits creates optimized.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
     """
-    examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
+    examples_dir = SMALL_MOLECULE_DIR
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         shutil.copy2(examples_dir / "struc1.xyz", temp_path / "reac.xyz")
