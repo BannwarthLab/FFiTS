@@ -42,17 +42,39 @@ ATOM_TYPES = ["C", "C", "O", "H", "H", "H", "H"]
 
 NAT = 7
 
+SMALL_MOLECULE_DIR = Path(__file__).parent / "examples" / "small_single_molecule"
 
 def run_ffits_as_subprocess(args):
+    """Joins all args to a command and runs it as a subprocess, capturing stdout, stderr, and return code. 
+
+    Args:
+        args (list): string list of command line arguments to pass to ffits (excluding "ffits" itself)
+
+    Returns:
+        tuple: stdout, stderr, and return code of the subprocess
+    """
     command = "ffits " + " ".join(args)
     print(command)
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     return result.stdout, result.stderr, result.returncode
 
+def check_for_string_in_file(file_path, expected_string):
+    """Checks if the expected string is present in the file at the given path.
+
+    Args:
+        file_path (str or Path): Path to the file to check.
+        expected_string (str): The string to search for in the file.
+
+    Returns:
+        bool: True if the expected string is found in the file, False otherwise.
+    """
+    with open(file_path, "r") as f:
+        content = f.read()
+        return expected_string in content
 
 def reactant_structure_main():
     """Create a reactant structure for testing using real example files."""
-    test_dir = Path(__file__).parent / "examples" / "small_single_molecule"
+    test_dir = SMALL_MOLECULE_DIR
 
     xyz_file = str(test_dir / "struc1.xyz")
     wbo_file = str(test_dir / "wbo1")
@@ -89,7 +111,7 @@ def reactant_structure_main():
 
 def product_structure_main():
     """Create a product structure for testing using real example files."""
-    test_dir = Path(__file__).parent / "examples" / "small_single_molecule"
+    test_dir = SMALL_MOLECULE_DIR
 
     xyz_file = str(test_dir / "struc2.xyz")
     wbo_file = str(test_dir / "wbo2")
