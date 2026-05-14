@@ -22,7 +22,12 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-def run_optimizer_mode(structure_filename: str, ff_filename: str, optimizer: Callable = anc_optimizer, calcdata: CalculationData = CalculationData.from_default()):
+def run_optimizer_mode(
+    structure_filename: str,
+    ff_filename: str,
+    optimizer: Callable = anc_optimizer,
+    calcdata: CalculationData = CalculationData.from_default(),
+):
     """
     Run in optimizer mode: takes a single structure and optimizes it using the specified optimizer.
     Usage: ffits structure.xyz --opt ff
@@ -40,13 +45,20 @@ def run_optimizer_mode(structure_filename: str, ff_filename: str, optimizer: Cal
     # return structure
 
 
-def run_parameterization_mode(calcdata: CalculationData = CalculationData.from_default()):
+def run_parameterization_mode(
+    calcdata: CalculationData = CalculationData.from_default(),
+):
     pass
 
-def run_tsguess_mode(reactant_filename: str, product_filename: str, calcdata: CalculationData = CalculationData.from_default()):
+
+def run_tsguess_mode(
+    reactant_filename: str,
+    product_filename: str,
+    calcdata: CalculationData = CalculationData.from_default(),
+):
     """
     Normal mode: processes reactant (calcdata.reactant_path.xyz_filename) and product coordinate files (calcdata.product_path.xyz_filename) to generate a TS guess.
-    
+
     Args:
         calcdata (CalculationData, optional): Calculation data containing paths to reactant and product structures, as well as calculation options. Defaults to CalculationData.from_default().
     """
@@ -94,18 +106,29 @@ def main():
     # Initialize logging - DEBUG level if --debug flag, otherwise INFO
     log_level = "DEBUG" if args.get("debug") else "INFO"
     setup_logger(log_level)
-    calcdata = CalculationData.from_config(args.get("config_file")) if args.get("config_file") else CalculationData.from_default()
+    calcdata = (
+        CalculationData.from_config(args.get("config_file"))
+        if args.get("config_file")
+        else CalculationData.from_default()
+    )
     print(calcdata)
-    overwrite_from_commandline(calcdata, multiplicity=args['multiplicity'], charge=args['charge'], structures=args['structures'])
+    overwrite_from_commandline(
+        calcdata,
+        multiplicity=args["multiplicity"],
+        charge=args["charge"],
+        structures=args["structures"],
+    )
 
     try:
         if args["optff"] is not None:
-            run_optimizer_mode(args.get("structures")[0], args.get("optff"), calcdata=calcdata)
+            run_optimizer_mode(
+                args.get("structures")[0], args.get("optff"), calcdata=calcdata
+            )
         else:
             run_tsguess_mode(
                 reactant_filename=calcdata.reactant_path.xyz_filename,
                 product_filename=calcdata.product_path.xyz_filename,
-                calcdata=calcdata
+                calcdata=calcdata,
             )
 
         end_time = time.time()

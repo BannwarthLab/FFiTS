@@ -5,9 +5,11 @@ import os
 from pathlib import Path
 from ffits.io.reader import readin_xyz
 from ffits.utils.rmsd import kabsch_rmsd
-from tests.test_utils import run_ffits_as_subprocess, SMALL_MOLECULE_DIR, check_for_string_in_file
-
-
+from tests.test_utils import (
+    run_ffits_as_subprocess,
+    SMALL_MOLECULE_DIR,
+    check_for_string_in_file,
+)
 
 
 def test_ffits_with_multiplicity_and_charge():
@@ -37,7 +39,9 @@ def test_ffits_with_multiplicity_and_charge():
             assert (
                 optimized_file.exists()
             ), f"optimized.xyz was not created in {temp_path}"
-            assert  "xTB will be run with uhf = 1, chrg = 1" in stdout, "Defined charge and multiplicity were not correctly passed to xTB as indicated in optimized.xyz"
+            assert (
+                "xTB will be run with uhf = 1, chrg = 1" in stdout
+            ), "Defined charge and multiplicity were not correctly passed to xTB as indicated in optimized.xyz"
             ff_csv_file = temp_path / "tsff.csv"
             assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
             ff_csv_file = temp_path / "ff1.csv"

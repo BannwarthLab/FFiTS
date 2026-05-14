@@ -5,12 +5,17 @@ from dataclasses import dataclass
 import networkx as nx
 import numpy as np
 import os
-import pandas as pd
-import re
-import tomllib
 from collections.abc import Callable
-from ffits.datatype.calculation_data import CalculationData, CalculationOptions, PathData
-from ffits.forcefield.python_interface.ff_energy import complete_gradient, complete_hessian, energy_ff
+from ffits.datatype.calculation_data import (
+    CalculationData,
+    CalculationOptions,
+    PathData,
+)
+from ffits.forcefield.python_interface.ff_energy import (
+    complete_gradient,
+    complete_hessian,
+    energy_ff,
+)
 from ffits.data.vanderwaals_radii import get_vander_matrix
 from ffits.setup.structure_preparatation import randomize_coordinates
 from ffits.utils.geometry import angstrom2bohr, convert_xyz_to_fortranstyle
@@ -31,6 +36,7 @@ class StructurePath:
     hessian_filename: str
     wbo_filename: str
     ff_filename: str
+
 
 class StructuralInformation:
     """
@@ -170,54 +176,14 @@ class Structure:
     ff: ForceField
     info: StructuralInformation
 
-    # @staticmethod
-    # def from_xyz(
-    #     nat: int, 
-    #     xyz: np.ndarray,
-    #     atom_types: list,
-    #     xtbrunner: Xtb,
-    #     xyz_filename: str = 'struc.xyz',
-    #     wbo_filename: str = 'wbo',  
-    #     hessian_filename: str = 'hess',
-    #     ff_filename: str = 'ff.csv',
-    # ) -> "Structure":
-    #     """Create Structure object from given coordinates by calculating hessian and wbo without geometry optimization. All filenames are only used to write out the corresponding files, but can be kept as default values if not needed. 
-
-    #     Args:
-    #         nat (int): number of atoms
-    #         xyz (np.ndarray): coordinates
-    #         atom_types (list): atom types
-    #         xtbrunner (Xtb): xtb runner object with defined path to xtb executable and other settings
-    #         xyz_filename (str, optional): filename for written out xyz file. Defaults to 'struc.xyz'.
-    #         wbo_filename (str, optional): filename for written out wbo file. Defaults to 'wbo'.
-    #         hessian_filename (str, optional): filename for written out hessian file. Defaults to 'hess'.
-    #         ff_filename (str, optional): filename for written out ff file. Defaults to 'ff.csv'.
-    #     """
-
-    #     strucbuilder = StructureBuilder(xyz=xyz, 
-    #                                     xyz_filename=xyz_filename, 
-    #                                     hessian_filename=hessian_filename,
-    #                                     wbo_filename=wbo_filename, 
-    #                                     ff_filename=ff_filename)
-        
-    #     strucbuilder.nat(nat)
-    #     strucbuilder.atom_types(atom_types)
-        
-    #     strucbuilder.hessian_from_xtb(xtbrunner)
-    #     strucbuilder.wbo_from_xtb(xtbrunner)
-
-    #     strucbuilder.ff_empty(energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
-
-    #     struc = strucbuilder.build()
-    #     return struc
-    
     @staticmethod
-    def from_config(    
+    def from_config(
         cd: CalculationData,
         calcopt: CalculationOptions,
         pathdata: PathData,
         random_seed: int | None = None,
-        bondorder_threshold: float = 0.0) -> "Structure":
+        bondorder_threshold: float = 0.0,
+    ) -> "Structure":
         """_summary_
 
         Args:
@@ -230,8 +196,8 @@ class Structure:
             Structure: _description_
         """
         xtbrunner = Xtb(
-            chrg = cd.system.charge,
-            mult = cd.system.multiplicity,
+            chrg=cd.system.charge,
+            mult=cd.system.multiplicity,
             xtb_path=cd.system.xtb_path,
             xtb_alpb_solvent=cd.system.xtb_alpb_solvent,
             xtb_input_name=cd.system.xtb_input_name,
@@ -251,45 +217,66 @@ class Structure:
         if random_seed is not None:
             xyz = randomize_coordinates(xyz, displacement=0.01, random_seed=random_seed)
 
-        strucbuilder = StructureBuilder(xyz=xyz, 
-                                        xyz_filename=pathdata.xyz_filename, 
-                                        hessian_filename=pathdata.hessian_filename,
-                                        wbo_filename=pathdata.wbo_filename, 
-                                        ff_filename=pathdata.ff_filename,
-                                        bondorder_threshold=bondorder_threshold)
-        
+        strucbuilder = StructureBuilder(
+            xyz=xyz,
+            xyz_filename=pathdata.xyz_filename,
+            hessian_filename=pathdata.hessian_filename,
+            wbo_filename=pathdata.wbo_filename,
+            ff_filename=pathdata.ff_filename,
+            bondorder_threshold=bondorder_threshold,
+        )
+
         strucbuilder.nat(nat)
         strucbuilder.atom_types(atom_types)
         strucbuilder.path()
-        
-        if calcopt.hessian_calc: 
+
+        if calcopt.hessian_calc:
             strucbuilder.hessian_from_xtb(xtbrunner)
         else:
             logger.info(
                 f"Skipping Hessian calculation and reading in {pathdata.hessian_filename}."
             )
             strucbuilder.hessian_from_file()
-        
+
         if calcopt.wbo_calc:
             strucbuilder.wbo_from_xtb(xtbrunner)
         else:
-            logger.info(f"Skipping WBO calculation and reading in {pathdata.wbo_filename}.")
+            logger.info(
+                f"Skipping WBO calculation and reading in {pathdata.wbo_filename}."
+            )
             strucbuilder.wbo_from_file()
 
         if calcopt.ff_parameterization:
-            strucbuilder.ff_empty(energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
+            strucbuilder.ff_empty(
+                energy_calculator=energy_ff,
+                gradient_calculator=complete_gradient,
+                hessian_calculator=complete_hessian,
+            )
         else:
-            logger.info(f"Skipping FF parameterization and reading in {pathdata.ff_filename}.")
-            strucbuilder.ff_from_file(energy_calculator=energy_ff, gradient_calculator=complete_gradient, hessian_calculator=complete_hessian)
+            logger.info(
+                f"Skipping FF parameterization and reading in {pathdata.ff_filename}."
+            )
+            strucbuilder.ff_from_file(
+                energy_calculator=energy_ff,
+                gradient_calculator=complete_gradient,
+                hessian_calculator=complete_hessian,
+            )
 
         struc = strucbuilder.build()
         return struc
 
 
-
 class StructureBuilder:
-    def __init__(self, xyz: np.ndarray, xyz_filename: str = 'struc.xyz', wbo_filename: str = 'wbo', hessian_filename: str = 'hess', ff_filename: str = 'ff.csv', bondorder_threshold: float = 0.0):
-        self._xyz = xyz #(np.ndarray): coordinates in Angström in shape (nat, 3)
+    def __init__(
+        self,
+        xyz: np.ndarray,
+        xyz_filename: str = "struc.xyz",
+        wbo_filename: str = "wbo",
+        hessian_filename: str = "hess",
+        ff_filename: str = "ff.csv",
+        bondorder_threshold: float = 0.0,
+    ):
+        self._xyz = xyz  # (np.ndarray): coordinates in Angström in shape (nat, 3)
         self._xyz_filename = xyz_filename
         self._wbo_filename = wbo_filename
         self._hessian_filename = hessian_filename
@@ -302,10 +289,11 @@ class StructureBuilder:
         self._ff: ForceField = None
         self._path: StructurePath = self.path()
 
-
     def _write_xyz_if_needed(self):
         if self._xyz_filename is not None and not os.path.exists(self._xyz_filename):
-            logger.warning(f"XYZ file {self._xyz_filename} does not exist. It will be created with the provided xyz data.")
+            logger.warning(
+                f"XYZ file {self._xyz_filename} does not exist. It will be created with the provided xyz data."
+            )
             write_xyz_to_file(self._xyz, self._xyz_filename)
 
     def nat(self, nat: int) -> "StructureBuilder":
@@ -315,29 +303,29 @@ class StructureBuilder:
     def atom_types(self, atom_types: np.ndarray) -> "StructureBuilder":
         self._atom_types = atom_types
         return self
-    
+
     # ---- wbo ----
     def wbo_from_xtb(self, xtbrunner: Xtb) -> "StructureBuilder":
         self._write_xyz_if_needed()
         self._wbo_dict = xtbrunner.wbocalc(self._xyz_filename, self._wbo_filename)
         return self
-    
+
     def wbo_from_file(self) -> "StructureBuilder":
         self._wbo_dict = read_wbo_file(self._wbo_filename)
         return self
-    
+
     def wbo_from_dict(self, wbo_dict: dict) -> "StructureBuilder":
         self._wbo_dict = wbo_dict
         return self
 
     # ---- hessian ----
-    def hessian_from_xtb(self, xtbrunner: Xtb) -> "StructureBuilder":        
+    def hessian_from_xtb(self, xtbrunner: Xtb) -> "StructureBuilder":
         self._write_xyz_if_needed()
         self._hessian = xtbrunner.hesscalc(self._xyz_filename, self._hessian_filename)
         return self
-    
-    def hessian_from_file(self, format: str = 'xtb') -> "StructureBuilder":
-        if format == 'xtb':
+
+    def hessian_from_file(self, format: str = "xtb") -> "StructureBuilder":
+        if format == "xtb":
             self._hessian = read_xtb_hessian(self._hessian_filename)
         else:
             raise ValueError(f"Unsupported hessian file format: {format}")
@@ -346,11 +334,16 @@ class StructureBuilder:
     def hessian_from_array(self, hessian_array: np.ndarray) -> "StructureBuilder":
         self._hessian = hessian_array
         return self
-    
+
     # ---- force field ----
-    def ff_from_file(self, energy_calculator: Callable, gradient_calculator: Callable, hessian_calculator: Callable) -> "StructureBuilder":
+    def ff_from_file(
+        self,
+        energy_calculator: Callable,
+        gradient_calculator: Callable,
+        hessian_calculator: Callable,
+    ) -> "StructureBuilder":
         self._ff = ForceField(
-            self._nat,            
+            self._nat,
             self._ff_filename,
             readff=True,
             energy_calculator=energy_calculator,
@@ -358,28 +351,32 @@ class StructureBuilder:
             hessian_calculator=hessian_calculator,
         )
         return self
-    
-    def ff_empty(self, energy_calculator: Callable, gradient_calculator: Callable, hessian_calculator: Callable) -> "StructureBuilder":
+
+    def ff_empty(
+        self,
+        energy_calculator: Callable,
+        gradient_calculator: Callable,
+        hessian_calculator: Callable,
+    ) -> "StructureBuilder":
         self._ff = ForceField(
-            self._nat,            
+            self._nat,
             self._ff_filename,
             readff=False,
             energy_calculator=energy_calculator,
             gradient_calculator=gradient_calculator,
             hessian_calculator=hessian_calculator,
         )
-        return self 
-    
+        return self
+
     # ---- path data ----
     def path(self) -> "StructureBuilder":
         self._path = StructurePath(
             xyz_filename=self._xyz_filename,
             hessian_filename=self._hessian_filename,
             wbo_filename=self._wbo_filename,
-            ff_filename=self._ff_filename
+            ff_filename=self._ff_filename,
         )
         return self
-
 
     def build(self) -> Structure:
         if self._nat is None:
@@ -402,6 +399,6 @@ class StructureBuilder:
                 wbo_dict=self._wbo_dict,
                 atom_types=self._atom_types,
                 hessian=self._hessian,
-                bo_threshold=self._bondorder_threshold
-            )
+                bo_threshold=self._bondorder_threshold,
+            ),
         )

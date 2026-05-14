@@ -1,6 +1,5 @@
 import logging
 from collections.abc import Callable
-import numpy as np
 from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.structure_data import StructuralInformation
 from ffits.external.molbar import (
@@ -17,8 +16,6 @@ from ffits.forcefield.python_interface.ff_energy import (
 from ffits.io.print.details import print_optimization_start, print_optimization_end
 from ffits.io.reader import readin_xyz
 from ffits.datatype.calculation_data import TSCalculationOptions
-from ffits.utils.temp_dir_manager import TempDirManager
-from typing import Optional
 import sys
 
 logger = logging.getLogger(__name__)

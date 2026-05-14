@@ -5,7 +5,7 @@ in main calculation functions.
 
 import pytest
 import tempfile
-import os 
+import os
 from ffits.datatype.calculation_data import CalculationData
 
 

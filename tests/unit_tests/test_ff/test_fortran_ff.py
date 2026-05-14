@@ -1,4 +1,8 @@
-from ffits.forcefield.python_interface.ff_energy import (energy_ff, complete_gradient, complete_hessian)
+from ffits.forcefield.python_interface.ff_energy import (
+    energy_ff,
+    complete_gradient,
+    complete_hessian,
+)
 
 # from tests.component_tests.static_data import XYZ, WBO, ATOM_TYPES
 from ffits.datatype.structure_data import (

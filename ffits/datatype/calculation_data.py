@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 import os
 import logging
-import tomllib 
+import tomllib
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +14,7 @@ def load_toml(path: str) -> dict:
     """
     with open(path, "rb") as f:
         return tomllib.load(f)
+
 
 @dataclass
 class System:
@@ -149,7 +150,7 @@ class CalculationData:
         cd.ts_path.hessian_filename = "ts.hess"
         cd.ts_path.wbo_filename = "wbo_ts"
         return cd
-    
+
     @staticmethod
     def from_config(path_to_config: str, test: bool = False) -> "CalculationData":
         """_summary_
@@ -170,7 +171,7 @@ class CalculationData:
         Returns:
             CalculationData: CalculationData object initialized with values from the config file.
         """
-        print('TEST TEST TEST TEST TEST')
+        print("TEST TEST TEST TEST TEST")
         cd: CalculationData = CalculationData.from_default()
         if not os.path.exists(path_to_config):
             raise FileNotFoundError(f"Config file {path_to_config} not found.")
@@ -183,7 +184,9 @@ class CalculationData:
         cd.system.charge = sys_data.get("charge", cd.system.charge)
         cd.system.multiplicity = sys_data.get("multiplicity", cd.system.multiplicity)
         cd.system.xtb_path = sys_data.get("xtb_path", cd.system.xtb_path)
-        cd.system.xtb_input_name = sys_data.get("xtb_input_name", cd.system.xtb_input_name)
+        cd.system.xtb_input_name = sys_data.get(
+            "xtb_input_name", cd.system.xtb_input_name
+        )
         cd.system.xtb_alpb_solvent = sys_data.get(
             "xtb_alpb_solvent", cd.system.xtb_alpb_solvent
         )
@@ -211,7 +214,9 @@ class CalculationData:
         cd.reactant_calc.geometry_optimization = react_calc.get(
             "geometry_optimization", cd.reactant_calc.geometry_optimization
         )
-        cd.reactant_calc.wbo_calc = react_calc.get("wbo_calc", cd.reactant_calc.wbo_calc)
+        cd.reactant_calc.wbo_calc = react_calc.get(
+            "wbo_calc", cd.reactant_calc.wbo_calc
+        )
         cd.reactant_calc.hessian_calc = react_calc.get(
             "hessian_calc", cd.reactant_calc.hessian_calc
         )
@@ -229,10 +234,12 @@ class CalculationData:
             "ff_parameter_repulsion", cd.reactant_calc.ff_parameter_repulsion
         )
         cd.reactant_calc.ff_parameterization_stepsize = react_calc.get(
-            "ff_parameterization_stepsize", cd.reactant_calc.ff_parameterization_stepsize
+            "ff_parameterization_stepsize",
+            cd.reactant_calc.ff_parameterization_stepsize,
         )
         cd.reactant_calc.ff_parameterization_threshold = react_calc.get(
-            "ff_parameterization_threshold", cd.reactant_calc.ff_parameterization_threshold
+            "ff_parameterization_threshold",
+            cd.reactant_calc.ff_parameterization_threshold,
         )
         cd.reactant_calc.ff_parameterization_constant_repulsion = react_calc.get(
             "ff_parameterization_constant_repulsion",
@@ -280,7 +287,8 @@ class CalculationData:
             "ff_parameterization_stepsize", cd.product_calc.ff_parameterization_stepsize
         )
         cd.product_calc.ff_parameterization_threshold = prod_calc.get(
-            "ff_parameterization_threshold", cd.product_calc.ff_parameterization_threshold
+            "ff_parameterization_threshold",
+            cd.product_calc.ff_parameterization_threshold,
         )
         cd.product_calc.ff_parameterization_constant_repulsion = prod_calc.get(
             "ff_parameterization_constant_repulsion",
@@ -304,7 +312,9 @@ class CalculationData:
         cd.ts_calc.factor_reactant = ts_calc.get(
             "factor_reactant", cd.ts_calc.factor_reactant
         )
-        cd.ts_calc.factor_product = ts_calc.get("factor_product", cd.ts_calc.factor_product)
+        cd.ts_calc.factor_product = ts_calc.get(
+            "factor_product", cd.ts_calc.factor_product
+        )
         cd.ts_calc.optimizer = ts_calc.get("optimizer", cd.ts_calc.optimizer)
         cd.ts_calc.energy_threshold_two_optimizations = ts_calc.get(
             "energy_threshold_two_optimizations",
@@ -320,14 +330,17 @@ class CalculationData:
             "molbar_optimizer_x_tol", cd.ts_calc.molbar_optimizer_x_tol
         )
         cd.ts_calc.molbar_optimizer_max_micro_steps = ts_calc.get(
-            "molbar_optimizer_max_micro_steps", cd.ts_calc.molbar_optimizer_max_micro_steps
+            "molbar_optimizer_max_micro_steps",
+            cd.ts_calc.molbar_optimizer_max_micro_steps,
         )
 
         # =======================
         # Postprocessing
         # =======================
         post = data.get("postprocessing", {})
-        cd.postprocessing.relaxation = post.get("relaxation", cd.postprocessing.relaxation)
+        cd.postprocessing.relaxation = post.get(
+            "relaxation", cd.postprocessing.relaxation
+        )
 
         # for testing purposes, return the CalculationData object without performing sanity checks, to allow testing of error handling in those checks
         if test:
@@ -369,9 +382,8 @@ class CalculationData:
         # Ensure relaxation option is valid
         valid_relaxations = ["None", "gfn2-xtb", "pbeh-3c"]
         if cd.postprocessing.relaxation not in valid_relaxations:
-            raise ValueError(f"Invalid relaxation option: {cd.postprocessing.relaxation}")
+            raise ValueError(
+                f"Invalid relaxation option: {cd.postprocessing.relaxation}"
+            )
 
         return cd
-
-
-
