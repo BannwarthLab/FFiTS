@@ -184,16 +184,16 @@ class Structure:
         random_seed: int | None = None,
         bondorder_threshold: float = 0.0,
     ) -> "Structure":
-        """_summary_
+        """Fills Struture object according to the provided calcoptions. 
 
         Args:
-            cd (CalculationData): _description_
-            calcopt (CalculationOptions): _description_
-            pathdata (PathData): _description_
-            random_seed (int | None, optional): _description_. Defaults to None.
+            cd (CalculationData): General calculation data object containing all information on the system and the calculation settings.
+            calcopt (CalculationOptions): Calculation options for given structure, which define how the structure should be processed and which data should be calculated.
+            pathdata (PathData): Path data for the structure.
+            random_seed (int | None, optional): Random seed for coordinate randomization. Defaults to None.
 
         Returns:
-            Structure: _description_
+            Structure: The constructed Structure object.
         """
         xtbrunner = Xtb(
             chrg=cd.system.charge,
@@ -342,6 +342,7 @@ class StructureBuilder:
         gradient_calculator: Callable,
         hessian_calculator: Callable,
     ) -> "StructureBuilder":
+        """sets force field data from ff file"""
         self._ff = ForceField(
             self._nat,
             self._ff_filename,
@@ -358,6 +359,7 @@ class StructureBuilder:
         gradient_calculator: Callable,
         hessian_calculator: Callable,
     ) -> "StructureBuilder":
+        """Creates empty force field object with the given calculators, which can be filled later with parameters."""
         self._ff = ForceField(
             self._nat,
             self._ff_filename,

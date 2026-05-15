@@ -8,9 +8,10 @@ import shutil
 from ffits.utils.rmsd import kabsch_rmsd
 from pathlib import Path
 
+
 def test_main_tsguess_mode_without_defining_calcopt():
     """Test that main function runs without errors in tsguess mode when no calculation options are provided, and that it produces the expected output files."""
-    
+
     cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
@@ -23,8 +24,10 @@ def test_main_tsguess_mode_without_defining_calcopt():
             run_tsguess_mode(
                 f"reac.xyz",
                 f"prod.xyz",
-            )   
-            assert (temp_path / "optimized.xyz").exists(), "optimized.xyz was not created."
+            )
+            assert (
+                temp_path / "optimized.xyz"
+            ).exists(), "optimized.xyz was not created."
             assert (temp_path / "tsff.csv").exists(), "tsff.csv was not created."
             assert (temp_path / "ff1.csv").exists(), "ff1.csv was not created."
             assert (temp_path / "ff2.csv").exists(), "ff2.csv was not created."
@@ -39,7 +42,7 @@ def test_main_tsguess_mode_without_defining_calcopt():
 
 def test_main_opt_mode_without_defining_calcopt():
     """Test that main function runs without errors in optimizer mode when no calculation options are provided, and that it produces the expected output files."""
-    
+
     cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
@@ -53,11 +56,15 @@ def test_main_opt_mode_without_defining_calcopt():
             run_optimizer_mode(
                 f"reac.xyz",
                 f"ff2.csv",
-            )   
-            assert (temp_path / "optimized.xyz").exists(), "optimized.xyz was not created."
+            )
+            assert (
+                temp_path / "optimized.xyz"
+            ).exists(), "optimized.xyz was not created."
             _, _, xyz1, _ = readin_xyz(temp_path / "optimized.xyz")
             _, _, xyz2, _ = readin_xyz(temp_path / "prod.xyz")
-            assert kabsch_rmsd(xyz1, xyz2) < 0.1, "Optimized geometry is not close to reactant geometry, which is expected when no calculation options are defined."
+            assert (
+                kabsch_rmsd(xyz1, xyz2) < 0.1
+            ), "Optimized geometry is not close to reactant geometry, which is expected when no calculation options are defined."
         finally:
             os.chdir(cwd)
             os.chdir(cwd)
