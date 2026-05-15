@@ -4,7 +4,6 @@ import logging
 import time
 from ffits.datatype.structure_data import Structure
 from ffits.io.logging_config import setup_logger
-from ffits.utils.temp_dir_manager import TempDirManager
 from ffits.datatype.calculation_data import CalculationData
 from ffits.io.toml_parser import overwrite_from_commandline
 from ffits.io.commandline_parser import parse_args

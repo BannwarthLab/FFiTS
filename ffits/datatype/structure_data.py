@@ -204,7 +204,7 @@ class Structure:
         )
 
         if calcopt.geometry_optimization:
-            new_xyz_filename, _ = xtbrunner.geomopt_with_topology_check(
+            new_xyz_filename, _, _, _, _ = xtbrunner.geomopt_with_topology_check(
                 pathdata.xyz_filename, pathdata.xyz_filename, pathdata.wbo_filename
             )
             pathdata.xyz_filename = (

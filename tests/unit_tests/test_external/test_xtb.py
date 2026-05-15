@@ -57,6 +57,23 @@ def methane_xyz(tmp_path):
     return xyz
 
 
+@pytest.fixture
+def debug_logging_enabled():
+    """Enable DEBUG logging for the xTB module temporarily."""
+    logger_xtb = logging.getLogger('ffits.external.xtb')
+    logger_root = logging.getLogger()
+    original_xtb_level = logger_xtb.level
+    original_root_level = logger_root.level
+    
+    logger_xtb.setLevel(logging.DEBUG)
+    logger_root.setLevel(logging.DEBUG)
+    
+    yield
+    
+    logger_xtb.setLevel(original_xtb_level)
+    logger_root.setLevel(original_root_level)
+
+
 # ---------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------
@@ -329,13 +346,14 @@ class TestXtbTopologyCheck:
         self, water_displaced_xyz, change_to_tmp_path
     ):
         """Test geometry optimization with topology check."""
+        
         xtb = Xtb(chrg=0, mult=1)
 
         result = xtb.geomopt_with_topology_check(
-            str(water_displaced_xyz), "water_geo.xyz", "water_wbo", threshold=0.3
+            str(water_displaced_xyz), str(change_to_tmp_path / "water_geo.xyz"), str(change_to_tmp_path / "water_wbo"), threshold=0.3
         )
 
-        nat, comment, coordinates, atom_types = result
+        name, nat, comment, coordinates, atom_types = result
         assert nat == 3, "Should have 3 atoms for water"
         assert isinstance(coordinates, np.ndarray)
         assert coordinates.shape == (3, 3)
@@ -356,7 +374,7 @@ class TestXtbTopologyCheck:
             str(strained_xyz), "strained_opt.xyz", "strained_wbo", threshold=0.1
         )
 
-        nat, comment, coordinates, atom_types = result
+        name, nat, comment, coordinates, atom_types = result
         assert nat == 5, "Should have 5 atoms for SiH4"
 
         # Check for warning messages in captured logs
@@ -379,18 +397,18 @@ class TestXtbTopologyCheck:
             if has_disappeared_bonds:
                 assert any("disappeared" in msg for msg in warning_messages)
 
-    def test_geomopt_with_topology_check_invalid_input(self, tmp_path):
+    def test_geomopt_with_topology_check_invalid_input(self, change_to_tmp_path):
         """Test geometry optimization with topology check using invalid geometry that causes xTB to fail."""
         xtb = Xtb(chrg=0, mult=1)
 
         # Create an XYZ file with invalid formatting that xTB cannot process
-        invalid_xyz = tmp_path / "invalid.xyz"
+        invalid_xyz = change_to_tmp_path / "invalid.xyz"
         invalid_xyz.write_text("not_a_number\nInvalid header\nH 0 0 0\n")
 
         # This should raise a RuntimeError from xTB when it fails to read the geometry
         with pytest.raises(RuntimeError):
             xtb.geomopt_with_topology_check(
-                str(invalid_xyz), "invalid_geo.xyz", "invalid_wbo", threshold=0.3
+                str(invalid_xyz), str(change_to_tmp_path / "invalid_geo.xyz"), str(change_to_tmp_path / "invalid_wbo"), threshold=0.3
             )
 
 
@@ -444,3 +462,98 @@ class TestXtbErrorHandling:
         xtb = Xtb(chrg=0, mult=1)
         with pytest.raises(FileNotFoundError):
             xtb.wbocalc(str(tmp_path / "nonexistent.xyz"), str(tmp_path / "wbo"))
+
+
+
+class TestXtbTemporaryDirectories:
+    """Test that temporary directories are properly handled and cleaned up or kept when Debug mode is enabled."""
+
+    def test_singlepoint_temp_dir_cleaned_up_when_not_debug(self, water_xyz, tmp_path, caplog):
+        """Test that temporary directory is cleaned up after singlepoint when not in debug mode."""
+        caplog.set_level(logging.INFO)  # Not debug level
+        xtb = Xtb(chrg=0, mult=1)
+        energy = xtb.singlepoint(str(water_xyz), str(tmp_path / "water_sp"))
+        assert isinstance(energy, float)
+        debug_dir = tmp_path / "debug"
+        if debug_dir.exists():
+            temp_dirs = list(debug_dir.glob("xtb_singlepoint_*"))
+            assert len(temp_dirs) == 0, "Temporary directories should be cleaned up when not in debug mode"
+
+    def test_singlepoint_temp_dir_kept_when_debug(self, water_xyz, change_to_tmp_path, debug_logging_enabled):
+        """Test that temporary directory is kept after singlepoint when in debug mode."""
+        xtb = Xtb(chrg=0, mult=1)
+        energy = xtb.singlepoint(str(water_xyz), str(change_to_tmp_path / "water_sp"))
+        
+        assert isinstance(energy, float)
+        debug_dir = change_to_tmp_path / "debug"
+        assert debug_dir.exists(), "Debug directory should be created in debug mode"
+        temp_dirs = list(debug_dir.glob("xtb_singlepoint_*"))
+        assert len(temp_dirs) > 0, "Temporary directories should be preserved in debug mode"
+
+    def test_geomopt_temp_dir_cleaned_up_when_not_debug(self, water_xyz, change_to_tmp_path, caplog):
+        """Test that temporary directory is cleaned up after geomopt when not in debug mode."""
+        caplog.set_level(logging.INFO)  # Not debug level
+        xtb = Xtb(chrg=0, mult=1)
+        output_file = str(change_to_tmp_path / "water_opt.xyz")
+        result = xtb.geomopt(str(water_xyz), output_file)
+        assert len(result) == 4  # Valid result
+        debug_dir = change_to_tmp_path / "debug"
+        if debug_dir.exists():
+            temp_dirs = list(debug_dir.glob("geomopt_*"))
+            assert len(temp_dirs) == 0, "Temporary directories should be cleaned up when not in debug mode"
+
+    def test_geomopt_temp_dir_kept_when_debug(self, water_xyz, change_to_tmp_path, debug_logging_enabled):
+        """Test that temporary directory is kept after geomopt when in debug mode."""
+        xtb = Xtb(chrg=0, mult=1)
+        output_file = str(change_to_tmp_path / "water_opt.xyz")
+        result = xtb.geomopt(str(water_xyz), output_file)
+        
+        assert len(result) == 4  # Valid result
+        debug_dir = change_to_tmp_path / "debug"
+        assert debug_dir.exists(), "Debug directory should be created in debug mode"
+        temp_dirs = list(debug_dir.glob("geomopt_*"))
+        assert len(temp_dirs) > 0, "Temporary directories should be preserved in debug mode"
+
+    def test_hesscalc_temp_dir_cleaned_up_when_not_debug(self, water_xyz, tmp_path, caplog):
+        """Test that temporary directory is cleaned up after hesscalc when not in debug mode."""
+        caplog.set_level(logging.INFO)  # Not debug level
+        xtb = Xtb(chrg=0, mult=1)
+        hessian = xtb.hesscalc(str(water_xyz), str(tmp_path / "water_hessian"))
+        assert isinstance(hessian, np.ndarray)
+        debug_dir = tmp_path / "debug"
+        if debug_dir.exists():
+            temp_dirs = list(debug_dir.glob("hesscalc_*"))
+            assert len(temp_dirs) == 0, "Temporary directories should be cleaned up when not in debug mode"
+
+    def test_hesscalc_temp_dir_kept_when_debug(self, water_xyz, change_to_tmp_path, debug_logging_enabled):
+        """Test that temporary directory is kept after hesscalc when in debug mode."""
+        xtb = Xtb(chrg=0, mult=1)
+        hessian = xtb.hesscalc(str(water_xyz), str(change_to_tmp_path / "water_hessian"))
+        
+        assert isinstance(hessian, np.ndarray)
+        debug_dir = change_to_tmp_path / "debug"
+        assert debug_dir.exists(), "Debug directory should be created in debug mode"
+        temp_dirs = list(debug_dir.glob("hesscalc_*"))
+        assert len(temp_dirs) > 0, "Temporary directories should be preserved in debug mode"
+
+    def test_wbocalc_temp_dir_cleaned_up_when_not_debug(self, water_xyz, tmp_path, caplog):
+        """Test that temporary directory is cleaned up after wbocalc when not in debug mode."""
+        caplog.set_level(logging.INFO)  # Not debug level
+        xtb = Xtb(chrg=0, mult=1)
+        wbo = xtb.wbocalc(str(water_xyz), str(tmp_path / "water_wbo"))
+        assert isinstance(wbo, dict)
+        debug_dir = tmp_path / "debug"
+        if debug_dir.exists():
+            temp_dirs = list(debug_dir.glob("wbocalc_*"))
+            assert len(temp_dirs) == 0, "Temporary directories should be cleaned up when not in debug mode"
+
+    def test_wbocalc_temp_dir_kept_when_debug(self, water_xyz, change_to_tmp_path, debug_logging_enabled):
+        """Test that temporary directory is kept after wbocalc when in debug mode."""
+        xtb = Xtb(chrg=0, mult=1)
+        wbo = xtb.wbocalc(str(water_xyz), str(change_to_tmp_path / "water_wbo"))
+        
+        assert isinstance(wbo, dict)
+        debug_dir = change_to_tmp_path / "debug"
+        assert debug_dir.exists(), "Debug directory should be created in debug mode"
+        temp_dirs = list(debug_dir.glob("wbocalc_*"))
+        assert len(temp_dirs) > 0, "Temporary directories should be preserved in debug mode"
