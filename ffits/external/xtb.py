@@ -76,8 +76,19 @@ class Xtb:
             )
             raise RuntimeError(error_msg) from e
 
-    def _run_xtb(self, command: str, cwd: Path):
-        """Run an xTB command inside cwd and handle errors."""
+    def _run_xtb(self, command: str, cwd: Path) -> int:
+        """Run an xTB command inside cwd and handle errors.
+
+        Args:
+            command (str): command string to execute
+            cwd (Path): Current working directory where the command will be executed
+
+        Raises:
+            RuntimeError: _description_
+
+        Returns:
+            int: _description_
+        """
         stdout = cwd / "xtb.out"
         stderr = cwd / "xtb_err.out"
         result = subprocess.run(
@@ -109,15 +120,26 @@ class Xtb:
     # ------------------------------------------------------------------
 
     def singlepoint(self, input_xyz: str, output_name: str) -> float:
-        """Run xTB singlepoint calculation in a temporary directory."""
-        
+        """Run xTB singlepoint calculation in a temporary directory. If Debug mode, save all files in debug directory, otherwise use temporary directory.
+
+
+        Args:
+            input_xyz (str): Path to the input XYZ file
+            output_name (str): Name of the output file
+
+        Returns:
+            float: Singlepoint energy parsed from xTB output
+        """
+
         basename = Path(output_name).name
         if logger.isEnabledFor(logging.DEBUG):
             os.makedirs("debug", exist_ok=True)
-            tmp = Path(tempfile.mkdtemp(dir="./debug", prefix=f'xtb_singlepoint_{basename}_'))
+            tmp = Path(
+                tempfile.mkdtemp(dir="./debug", prefix=f"xtb_singlepoint_{basename}_")
+            )
         else:
-            tmp = Path(tempfile.mkdtemp(prefix=f'xtb_singlepoint_{basename}_'))
-        
+            tmp = Path(tempfile.mkdtemp(prefix=f"xtb_singlepoint_{basename}_"))
+
         shutil.copy(input_xyz, tmp / Path(input_xyz).name)
         command = self._get_command(Path(input_xyz).name, "")
         self._run_xtb(command, tmp)
@@ -131,24 +153,25 @@ class Xtb:
         return energy
 
     def geomopt(
-        self, input_xyz: str, output_filename: str, output_dir: str | None = None
+        self, input_xyz: str, output_filename: str
     ) -> Tuple[int, str, np.ndarray, List[str]]:
         """
-        Run xTB geometry optimization and save optimized geometry.
-        If output_dir is provided, save output there, otherwise use a temporary directory.
-        input:
+        Run xTB geometry optimization and save optimized geometry.If Debug mode, save all files in debug directory, otherwise use temporary directory.
+ 
+
+        Args:
             input_xyz: path to input geometry file (xyz format)
             output_filename: name of the optimized geometry file to be saved
-            output_dir: optional directory to save all xtb output files (including trajectory and logs)
-        returns:
-            tuple containing optimized geometry data and a dictionary of bond orders
+
+        Returns:
+            tuple containing number of atoms, comment line, optimized coordinates as numpy array, and list of atom types
         """
         basename = Path(output_filename).name
         if logger.isEnabledFor(logging.DEBUG):
             os.makedirs("debug", exist_ok=True)
-            tmp = Path(tempfile.mkdtemp(dir="./debug", prefix=f'geomopt_{basename}_'))
+            tmp = Path(tempfile.mkdtemp(dir="./debug", prefix=f"geomopt_{basename}_"))
         else:
-            tmp = Path(tempfile.mkdtemp(prefix=f'geomopt_{basename}_'))
+            tmp = Path(tempfile.mkdtemp(prefix=f"geomopt_{basename}_"))
         xyz_name = Path(input_xyz).name
         shutil.copy(input_xyz, tmp / xyz_name)
 
@@ -166,10 +189,6 @@ class Xtb:
         trj_path = output_path.parent / f"trj_{output_path.name}"
         shutil.copy(optimized_log, trj_path)
 
-        # copy whole temp directory to output_dir if specified
-        if output_dir is not None:
-            shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
-
         (tmp / "xtbrestart").unlink(missing_ok=True)
         logger.info(
             f"Geometry optimization of {input_xyz} to {output_filename} finished successfully."
@@ -179,16 +198,15 @@ class Xtb:
 
         return readin_xyz(f"{output_filename}")
 
-    def hesscalc(self, input_xyz: str, output_name: str, output_dir: str | None = None):
+    def hesscalc(self, input_xyz: str, output_name: str):
         """
-        Run xTB hessian calculation and save hessian.
-        If output_dir is provided, save output there, otherwise use a temporary directory.
+        Run xTB hessian calculation and save hessian. If Debug mode, save all files in debug directory, otherwise use temporary directory.
 
-        input:
+        Args:
             input_xyz: path to input geometry file (xyz format)
-            output_filename: name of the hessian file to be saved
-            output_dir: optional directory to save all xtb output files
-        returns:
+            output_name: desired name of the output hessian file 
+
+        Returns:
             parsed Hessian matrix as a numpy array
         """
         cwd = Path(input_xyz).parent
@@ -196,9 +214,11 @@ class Xtb:
         if logger.isEnabledFor(logging.DEBUG):
             debug_dir = cwd / "debug"
             debug_dir.mkdir(exist_ok=True)
-            tmp = Path(tempfile.mkdtemp(dir=str(debug_dir), prefix=f'hesscalc_{basename}_'))
+            tmp = Path(
+                tempfile.mkdtemp(dir=str(debug_dir), prefix=f"hesscalc_{basename}_")
+            )
         else:
-            tmp = Path(tempfile.mkdtemp(prefix=f'hesscalc_{basename}_'))
+            tmp = Path(tempfile.mkdtemp(prefix=f"hesscalc_{basename}_"))
         shutil.copy(input_xyz, tmp / Path(input_xyz).name)
         command = self._get_command(Path(input_xyz).name, "--hess")
         self._run_xtb(command, tmp)
@@ -206,10 +226,7 @@ class Xtb:
         hess_file = tmp / "hessian"
         if not hess_file.exists():
             raise RuntimeError("No Hessian file generated.")
-        # copy whole temp directory to output_dir if specified
-        if output_dir is not None:
-            shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
-            
+
         shutil.copy(
             hess_file, cwd / output_name
         )  # copy hessian to original directory for later reading
@@ -223,13 +240,11 @@ class Xtb:
         self, input_xyz: str, output_name: str, output_dir: str | None = None
     ) -> Dict[Tuple[int, int], float]:
         """
-        Run xTB geometry optimization and save optimized geometry.
-        If output_dir is provided, save output there, otherwise use a temporary directory.
+        Run xTB WBO calcuation and save WBOs. If Debug mode, save all files in debug directory, otherwise use temporary directory.
 
         Args:
             input_xyz: path to input geometry file (xyz format)
             output_name: name of the WBO file to be saved
-            output_dir: optional directory to save all xtb output files
 
         Returns:
             parsed WBO data as a dictionary with keys as tuples of atom indices and values as WBOs
@@ -239,14 +254,12 @@ class Xtb:
 
         if logger.isEnabledFor(logging.DEBUG):
             os.makedirs("debug", exist_ok=True)
-            tmp = Path(tempfile.mkdtemp(dir="./debug", prefix=f'wbocalc_{basename}_'))
+            tmp = Path(tempfile.mkdtemp(dir="./debug", prefix=f"wbocalc_{basename}_"))
         else:
-            tmp = Path(tempfile.mkdtemp(prefix=f'wbocalc_{basename}_'))
+            tmp = Path(tempfile.mkdtemp(prefix=f"wbocalc_{basename}_"))
         shutil.copy(input_xyz, tmp / Path(input_xyz).name)
         command = self._get_command(Path(input_xyz).name, "--wbo")
         self._run_xtb(command, tmp)
-        if output_dir is not None:
-            shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
 
         wbo_file = tmp / "wbo"
         if not wbo_file.exists():
@@ -260,7 +273,7 @@ class Xtb:
 
         return read_wbo_file(str(cwd / output_name))
 
-    def  geomopt_with_topology_check(
+    def geomopt_with_topology_check(
         self,
         input_xyz: str,
         output_basename: str,
@@ -268,12 +281,13 @@ class Xtb:
         threshold: float = 0.2,
     ) -> Tuple[str, Dict[Tuple[int, int], float]]:
         """
-        Perform geometry optimization and check if topology (WBOs) changed.
+        Perform geometry optimization and check if topology (WBOs) changed. If Debug mode, save all files in debug directory, otherwise use temporary directory.
+
 
         Args:
             input_xyz: path to input geometry file (xyz format)
-            output_basename: path/basename for the optimized geometry file
-            wbo_output_basename: path/basename for WBO output files
+            output_basename: basename for the optimized geometry file
+            wbo_output_basename: basename for WBO output files
             threshold: threshold for WBO change to flag topology change
 
         Returns:
