@@ -1,10 +1,9 @@
 #!/bin/python
 
 import logging
+import os
 import subprocess
 from ffits.io.reader import read_wbo_file, read_xtb_hessian, readin_xyz
-from ffits.utils.temp_dir_manager import TempDirManager
-import subprocess
 import tempfile
 import shutil
 from pathlib import Path
@@ -24,7 +23,6 @@ class Xtb:
         xtb_alpb_solvent: str | None = None,
         xtb_input_name: str | None = None,
         xtb_path: str = "xtb",
-        temp_dir_manager: Optional[TempDirManager] = None,
     ) -> None:
         """_summary_
 
@@ -34,7 +32,6 @@ class Xtb:
             xtb_alpb_solvent (str | None, optional): _description_. Defaults to None.
             xtb_input_name (str | None, optional): _description_. Defaults to None.
             xtb_path (str, optional): _description_. Defaults to "xtb".
-            temp_dir_manager (Optional[TempDirManager], optional): _description_. Defaults to None.
         """
         # If xtb_path not provided, try to find it
 
@@ -43,7 +40,6 @@ class Xtb:
         self.uhf = mult - 1  # multiplicity = number of unpaired electrons + 1
         self.xtb_input_name = xtb_input_name
         self.xtb_alpb_solvent = xtb_alpb_solvent
-        self.temp_dir_manager = temp_dir_manager
         self._check_xtb_loaded()
         logger.info(f"xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
         logger.info(f"Using xTB executable: {self.xtb_path}")
@@ -53,6 +49,8 @@ class Xtb:
             )
         if self.xtb_input_name is not None:
             logger.info(f"Using xtb input file: {self.xtb_input_name}")
+        if logger.isEnabledFor(logging.DEBUG):
+            os.makedirs("debug", exist_ok=True)
 
     # ------------------------------------------------------------------
     # --- UTILITIES ----------------------------------------------------
@@ -112,15 +110,25 @@ class Xtb:
 
     def singlepoint(self, input_xyz: str, output_name: str) -> float:
         """Run xTB singlepoint calculation in a temporary directory."""
-        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
-            tmp = Path(tmpdir)
-            shutil.copy(input_xyz, tmp / Path(input_xyz).name)
-            command = self._get_command(Path(input_xyz).name, "")
-            self._run_xtb(command, tmp)
+        
+        basename = Path(output_name).name
+        if logger.isEnabledFor(logging.DEBUG):
+            os.makedirs("debug", exist_ok=True)
+            tmp = Path(tempfile.mkdtemp(dir="./debug", prefix=f'xtb_singlepoint_{basename}_'))
+        else:
+            tmp = Path(tempfile.mkdtemp(prefix=f'xtb_singlepoint_{basename}_'))
+        
+        shutil.copy(input_xyz, tmp / Path(input_xyz).name)
+        command = self._get_command(Path(input_xyz).name, "")
+        self._run_xtb(command, tmp)
 
-            energy = self._find_energy_in_output(tmp / "xtb.out")
-            shutil.copy(tmp / "xtb.out", f"{output_name}_singlepoint.out")
-            return energy
+        energy = self._find_energy_in_output(tmp / "xtb.out")
+        shutil.copy(tmp / "xtb.out", f"{output_name}_singlepoint.out")
+
+        if not logger.isEnabledFor(logging.DEBUG):
+            shutil.rmtree(tmp)
+
+        return energy
 
     def geomopt(
         self, input_xyz: str, output_filename: str, output_dir: str | None = None
@@ -135,40 +143,41 @@ class Xtb:
         returns:
             tuple containing optimized geometry data and a dictionary of bond orders
         """
-        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
-            tmp = Path(tmpdir)
-            xyz_name = Path(input_xyz).name
-            shutil.copy(input_xyz, tmp / xyz_name)
+        basename = Path(output_filename).name
+        if logger.isEnabledFor(logging.DEBUG):
+            os.makedirs("debug", exist_ok=True)
+            tmp = Path(tempfile.mkdtemp(dir="./debug", prefix=f'geomopt_{basename}_'))
+        else:
+            tmp = Path(tempfile.mkdtemp(prefix=f'geomopt_{basename}_'))
+        xyz_name = Path(input_xyz).name
+        shutil.copy(input_xyz, tmp / xyz_name)
 
-            command = self._get_command(xyz_name, "--opt")
-            self._run_xtb(command, tmp)
+        command = self._get_command(xyz_name, "--opt")
+        self._run_xtb(command, tmp)
 
-            optimized_xyz = tmp / "xtbopt.xyz"
-            optimized_log = tmp / "xtbopt.log"
-            if not optimized_xyz.exists():
-                raise RuntimeError("No optimized geometry found (xtbopt.xyz missing).")
+        optimized_xyz = tmp / "xtbopt.xyz"
+        optimized_log = tmp / "xtbopt.log"
+        if not optimized_xyz.exists():
+            raise RuntimeError("No optimized geometry found (xtbopt.xyz missing).")
 
-            output_path = Path(output_filename)
-            shutil.copy(optimized_xyz, output_path)
+        output_path = Path(output_filename)
+        shutil.copy(optimized_xyz, output_path)
 
-            trj_path = output_path.parent / f"trj_{output_path.name}"
-            shutil.copy(optimized_log, trj_path)
+        trj_path = output_path.parent / f"trj_{output_path.name}"
+        shutil.copy(optimized_log, trj_path)
 
-            # copy whole temp directory to output_dir if specified
-            if output_dir is not None:
-                shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
+        # copy whole temp directory to output_dir if specified
+        if output_dir is not None:
+            shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
 
-            # Copy to DEBUG directory if debug logging is enabled
-            if self.temp_dir_manager is not None:
-                step_name = f"xtb_opt_{Path(output_filename).stem}"
-                self.temp_dir_manager.copy_temp_to_debug(tmp, step_name)
+        (tmp / "xtbrestart").unlink(missing_ok=True)
+        logger.info(
+            f"Geometry optimization of {input_xyz} to {output_filename} finished successfully."
+        )
+        if not logger.isEnabledFor(logging.DEBUG):
+            shutil.rmtree(tmp)
 
-            (tmp / "xtbrestart").unlink(missing_ok=True)
-            logger.info(
-                f"Geometry optimization of {input_xyz} to {output_filename} finished successfully."
-            )
-
-            return readin_xyz(f"{output_filename}")
+        return readin_xyz(f"{output_filename}")
 
     def hesscalc(self, input_xyz: str, output_name: str, output_dir: str | None = None):
         """
@@ -183,29 +192,32 @@ class Xtb:
             parsed Hessian matrix as a numpy array
         """
         cwd = Path(input_xyz).parent
-        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
-            tmp = Path(tmpdir)
-            shutil.copy(input_xyz, tmp / Path(input_xyz).name)
-            command = self._get_command(Path(input_xyz).name, "--hess")
-            self._run_xtb(command, tmp)
+        basename = Path(output_name).name
+        if logger.isEnabledFor(logging.DEBUG):
+            debug_dir = cwd / "debug"
+            debug_dir.mkdir(exist_ok=True)
+            tmp = Path(tempfile.mkdtemp(dir=str(debug_dir), prefix=f'hesscalc_{basename}_'))
+        else:
+            tmp = Path(tempfile.mkdtemp(prefix=f'hesscalc_{basename}_'))
+        shutil.copy(input_xyz, tmp / Path(input_xyz).name)
+        command = self._get_command(Path(input_xyz).name, "--hess")
+        self._run_xtb(command, tmp)
 
-            hess_file = tmp / "hessian"
-            if not hess_file.exists():
-                raise RuntimeError("No Hessian file generated.")
-            # copy whole temp directory to output_dir if specified
-            if output_dir is not None:
-                shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
+        hess_file = tmp / "hessian"
+        if not hess_file.exists():
+            raise RuntimeError("No Hessian file generated.")
+        # copy whole temp directory to output_dir if specified
+        if output_dir is not None:
+            shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
+            
+        shutil.copy(
+            hess_file, cwd / output_name
+        )  # copy hessian to original directory for later reading
+        logger.info(f"Hessian calculation for {input_xyz} finished successfully.")
+        if not logger.isEnabledFor(logging.DEBUG):
+            shutil.rmtree(tmp)
 
-            # Copy to DEBUG directory if debug logging is enabled
-            if self.temp_dir_manager is not None:
-                step_name = f"xtb_hess_{Path(output_name).stem}"
-                self.temp_dir_manager.copy_temp_to_debug(tmp, step_name)
-
-            shutil.copy(
-                hess_file, cwd / output_name
-            )  # copy hessian to original directory for later reading
-            logger.info(f"Hessian calculation for {input_xyz} finished successfully.")
-            return read_xtb_hessian(f"{cwd / output_name}")
+        return read_xtb_hessian(str(cwd / output_name))
 
     def wbocalc(
         self, input_xyz: str, output_name: str, output_dir: str | None = None
@@ -223,31 +235,32 @@ class Xtb:
             parsed WBO data as a dictionary with keys as tuples of atom indices and values as WBOs
         """
         cwd = Path(input_xyz).parent
+        basename = Path(output_name).name
 
-        #  TOOO remove context manager and check debug level to maybe not delete temp directory for easier debugging of wbo calculation if needed
-        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
-            tmp = Path(tmpdir)
-            shutil.copy(input_xyz, tmp / Path(input_xyz).name)
-            command = self._get_command(Path(input_xyz).name, "--wbo")
-            self._run_xtb(command, tmp)
-            if output_dir is not None:
-                shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
+        if logger.isEnabledFor(logging.DEBUG):
+            os.makedirs("debug", exist_ok=True)
+            tmp = Path(tempfile.mkdtemp(dir="./debug", prefix=f'wbocalc_{basename}_'))
+        else:
+            tmp = Path(tempfile.mkdtemp(prefix=f'wbocalc_{basename}_'))
+        shutil.copy(input_xyz, tmp / Path(input_xyz).name)
+        command = self._get_command(Path(input_xyz).name, "--wbo")
+        self._run_xtb(command, tmp)
+        if output_dir is not None:
+            shutil.copytree(tmp, Path(output_dir), dirs_exist_ok=True)
 
-            # Copy to DEBUG directory if debug logging is enabled
-            if self.temp_dir_manager is not None:
-                step_name = f"xtb_wbo_{Path(output_name).stem}"
-                self.temp_dir_manager.copy_temp_to_debug(tmp, step_name)
+        wbo_file = tmp / "wbo"
+        if not wbo_file.exists():
+            raise RuntimeError("No WBO file generated.")
+        if not wbo_file.exists():
+            raise RuntimeError("No WBO file generated.")
+        shutil.copy(wbo_file, cwd / output_name)
+        logger.info(f"WBO calculation for {input_xyz} finished successfully.")
+        if not logger.isEnabledFor(logging.DEBUG):
+            shutil.rmtree(tmp)
 
-            wbo_file = tmp / "wbo"
-            if not wbo_file.exists():
-                raise RuntimeError("No WBO file generated.")
-            if not wbo_file.exists():
-                raise RuntimeError("No WBO file generated.")
-            shutil.copy(wbo_file, cwd / output_name)
-            logger.info(f"WBO calculation for {input_xyz} finished successfully.")
-            return read_wbo_file(f"{output_name}")
+        return read_wbo_file(str(cwd / output_name))
 
-    def geomopt_with_topology_check(
+    def  geomopt_with_topology_check(
         self,
         input_xyz: str,
         output_basename: str,
@@ -325,8 +338,9 @@ class Xtb:
             logger.warning(f"Bonds disappeared during geometry optimization:")
             for bond in disappeared_bonds:
                 logger.warning(f"  {bond}")
-
-        return readin_xyz(opt_filename)
+        os.rename(wbo_after_file, wbo_output_basename)
+        nat, comment, coordinates, atom_types = readin_xyz(opt_filename)
+        return opt_filename, nat, comment, coordinates, atom_types
 
     # ------------------------------------------------------------------
     # --- ANALYSIS -----------------------------------------------------

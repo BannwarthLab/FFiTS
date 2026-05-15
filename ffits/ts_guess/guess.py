@@ -18,7 +18,6 @@ from ffits.io.print.details import print_ts_optimization_start
 from ffits.io.file_writer import write_hessian_to_orcahessfile
 from ffits.data.elements import element_to_weight
 from ffits.forcefield.python_interface.optimization import optimize_with_forcefield
-from ffits.utils.temp_dir_manager import TempDirManager
 from typing import Optional
 
 logger = logging.getLogger(__name__)
