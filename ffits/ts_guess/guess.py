@@ -26,20 +26,27 @@ logger = logging.getLogger(__name__)
 def get_ts_guess(
     struc1: Structure,
     struc2: Structure,
-    calcdata: CalculationData = None,
+    calcdata: CalculationData = CalculationData.from_default(),
     optimizer: Callable = anc_optimizer,
 ) -> tuple[ForceField, bool, float, np.ndarray]:
-    if calcdata is None:
-        logger.warning(
-            "No calculation data provided for TS guess generation. Using default values."
-        )
-        calcdata = CalculationData()
-        calcdata.ts_path.ff_filename = "tsff.csv"
+    """Generates a TS guess from reactant and product structures by first constructing the TS FF and the using it as the potential for the geometry optimization or either reactant or product structure.
+
+    Args:
+        struc1 (Structure): Structure object containing information about the reactant structure
+        struc2 (Structure): Structure object containing information about the product structure
+        calcdata (CalculationData, optional): Calculation data for the TS guess generation. If not given defaults to CalculationData.from_default(). This should contain the default options for the TS FF creation and optimization.
+        optimizer (Callable, optional): Optimization function (eg optimizer algorithm) to use. Defaults to anc_optimizer.
+
+    Returns:
+        tuple[ForceField, bool, float, np.ndarray]: TS ForceField object, convergence status of the optimization, final energy of the optimized structure, and final geometry of the optimized structure in the shape (nat, 3)
+    """
 
     trajectory_filename: str = "trajectory.xyz"
     final_geometry_filename: str = "optimized.xyz"
     print_ts_optimization_start()
+
     #### ------- Create TS Force Field by mixing reactant and product FFs ------- ####
+    # factor reactant and product will be overwritten if weight bonds with hessian is set to True
     res = create_tsff(
         ff1=struc1.ff,
         info1=struc1.info,
@@ -48,6 +55,7 @@ def get_ts_guess(
         fact1=calcdata.ts_calc.factor_reactant,
         fact2=calcdata.ts_calc.factor_product,
         calcdata=calcdata,
+        weigh_bonds_with_hessian=True,
     )
     tsff: ForceField = res["tsff"]
     tsff.energy_calculator = energy_ff
@@ -56,11 +64,16 @@ def get_ts_guess(
 
     ### ---------- optimization ------------ ###
     if tsff.start_from_reactant:
-        logger.info("Starting TS guess optimization from reactant geometry.")
+        logger.info(
+            f"Starting TS guess optimization from reactant geometry {struc1.path.xyz_filename}."
+        )
         initial_struc = struc1.info
     else:
-        logger.info("Starting TS guess optimization from product geometry.")
+        logger.info(
+            f"Starting TS guess optimization from product geometry {struc2.path.xyz_filename}."
+        )
         initial_struc = struc2.info
+
     converged, energy, final_geom = optimize_with_forcefield(
         initial_struc,
         tsff,

@@ -15,11 +15,30 @@ def create_tsff(
     info1: StructuralInformation,
     ff2: ForceField,
     info2: StructuralInformation,
-    fact1: float,
-    fact2: float,
     calcdata: CalculationData,
+    fact1: float = 0.5,
+    fact2: float = 0.5,
     weigh_bonds_with_hessian: bool = True,
 ) -> dict[ForceField, dict]:
+    """Creates TS force field (TS FF) from two given structures.
+
+    Args:
+        ff1 (ForceField): Force field of the reactant structure.
+        info1 (StructuralInformation): Structural information of the reactant structure.
+        ff2 (ForceField): Force field of the product structure.
+        info2 (StructuralInformation): Structural information of the product structure.
+        calcdata (CalculationData): Calculation data for the TS FF creation.
+        fact1 (float, optional): Mixing factor for the reactant structure. Defaults to 0.5.
+        fact2 (float, optional): Mixing factor for the product structure. Defaults to 0.5.
+        weigh_bonds_with_hessian (bool, optional): Whether to weigh bonds with the Hessian. Defaults to True.
+
+    Returns:
+        dict[ForceField, dict]: _description_
+    """
+    if weigh_bonds_with_hessian and fact1 != 0.5:
+        logger.warning(
+            "Bonds from FFs are not averaged with chosen factors, since weigh_bonds_with_hessian is set to True. Weighting will be determined through Hessian analysis. "
+        )
 
     # TODO add parameter transfer for averaginc dg and add that in printout too
     tsff = ForceField(ff1.nat, calcdata.ts_path.ff_filename, readff=False)
