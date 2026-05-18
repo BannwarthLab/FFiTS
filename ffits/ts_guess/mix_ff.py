@@ -33,7 +33,7 @@ def create_tsff(
         weigh_bonds_with_hessian (bool, optional): Whether to weigh bonds with the Hessian. Defaults to True.
 
     Returns:
-        dict[ForceField, dict]: _description_
+        dict[ForceField, dict]: ForceField object representing the TS FF and a dictionary with the mixing factors for each term if weigh_bonds_with_hessian is True.
     """
     if weigh_bonds_with_hessian and fact1 != 0.5:
         logger.warning(

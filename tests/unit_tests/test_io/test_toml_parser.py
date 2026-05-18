@@ -13,7 +13,7 @@ class TestLoadToml:
 
     def test_load_toml_valid_file(self):
         """Test loading a valid TOML file."""
-        path = os.path.join(os.getcwd(), "ffits", "data", "default_config.toml")
+        path = os.path.join(os.getcwd(), "tests", "examples", "default_config.toml")
         config = load_toml(path)
         assert isinstance(config, dict)
         assert "system" in config
