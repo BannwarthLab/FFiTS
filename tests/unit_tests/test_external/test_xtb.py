@@ -209,7 +209,6 @@ class TestXtbGeomOpt:
         assert orig_coords != opt_coords
 
 
-
 class TestXtbHessian:
     """Integration tests for Hessian calculations."""
 

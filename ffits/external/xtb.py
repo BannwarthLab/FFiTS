@@ -157,7 +157,7 @@ class Xtb:
     ) -> Tuple[int, str, np.ndarray, List[str]]:
         """
         Run xTB geometry optimization and save optimized geometry.If Debug mode, save all files in debug directory, otherwise use temporary directory.
- 
+
 
         Args:
             input_xyz: path to input geometry file (xyz format)
@@ -204,7 +204,7 @@ class Xtb:
 
         Args:
             input_xyz: path to input geometry file (xyz format)
-            output_name: desired name of the output hessian file 
+            output_name: desired name of the output hessian file
 
         Returns:
             parsed Hessian matrix as a numpy array

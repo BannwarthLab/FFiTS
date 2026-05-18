@@ -184,7 +184,7 @@ class Structure:
         random_seed: int | None = None,
         bondorder_threshold: float = 0.0,
     ) -> "Structure":
-        """Fills Struture object according to the provided calcoptions. 
+        """Fills Struture object according to the provided calcoptions.
 
         Args:
             cd (CalculationData): General calculation data object containing all information on the system and the calculation settings.
