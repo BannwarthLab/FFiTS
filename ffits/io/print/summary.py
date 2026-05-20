@@ -1,7 +1,9 @@
 import datetime
 
 
-def print_run_summary(start_time: float, end_time: float = None, success: bool = True, message: str = None):
+def print_run_summary(
+    start_time: float, end_time: float = None, success: bool = True, message: str = None
+):
     """
     Prints a formatted summary of the run completion.
 
@@ -16,29 +18,29 @@ def print_run_summary(start_time: float, end_time: float = None, success: bool =
     message : str, optional
         Additional message to display in the summary.
     """
-    
+
     if end_time is None:
         end_time = datetime.datetime.now().timestamp()
-    
+
     elapsed_seconds = end_time - start_time
     hours = int(elapsed_seconds // 3600)
     minutes = int((elapsed_seconds % 3600) // 60)
     seconds = int(elapsed_seconds % 60)
-    
+
     if hours > 0:
         time_str = f"{hours}h {minutes}m {seconds}s"
     elif minutes > 0:
         time_str = f"{minutes}m {seconds}s"
     else:
         time_str = f"{seconds}s"
-    
+
     status = "Calculation COMPLETED" if success else "Calculation FAILED"
-    
+
     start_dt = datetime.datetime.fromtimestamp(start_time)
     end_dt = datetime.datetime.fromtimestamp(end_time)
     start_str = start_dt.strftime("%Y-%m-%d %H:%M:%S")
     end_str = end_dt.strftime("%Y-%m-%d %H:%M:%S")
-    
+
     print(" " * 70)
     print("=" * 70)
     print(f" Run Summary")

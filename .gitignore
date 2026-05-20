@@ -6,6 +6,7 @@ _skbuild
 _manual_test/
 src/forcefield/fortran_energy/.nfs000000000028a8ea00010c34
 **/__pycache__/
+ffits/forcefield/fortran/fortran_forcefield.cpython-311-x86_64-linux-gnu.so
 
 # Build and distribution artifacts
 build/

@@ -1,11 +1,16 @@
+from ffits.datatype.calculation_data import (
+    CalculationData,
+    PathData,
+    CalculationOptions,
+)
 
-from ffits.datatype.calculation_data import CalculationData, PathData, CalculationOptions
 
 def print_header_setup():
-    
-    print("\n" +"\n" + "=" * 60)
+
+    print("\n" + "\n" + "=" * 60)
     print(" SETUP ")
     print("=" * 60)
+
 
 def print_calculation_data(calc_data: CalculationData):
     """
@@ -14,7 +19,6 @@ def print_calculation_data(calc_data: CalculationData):
     print("\n" + "=" * 60)
     print(" INPUT ")
     print("=" * 60)
-
 
     # --- System section ---
     system = calc_data.system
@@ -58,7 +62,6 @@ def print_calculation_data(calc_data: CalculationData):
     print(f"  Relaxation: {calc_data.postprocessing.relaxation}")
 
 
-
 def _print_path(path: PathData):
     """Helper to print file paths neatly."""
     print(f"  XYZ file:       {path.xyz_filename or '—'}")
@@ -69,11 +72,17 @@ def _print_path(path: PathData):
 
 def _print_calc_options(opt: CalculationOptions):
     """Helper to print booleans with Yes/No formatting."""
-    print(f"  Geometry optimization:            {'Yes' if opt.geometry_optimization else 'No'}")
+    print(
+        f"  Geometry optimization:            {'Yes' if opt.geometry_optimization else 'No'}"
+    )
     print(f"  WBO calculation:                  {'Yes' if opt.wbo_calc else 'No'}")
     print(f"  Hessian calculation:              {'Yes' if opt.hessian_calc else 'No'}")
-    print(f"  FF parameterization:              {'Yes' if opt.ff_parameterization else 'No'}")
-    print(f"  Test parameterization:            {'Yes' if opt.test_parameterization else 'No'}")
+    print(
+        f"  FF parameterization:              {'Yes' if opt.ff_parameterization else 'No'}"
+    )
+    print(
+        f"  Test parameterization:            {'Yes' if opt.test_parameterization else 'No'}"
+    )
     # print(f"  FF parameter repulsion:           {opt.ff_parameter_repulsion}")
     # print(f"  FF parameterization max iter:     {opt.ff_parameterization_maxiteration}")
     # print(f"  FF parameterization step size:    {opt.ff_parameterization_stepsize}")
