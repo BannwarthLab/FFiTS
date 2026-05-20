@@ -1,23 +1,25 @@
 import argparse
 import os
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def _get_version():
     """
     Get version from pyproject.toml.
-    
+
     Returns
-    -------
-    str
-        Version string from pyproject.toml, or "unknown" if not found.
+        version (str): Version string from pyproject.toml, or "unknown" if not found.
     """
     try:
         import tomllib
     except ImportError:
         import tomli as tomllib
-    
+
     from pathlib import Path
-    
+
     try:
         # Find pyproject.toml in parent directories
         current_path = Path(__file__).parent
@@ -31,7 +33,7 @@ def _get_version():
             current_path = current_path.parent
     except Exception:
         pass
-    
+
     return "unknown"
 
 
@@ -44,10 +46,11 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--version", "-v",
+        "--version",
+        "-v",
         action="store_true",
-        default = False,
-        help="Print version and exit."
+        default=False,
+        help="Print version and exit.",
     )
     if "--version" in sys.argv or "-v" in sys.argv:
         version = _get_version()
@@ -56,41 +59,48 @@ def parse_args():
 
     # Positional arguments: multiple structure files
     parser.add_argument(
-        "structures",
-        nargs="*",
-        help="Structure files (e.g., struc1.xyz struc2.xyz)"
+        "structures", nargs="*", help="Structure files (e.g., struc1.xyz struc2.xyz)"
     )
 
     # Optional arguments
     parser.add_argument(
-        "--config", "-c",
+        "--config",
+        "-c",
         type=str,
         default=None,
-        help="Path to the config TOML file (optional)."
+        help="Path to the config TOML file (optional).",
     )
     parser.add_argument(
-        "--charge", "-chrg",
+        "--charge",
+        "-chrg",
         type=int,
         default=None,
-        help="Charge for the system (default: 0)."
+        help="Charge for the system (default: 0).",
     )
     parser.add_argument(
-        "--multiplicity", "-mult",
+        "--multiplicity",
+        "-mult",
         type=int,
         default=None,
-        help="Multiplicity of the system (default: 1)."
+        help="Multiplicity of the system (default: 1).",
     )
     parser.add_argument(
         "--opt",
         type=str,
         default=None,
-        help="Run optimizer mode with specified csv ff."
+        help="Run optimizer mode with specified csv ff.",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Enable debug mode with detailed logging output and DEBUG directory creation.",
     )
 
-    args = parser.parse_args() 
+    args = parser.parse_args()
 
     if not args.opt and len(args.structures) != 2 and args.version == False:
-        parser.error("Exactly two structure files must be provided for TS guess mode.") 
+        parser.error("Exactly two structure files must be provided for TS guess mode.")
     if args.opt and len(args.structures) != 1:
         parser.error("Exactly one structure file must be provided for optimizer mode.")
 
@@ -103,18 +113,21 @@ def parse_args():
     if args.config is not None:
         if not os.path.exists(args.config):
             raise FileNotFoundError(f"Config file not found: {args.config}")
-        
-    
+
     if args.config is not None and args.multiplicity is not None:
-        print(f'[WARNING] Multiplicity given in the input file differs from command line multiplicity.')
+        logger.warning(
+            f"Multiplicity given in the input file differs from command line multiplicity."
+        )
     if args.config is not None and args.charge is not None:
-        print(f'[WARNING] Charge given in the input file differs from command line charge.')
+        logger.warning(
+            f"Charge given in the input file differs from command line charge."
+        )
 
     return {
         "structures": args.structures,
         "config_file": args.config,
         "charge": args.charge,
         "multiplicity": args.multiplicity,
-        "optff": args.opt
+        "optff": args.opt,
+        "debug": args.debug,
     }
-

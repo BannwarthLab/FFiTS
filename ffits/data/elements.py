@@ -1,54 +1,374 @@
-#from https://gist.github.com/lukasrichters14/c862644d4cbcf2d67252a484b7c6049c
+# from https://gist.github.com/lukasrichters14/c862644d4cbcf2d67252a484b7c6049c
 
 
-elements_dict = {'H' : 1.008,'HE' : 4.003, 'LI' : 6.941, 'BE' : 9.012,\
-                 'B' : 10.811, 'C' : 12.011, 'N' : 14.007, 'O' : 15.999,\
-                 'F' : 18.998, 'NE' : 20.180, 'NA' : 22.990, 'MG' : 24.305,\
-                 'AL' : 26.982, 'SI' : 28.086, 'P' : 30.974, 'S' : 32.066,\
-                 'CL' : 35.453, 'AR' : 39.948, 'K' : 39.098, 'CA' : 40.078,\
-                 'SC' : 44.956, 'TI' : 47.867, 'V' : 50.942, 'CR' : 51.996,\
-                 'MN' : 54.938, 'FE' : 55.845, 'CO' : 58.933, 'NI' : 58.693,\
-                 'CU' : 63.546, 'ZN' : 65.38, 'GA' : 69.723, 'GE' : 72.631,\
-                 'AS' : 74.922, 'SE' : 78.971, 'BR' : 79.904, 'KR' : 84.798,\
-                 'RB' : 84.468, 'SR' : 87.62, 'Y' : 88.906, 'ZR' : 91.224,\
-                 'NB' : 92.906, 'MO' : 95.95, 'TC' : 98.907, 'RU' : 101.07,\
-                 'RH' : 102.906, 'PD' : 106.42, 'AG' : 107.868, 'CD' : 112.414,\
-                 'IN' : 114.818, 'SN' : 118.711, 'SB' : 121.760, 'TE' : 126.7,\
-                 'I' : 126.904, 'XE' : 131.294, 'CS' : 132.905, 'BA' : 137.328,\
-                 'LA' : 138.905, 'CE' : 140.116, 'PR' : 140.908, 'ND' : 144.243,\
-                 'PM' : 144.913, 'SM' : 150.36, 'EU' : 151.964, 'GD' : 157.25,\
-                 'TB' : 158.925, 'DY': 162.500, 'HO' : 164.930, 'ER' : 167.259,\
-                 'TM' : 168.934, 'YB' : 173.055, 'LU' : 174.967, 'HF' : 178.49,\
-                 'TA' : 180.948, 'W' : 183.84, 'RE' : 186.207, 'OS' : 190.23,\
-                 'IR' : 192.217, 'PT' : 195.085, 'AU' : 196.967, 'HG' : 200.592,\
-                 'TL' : 204.383, 'PB' : 207.2, 'BI' : 208.980, 'PO' : 208.982,\
-                 'AT' : 209.987, 'RN' : 222.081, 'FR' : 223.020, 'RA' : 226.025,\
-                 'AC' : 227.028, 'TH' : 232.038, 'PA' : 231.036, 'U' : 238.029,\
-                 'NP' : 237, 'PU' : 244, 'AM' : 243, 'CM' : 247, 'BK' : 247,\
-                 'CT' : 251, 'ES' : 252, 'FM' : 257, 'MD' : 258, 'NO' : 259,\
-                 'LR' : 262, 'RF' : 261, 'DB' : 262, 'SG' : 266, 'BH' : 264,\
-                 'HS' : 269, 'MT' : 268, 'DS' : 271, 'RG' : 272, 'CN' : 285,\
-                 'NH' : 284, 'FL' : 289, 'MC' : 288, 'LV' : 292, 'TS' : 294,\
-                 'OG' : 294}
+ELEMENTS_MASSES = {
+    "H": 1.008,
+    "HE": 4.003,
+    "LI": 6.941,
+    "BE": 9.012,
+    "B": 10.811,
+    "C": 12.011,
+    "N": 14.007,
+    "O": 15.999,
+    "F": 18.998,
+    "NE": 20.180,
+    "NA": 22.990,
+    "MG": 24.305,
+    "AL": 26.982,
+    "SI": 28.086,
+    "P": 30.974,
+    "S": 32.066,
+    "CL": 35.453,
+    "AR": 39.948,
+    "K": 39.098,
+    "CA": 40.078,
+    "SC": 44.956,
+    "TI": 47.867,
+    "V": 50.942,
+    "CR": 51.996,
+    "MN": 54.938,
+    "FE": 55.845,
+    "CO": 58.933,
+    "NI": 58.693,
+    "CU": 63.546,
+    "ZN": 65.38,
+    "GA": 69.723,
+    "GE": 72.631,
+    "AS": 74.922,
+    "SE": 78.971,
+    "BR": 79.904,
+    "KR": 84.798,
+    "RB": 84.468,
+    "SR": 87.62,
+    "Y": 88.906,
+    "ZR": 91.224,
+    "NB": 92.906,
+    "MO": 95.95,
+    "TC": 98.907,
+    "RU": 101.07,
+    "RH": 102.906,
+    "PD": 106.42,
+    "AG": 107.868,
+    "CD": 112.414,
+    "IN": 114.818,
+    "SN": 118.711,
+    "SB": 121.760,
+    "TE": 126.7,
+    "I": 126.904,
+    "XE": 131.294,
+    "CS": 132.905,
+    "BA": 137.328,
+    "LA": 138.905,
+    "CE": 140.116,
+    "PR": 140.908,
+    "ND": 144.243,
+    "PM": 144.913,
+    "SM": 150.36,
+    "EU": 151.964,
+    "GD": 157.25,
+    "TB": 158.925,
+    "DY": 162.500,
+    "HO": 164.930,
+    "ER": 167.259,
+    "TM": 168.934,
+    "YB": 173.055,
+    "LU": 174.967,
+    "HF": 178.49,
+    "TA": 180.948,
+    "W": 183.84,
+    "RE": 186.207,
+    "OS": 190.23,
+    "IR": 192.217,
+    "PT": 195.085,
+    "AU": 196.967,
+    "HG": 200.592,
+    "TL": 204.383,
+    "PB": 207.2,
+    "BI": 208.980,
+    "PO": 208.982,
+    "AT": 209.987,
+    "RN": 222.081,
+    "FR": 223.020,
+    "RA": 226.025,
+    "AC": 227.028,
+    "TH": 232.038,
+    "PA": 231.036,
+    "U": 238.029,
+    "NP": 237,
+    "PU": 244,
+    "AM": 243,
+    "CM": 247,
+    "BK": 247,
+    "CT": 251,
+    "ES": 252,
+    "FM": 257,
+    "MD": 258,
+    "NO": 259,
+    "LR": 262,
+    "RF": 261,
+    "DB": 262,
+    "SG": 266,
+    "BH": 264,
+    "HS": 269,
+    "MT": 268,
+    "DS": 271,
+    "RG": 272,
+    "CN": 285,
+    "NH": 284,
+    "FL": 289,
+    "MC": 288,
+    "LV": 292,
+    "TS": 294,
+    "OG": 294,
+}
 
-elements_list = ['H', 'HE', 'LI', 'BE', 'B', 'C', 'N', 'O', 'F', 'NE', 'NA',\
-                 'MG', 'AL', 'SI', 'P', 'S', 'CL', 'AR', 'K', 'CA', 'SC', 'TI',\
-                 'V', 'CR', 'MN', 'FE', 'CO', 'NI', 'CU', 'ZN', 'GA', 'GE',\
-                 'AS', 'SE', 'BR', 'KR', 'RB', 'SR', 'Y', 'ZR', 'NB', 'MO',\
-                 'TC', 'RU', 'RH', 'PD', 'AG', 'CD', 'IN', 'SN', 'SB', 'TE',\
-                 'I', 'XE', 'CS', 'BA', 'LA', 'CE', 'PR', 'ND', 'PM', 'SM',\
-                 'EU', 'GD', 'TB', 'DY', 'HO', 'ER', 'TM', 'YB', 'LU', 'HF',\
-                 'TA', 'W', 'RE', 'OS', 'IR', 'PT', 'AU', 'HG', 'TL', 'PB',\
-                 'BI', 'PO', 'AT', 'RN', 'FR', 'RA', 'AC', 'TH', 'PA', 'U',\
-                 'NP', 'PU', 'AM', 'CM', 'BK', 'CT', 'ES', 'FM', 'MD', 'NO',\
-                 'LR', 'RF', 'DB', 'SG', 'BH', 'HS', 'MT', 'DS', 'RG', 'CN',\
-                 'NH', 'FL', 'MC', 'LV', 'TS', 'OG']
+ELEMENTS_LIST = [
+    "H",
+    "HE",
+    "LI",
+    "BE",
+    "B",
+    "C",
+    "N",
+    "O",
+    "F",
+    "NE",
+    "NA",
+    "MG",
+    "AL",
+    "SI",
+    "P",
+    "S",
+    "CL",
+    "AR",
+    "K",
+    "CA",
+    "SC",
+    "TI",
+    "V",
+    "CR",
+    "MN",
+    "FE",
+    "CO",
+    "NI",
+    "CU",
+    "ZN",
+    "GA",
+    "GE",
+    "AS",
+    "SE",
+    "BR",
+    "KR",
+    "RB",
+    "SR",
+    "Y",
+    "ZR",
+    "NB",
+    "MO",
+    "TC",
+    "RU",
+    "RH",
+    "PD",
+    "AG",
+    "CD",
+    "IN",
+    "SN",
+    "SB",
+    "TE",
+    "I",
+    "XE",
+    "CS",
+    "BA",
+    "LA",
+    "CE",
+    "PR",
+    "ND",
+    "PM",
+    "SM",
+    "EU",
+    "GD",
+    "TB",
+    "DY",
+    "HO",
+    "ER",
+    "TM",
+    "YB",
+    "LU",
+    "HF",
+    "TA",
+    "W",
+    "RE",
+    "OS",
+    "IR",
+    "PT",
+    "AU",
+    "HG",
+    "TL",
+    "PB",
+    "BI",
+    "PO",
+    "AT",
+    "RN",
+    "FR",
+    "RA",
+    "AC",
+    "TH",
+    "PA",
+    "U",
+    "NP",
+    "PU",
+    "AM",
+    "CM",
+    "BK",
+    "CT",
+    "ES",
+    "FM",
+    "MD",
+    "NO",
+    "LR",
+    "RF",
+    "DB",
+    "SG",
+    "BH",
+    "HS",
+    "MT",
+    "DS",
+    "RG",
+    "CN",
+    "NH",
+    "FL",
+    "MC",
+    "LV",
+    "TS",
+    "OG",
+]
+
+
+PERIODIC_TABLE = {
+    "H": 1,
+    "He": 2,
+    "Li": 3,
+    "Be": 4,
+    "B": 5,
+    "C": 6,
+    "N": 7,
+    "O": 8,
+    "F": 9,
+    "Ne": 10,
+    "Na": 11,
+    "Mg": 12,
+    "Al": 13,
+    "Si": 14,
+    "P": 15,
+    "S": 16,
+    "Cl": 17,
+    "Ar": 18,
+    "K": 19,
+    "Ca": 20,
+    "Sc": 21,
+    "Ti": 22,
+    "V": 23,
+    "Cr": 24,
+    "Mn": 25,
+    "Fe": 26,
+    "Co": 27,
+    "Ni": 28,
+    "Cu": 29,
+    "Zn": 30,
+    "Ga": 31,
+    "Ge": 32,
+    "As": 33,
+    "Se": 34,
+    "Br": 35,
+    "Kr": 36,
+    "Rb": 37,
+    "Sr": 38,
+    "Y": 39,
+    "Zr": 40,
+    "Nb": 41,
+    "Mo": 42,
+    "Tc": 43,
+    "Ru": 44,
+    "Rh": 45,
+    "Pd": 46,
+    "Ag": 47,
+    "Cd": 48,
+    "In": 49,
+    "Sn": 50,
+    "Sb": 51,
+    "Te": 52,
+    "I": 53,
+    "Xe": 54,
+    "Cs": 55,
+    "Ba": 56,
+    "La": 57,
+    "Ce": 58,
+    "Pr": 59,
+    "Nd": 60,
+    "Pm": 61,
+    "Sm": 62,
+    "Eu": 63,
+    "Gd": 64,
+    "Tb": 65,
+    "Dy": 66,
+    "Ho": 67,
+    "Er": 68,
+    "Tm": 69,
+    "Yb": 70,
+    "Lu": 71,
+    "Hf": 72,
+    "Ta": 73,
+    "W": 74,
+    "Re": 75,
+    "Os": 76,
+    "Ir": 77,
+    "Pt": 78,
+    "Au": 79,
+    "Hg": 80,
+    "Tl": 81,
+    "Pb": 82,
+    "Bi": 83,
+    "Po": 84,
+    "At": 85,
+    "Rn": 86,
+}
 
 
 # function from element symbol to atomic weight
 def element_to_weight(element: str) -> float:
+    """
+    Convert an element symbol to its atomic weight.
+
+    Args:
+        element (str): The element symbol.
+
+    Raises:
+        ValueError: If the element symbol is not found in the ELEMENTS_MASSES dictionary.
+
+    Returns:
+        weight (float): The atomic weight of the element.
+    """
     element = element.upper()
-    if element in elements_dict:
-        return elements_dict[element]
+    if element in ELEMENTS_MASSES:
+        return ELEMENTS_MASSES[element]
     else:
-        raise ValueError(f"Element '{element}' not found in elements_dict.")
+        raise ValueError(f"Element '{element}' not found in ELEMENTS_MASSES.")
+
+
+def atom_symbol_to_number(element: str) -> int:
+    """
+    Convert an element symbol to its atomic number.
+
+    Args:
+        element (str): The element symbol.
+
+    Raises:
+        ValueError: If the element symbol is not found in the PERIODIC_TABLE dictionary.
+
+    Returns:
+        int: The atomic number of the element.
+    """
+    try:
+        return PERIODIC_TABLE[element.capitalize()]
+    except KeyError:
+        raise ValueError(f"Unknown atom symbol: {element}")

@@ -1,103 +1,148 @@
 import ffits.forcefield.python_interface.fortran_bindings as fb
-from ffits.datatype.structure_data import ForceField
-from ffits.utils.geometry_calc import angle, bondlength, dihedral_angle
+from ffits.datatype.forcefield_data import ForceField
+from ffits.utils.geometry import angle, bondlength, dihedral_angle
 import numpy as np
 
-def energy_ff(xyz_displaced, ff: ForceField):
-    """
-    Python equivalent of the Fortran subroutine energy_ff.
-    
-    Parameters
-    ----------
-    geometry_displ : np.ndarray
-        Shape (3, nat). Atomic displacements or positions.
-    ff : object
-        Holds FF parameters, including lists and constants.
-        Must define:
-          nat, count_bond, bond_list, c_bond, bondlengths,
-          count_angle, angle_list, c_angle, angles,
-          count_dihedral, dihedral_list, c_dihedral, dihedrals,
-          count_lj, lj_list, c_lj, lj_lengths.
-    Returns
-    -------
-    float
-        The computed energy.
+
+def energy_ff(xyz_displaced: np.ndarray, ff: ForceField) -> float:
+    """Returns FF energy for given geometry.
+
+    Args:
+        xyz_displaced (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+
+    Raises:
+        Exception: _description_
+
+    Returns:
+        float: The computed energy.
     """
     if np.shape(xyz_displaced) == (ff.nat, 3):
-        raise Exception('Please give xyz in column-major format.')
-    
+        raise Exception("Please give xyz in column-major format.")
+
+    if np.shape(xyz_displaced)[1] != ff.nat:
+        raise Exception(
+            f"Number of atoms in the geometry ({np.shape(xyz_displaced)[1]}) does not match the number of atoms in the force field ({ff.nat})."
+        )
+
     fact_bond = 1.0
     fact_ang = 1.0
     fact_dih = 1.0
     energy = 0.0
-    
+
     # bonds
     ff.bonds["current_reference"] = ff.bonds["atoms"].apply(
-        lambda atoms: bondlength(xyz_displaced, atoms[0], atoms[1]))
-    ff.bonds['energy'] = fact_bond * ff.bonds['parameter']**2 * (ff.bonds['current_reference'] - ff.bonds['reference_value'])**2
-    energy += ff.bonds['energy'].sum()
+        lambda atoms: bondlength(xyz_displaced, atoms[0], atoms[1])
+    )
+    ff.bonds["energy"] = (
+        fact_bond
+        * ff.bonds["parameter"] ** 2
+        * (ff.bonds["current_reference"] - ff.bonds["reference_value"]) ** 2
+    )
+    energy += ff.bonds["energy"].sum()
 
     # angles
     ff.angles["current_reference"] = ff.angles["atoms"].apply(
-        lambda atoms: angle(xyz_displaced, atoms[0], atoms[1], atoms[2]))
-    ff.angles['energy'] = fact_ang * ff.angles['parameter']**2 * (ff.angles['current_reference'] - ff.angles['reference_value'])**2
-    energy += ff.angles['energy'].sum()
+        lambda atoms: angle(xyz_displaced, atoms[0], atoms[1], atoms[2])
+    )
+    ff.angles["energy"] = (
+        fact_ang
+        * ff.angles["parameter"] ** 2
+        * (ff.angles["current_reference"] - ff.angles["reference_value"]) ** 2
+    )
+    energy += ff.angles["energy"].sum()
 
     # dihedrals
     ff.dihedrals["current_reference"] = ff.dihedrals["atoms"].apply(
-        lambda atoms: dihedral_angle(xyz_displaced, atoms[0], atoms[1], atoms[2], atoms[3]))
-    ff.dihedrals['energy'] = fact_dih * ff.dihedrals['parameter']**2 * (
-        (np.cos(ff.dihedrals['current_reference']) - np.cos(ff.dihedrals['reference_value']))**2 
-        + (np.sin(ff.dihedrals['current_reference']) - np.sin(ff.dihedrals['reference_value']))**2 
+        lambda atoms: dihedral_angle(
+            xyz_displaced, atoms[0], atoms[1], atoms[2], atoms[3]
+        )
     )
-    energy += ff.dihedrals['energy'].sum()
+    ff.dihedrals["energy"] = (
+        fact_dih
+        * ff.dihedrals["parameter"] ** 2
+        * (
+            (
+                np.cos(ff.dihedrals["current_reference"])
+                - np.cos(ff.dihedrals["reference_value"])
+            )
+            ** 2
+            + (
+                np.sin(ff.dihedrals["current_reference"])
+                - np.sin(ff.dihedrals["reference_value"])
+            )
+            ** 2
+        )
+    )
+    energy += ff.dihedrals["energy"].sum()
 
     # repulsive
     ff.repulsive["current_reference"] = ff.repulsive["atoms"].apply(
-        lambda atoms: bondlength(xyz_displaced, atoms[0], atoms[1]))
-    ff.repulsive['energy'] = fact_bond * 4 * ff.repulsive['parameter']**2 * (ff.repulsive['reference_value']/ff.repulsive['current_reference'])**12
-    energy += ff.repulsive['energy'].sum()
-    
+        lambda atoms: bondlength(xyz_displaced, atoms[0], atoms[1])
+    )
+    ff.repulsive["energy"] = (
+        fact_bond
+        * 4
+        * ff.repulsive["parameter"] ** 2
+        * (ff.repulsive["reference_value"] / ff.repulsive["current_reference"]) ** 12
+    )
+    energy += ff.repulsive["energy"].sum()
+
     return energy
-
-
-
 
 
 # -------------------------------------------------------------------------
 # --- Bond Gradient -------------------------------------------------------
 # -------------------------------------------------------------------------
-def bond_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray):
-    """adds gradient"""
+def bond_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray) -> None:
+    """Calculates FF bond gradient of given displaced geometry and adds it in place to the given gradient array. The gradient is calculated for all bond terms in the force field using the Fortran bindings.
+
+    Args:
+        xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+        gradient (np.ndarray): FF gradient array to which the calculated gradient will be added in place (shape: [nat*3])
+    """
     counter = 0
     for _, row in ff.bonds.iterrows():
-        atoms = row['atoms']      
-        param = row['reference_value']
-        c_val = row['parameter']**2
+        atoms = row["atoms"]
+        param = row["reference_value"]
+        c_val = row["parameter"] ** 2
         fb.get_single_bond_gradient(xyz, atoms, param, c_val, gradient)
 
 
 # -------------------------------------------------------------------------
 # --- Angle Gradient ------------------------------------------------------
 # -------------------------------------------------------------------------
-def angle_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray):
-    """adds gradient"""
+def angle_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray) -> None:
+    """Calculates FF angle gradient of given displaced geometry and adds it in place to the given gradient array. The gradient is calculated for all angle terms in the force field using the Fortran bindings.
+
+    Args:
+        xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+        gradient (np.ndarray): FF gradient array to which the calculated gradient will be added in place (shape: [nat*3])
+    """
     for _, row in ff.angles.iterrows():
-        atoms = row['atoms']      
-        param = row['reference_value']
-        c_val = row['parameter']**2
+        atoms = row["atoms"]
+        param = row["reference_value"]
+        c_val = row["parameter"] ** 2
         fb.get_single_angle_gradient(xyz, atoms, param, c_val, gradient)
 
 
 # -------------------------------------------------------------------------
 # --- Dihedral Gradient ---------------------------------------------------
 # -------------------------------------------------------------------------
-def dihedral_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray):
-    """adds gradient"""
+def dihedral_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray) -> None:
+    """Calculates FF dihedral gradient of given displaced geometry and adds it in place to the given gradient array. The gradient is calculated for all dihedral terms in the force field using the Fortran bindings.
+
+    Args:
+        xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+        gradient (np.ndarray): FF gradient array to which the calculated gradient will be added in place (shape: [nat*3])
+    """
     for _, row in ff.dihedrals.iterrows():
-        atoms = row['atoms']      
-        param = row['reference_value']
-        c_val = row['parameter']**2
+        atoms = row["atoms"]
+        param = row["reference_value"]
+        c_val = row["parameter"] ** 2
 
         fb.get_single_dihedral_gradient(xyz, atoms, param, c_val, gradient)
 
@@ -105,24 +150,43 @@ def dihedral_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray):
 # -------------------------------------------------------------------------
 # --- Repulsive Gradient --------------------------------------------------
 # -------------------------------------------------------------------------
-def repulsive_gradient(xyz: np.array, ff: ForceField, gradient: np.ndarray):
-    """adds gradient"""
+def repulsive_gradient(xyz: np.array, ff: ForceField, gradient: np.ndarray) -> None:
+    """Calculates FF repulsive gradient of given displaced geometry and adds it in place to the given gradient array. The gradient is calculated for all repulsive terms in the force field using the Fortran bindings.
+
+    Args:
+        xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+        gradient (np.ndarray): FF gradient array to which the calculated gradient will be added in place (shape: [nat*3])
+    """
     for _, row in ff.repulsive.iterrows():
-        atoms = row['atoms']      
-        param = row['reference_value']
-        c_val = row['parameter']**2
+        atoms = row["atoms"]
+        param = row["reference_value"]
+        c_val = row["parameter"] ** 2
         fb.get_single_repulsive_gradient(xyz, atoms, param, c_val, gradient)
 
 
 def complete_gradient(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
-    """
-    Computes total gradient (flattened, Fortran order) for all force field terms.
-    Uses DataFrame-based force field representation.
+    """Calculates complete FF gradient of the given displaced geometry.
+
+    Args:
+        xyz_displaced (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+
+    Raises:
+        Exception: Raises an exception if the input geometry is not in the correct format or if the number of atoms does not match the force field.
+
+    Returns:
+        np.ndarray: calculated gradient array (shape: [nat*3])
     """
     if np.shape(xyz_displaced) == (ff.nat, 3):
-        raise Exception('Please give xyz in column-major format.')
-    
-    gradient = np.zeros((ff.nat * 3), order='F')
+        raise Exception("Please give xyz in column-major format.")
+
+    if np.shape(xyz_displaced)[1] != ff.nat:
+        raise Exception(
+            f"Number of atoms in the geometry ({np.shape(xyz_displaced)[1]}) does not match the number of atoms in the force field ({ff.nat})."
+        )
+
+    gradient = np.zeros((ff.nat * 3), order="F")
 
     bond_gradient(xyz_displaced, ff, gradient)
     angle_gradient(xyz_displaced, ff, gradient)
@@ -132,17 +196,21 @@ def complete_gradient(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
     return gradient
 
 
-
-
 # -------------------------------------------------------------------------
 # --- Bond hessian -------------------------------------------------------
 # -------------------------------------------------------------------------
-def bond_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray):
-    """adds hessian"""
+def bond_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray) -> None:
+    """Calculates FF bond hessian of given displaced geometry and adds it in place to the given hessian array. The hessian is calculated for all bond terms in the force field using the Fortran bindings.
+
+    Args:
+        xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+        hessian (np.ndarray): FF hessian array to which the calculated hessian will be added in place (shape: [nat*3, nat*3])
+    """
     for _, row in ff.bonds.iterrows():
-        atoms = row['atoms']      
-        param = row['reference_value']
-        c_val = row['parameter']**2
+        atoms = row["atoms"]
+        param = row["reference_value"]
+        c_val = row["parameter"] ** 2
 
         fb.get_single_bond_hessian(xyz, atoms, param, c_val, hessian)
 
@@ -150,24 +218,36 @@ def bond_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray):
 # -------------------------------------------------------------------------
 # --- Angle hessian ------------------------------------------------------
 # -------------------------------------------------------------------------
-def angle_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray):
-    """adds hessian"""
+def angle_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray) -> None:
+    """Calculates FF angle hessian of given displaced geometry and adds it in place to the given hessian array. The hessian is calculated for all angle terms in the force field using the Fortran bindings.
+
+    Args:
+        xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+        hessian (np.ndarray): FF hessian array to which the calculated hessian will be added in place (shape: [nat*3, nat*3])
+    """
     for _, row in ff.angles.iterrows():
-        atoms = row['atoms']      
-        param = row['reference_value']
-        c_val = row['parameter']**2
+        atoms = row["atoms"]
+        param = row["reference_value"]
+        c_val = row["parameter"] ** 2
         fb.get_single_angle_hessian(xyz, atoms, param, c_val, hessian)
 
 
 # -------------------------------------------------------------------------
 # --- Dihedral hessian ---------------------------------------------------
 # -------------------------------------------------------------------------
-def dihedral_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray):
-    """adds hessian"""
+def dihedral_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray) -> None:
+    """Calculates FF dihedral hessian of given displaced geometry and adds it in place to the given hessian array. The hessian is calculated for all dihedral terms in the force field using the Fortran bindings.
+
+    Args:
+        xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+        hessian (np.ndarray): FF hessian array to which the calculated hessian will be added in place (shape: [nat*3, nat*3])
+    """
     for _, row in ff.dihedrals.iterrows():
-        atoms = row['atoms']      
-        param = row['reference_value']
-        c_val = row['parameter']**2
+        atoms = row["atoms"]
+        param = row["reference_value"]
+        c_val = row["parameter"] ** 2
 
         fb.get_single_dihedral_hessian(xyz, atoms, param, c_val, hessian)
 
@@ -175,24 +255,43 @@ def dihedral_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray):
 # -------------------------------------------------------------------------
 # --- Repulsive hessian --------------------------------------------------
 # -------------------------------------------------------------------------
-def repulsive_hessian(xyz: np.array, ff: ForceField, hessian: np.ndarray):
-    """adds hessian"""
+def repulsive_hessian(xyz: np.array, ff: ForceField, hessian: np.ndarray) -> None:
+    """Calculates FF repulsive hessian of given displaced geometry and adds it in place to the given hessian array. The hessian is calculated for all repulsive terms in the force field using the Fortran bindings.
+
+    Args:
+        xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+        hessian (np.ndarray): FF hessian array to which the calculated hessian will be added in place (shape: [nat*3, nat*3])
+    """
     for _, row in ff.repulsive.iterrows():
-        atoms = row['atoms']      
-        param = row['reference_value']
-        c_val = row['parameter']**2
+        atoms = row["atoms"]
+        param = row["reference_value"]
+        c_val = row["parameter"] ** 2
         fb.get_single_repulsive_hessian(xyz, atoms, param, c_val, hessian)
 
 
 def complete_hessian(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
-    """
-    Computes total hessian (Fortran order) for all force field terms.
-    Uses DataFrame-based force field representation.
+    """Calculates complete FF hessian of the given displaced geometry.
+
+    Args:
+        xyz_displaced (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
+        ff (ForceField): Force field object containing parameters and lists for energy calculation
+
+    Raises:
+        Exception: Raises an exception if the input geometry is not in the correct format or if the number of atoms does not match the force field.
+
+    Returns:
+        np.ndarray: calculated hessian array (shape: [nat*3, nat*3])
     """
     if np.shape(xyz_displaced) == (ff.nat, 3):
-        raise Exception('Please give xyz in column-major format.')
+        raise Exception("Please give xyz in column-major format.")
 
-    hessian = np.zeros((ff.nat * 3, ff.nat * 3), order='F')
+    if np.shape(xyz_displaced)[1] != ff.nat:
+        raise Exception(
+            f"Number of atoms in the geometry ({np.shape(xyz_displaced)[1]}) does not match the number of atoms in the force field ({ff.nat})."
+        )
+
+    hessian = np.zeros((ff.nat * 3, ff.nat * 3), order="F")
 
     bond_hessian(xyz_displaced, ff, hessian)
     angle_hessian(xyz_displaced, ff, hessian)
