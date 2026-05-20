@@ -327,28 +327,17 @@ def hessian_weighting_mix_list(
     Create a dictionary with bond, angle, and dihedral tuples as keys and mixing factors for the reactant as values.
     Combines results from bonds, angles, and dihedrals, only including terms that contain at least one bond from the changing bonds.
 
-    Parameters
-    ----------
-    info1 : StructuralInformation
-        Structural information for the reactant.
-    info2 : StructuralInformation
-        Structural information for the product.
-    bonds_df : pd.DataFrame
-        DataFrame with bonds already combined from both force fields.
-    angles_df : pd.DataFrame
-        DataFrame with angles already combined from both force fields.
-    dihedrals_df : pd.DataFrame
-        DataFrame with dihedrals already combined from both force fields.
-    sharpness : float
-        Controls how sharply the mixing factor changes with the Hessian ratio (default: 0.2).
-    threshold : float
-        Minimum WBO change to consider a bond for mixing (default: 0.1).
+    Args
+        info1 (StructuralInformation): Structural information for the reactant.
+        info2 (StructuralInformation): Structural information for the product.
+        bonds_df (pd.DataFrame): DataFrame with bonds already combined from both force fields.
+        angles_df (pd.DataFrame): DataFrame with angles already combined from both force fields.
+        dihedrals_df (pd.DataFrame): DataFrame with dihedrals already combined from both force fields.
+        sharpness (float): Controls how sharply the mixing factor changes with the Hessian ratio (default: 0.2).
+        threshold (float): Minimum WBO change to consider a bond for mixing (default: 0.1).
 
     Returns
-    -------
-    dict
-        Dictionary with bond tuples (i, j), angle tuples (i, j, k), and dihedral tuples (i, j, k, l) as keys
-        and mixing factors for the reactant as values.
+        (dict): Dictionary with bond tuples (i, j), angle tuples (i, j, k), and dihedral tuples (i, j, k, l) as keys and mixing factors for the reactant as values.
     """
     param_dict = {}
     wbo_diff = compare_wbo_differences(info1, info2, threshold=threshold)
