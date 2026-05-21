@@ -353,3 +353,120 @@ def fill_ff(
     ff.repulsive = pd.DataFrame({"type": "repulsive", "atoms": get_repulsive_atoms(A)})
     ff.repulsive["reference_value"] = ff.repulsive["atoms"].apply(ref_repulsive)
     ff.repulsive["parameter"] = ff.repulsive["atoms"].apply(param_repulsive)
+    hydrogen_bonds = _find_hydrogen_bonding(ff=ff, info=info)
+
+    # Add hydrogen bonds to ff.bonds and remove from ff.repulsive
+    if hydrogen_bonds:
+        hbond_bonds = list(hydrogen_bonds.keys())
+        hbond_angles = [
+            (donor, h, data["bonded_atom"])
+            for (donor, h), data in hydrogen_bonds.items()
+        ]
+
+        # Add hydrogen bonds to bonds dataframe
+        hbond_df = pd.DataFrame({"type": "bonds", "atoms": hbond_bonds})
+        hbond_df["reference_value"] = hbond_df["atoms"].apply(ref_bond)
+        hbond_df["parameter"] = 0.5
+        ff.bonds = pd.concat([ff.bonds, hbond_df], ignore_index=True)
+
+        # Sort bonds
+        atoms_array = np.array(ff.bonds["atoms"].tolist())
+        ff.bonds = ff.bonds.iloc[
+            np.lexsort((atoms_array[:, 1], atoms_array[:, 0]))
+        ].reset_index(drop=True)
+
+        # Add hydrogen bond angles to angles dataframe
+        hangle_df = pd.DataFrame({"type": "angles", "atoms": hbond_angles})
+        hangle_df["reference_value"] = hangle_df["atoms"].apply(ref_angle)
+        hangle_df["parameter"] = 0.25
+        ff.angles = pd.concat([ff.angles, hangle_df], ignore_index=True)
+
+        # Sort angles
+        angles_array = np.array(ff.angles["atoms"].tolist())
+        ff.angles = ff.angles.iloc[
+            np.lexsort((angles_array[:, 2], angles_array[:, 1], angles_array[:, 0]))
+        ].reset_index(drop=True)
+
+        # Remove hydrogen bonds from repulsive
+        ff.repulsive = ff.repulsive[
+            ~ff.repulsive["atoms"].isin(hbond_bonds)
+        ].reset_index(drop=True)
+
+
+def _find_hydrogen_bonding(ff: ForceField, info: StructuralInformation) -> dict:
+    """Identifies hydrogen bonding among atoms for repulsive interactions by distance, angle and atom type.
+
+    Args:
+        ff (ForceField): ForceField object containing repulsive terms
+        info (StructuralInformation): Structural information with atom types, coordinates, and connectivity
+
+    Returns:
+        dict: Dictionary of hydrogen bonds and their properties, keyed by (donor_atom, h_atom) with values containing bond length, angle, and bonded atom information for example {(21, 68): {'bl': 3.6, 'angle': 2.9, 'bonded_atom': 66}, (67, 34): {'bl': 3.8, 'angle': 3.0, 'bonded_atom': 5}}
+    """
+    import math
+
+    hbond_donors = {"O", "N", "F"}
+    angle_threshold_deg = 20.0
+    angle_threshold_rad = math.radians(angle_threshold_deg)
+    factor = 0.95
+
+    hydrogen_bonds = {}
+    logger.debug(
+        f"Starting hydrogen bond detection among {len(ff.repulsive)} repulsive pairs."
+    )
+
+    for _, row in ff.repulsive.iterrows():
+        atoms = row["atoms"]
+        atom_i, atom_j = atoms
+
+        elem_i = info.atom_types[atom_i]
+        elem_j = info.atom_types[atom_j]
+
+        is_donor_h = (elem_i in hbond_donors and elem_j == "H") or (
+            elem_j in hbond_donors and elem_i == "H"
+        )
+
+        if not is_donor_h:
+            continue
+
+        if elem_j == "H":
+            h_atom = atom_j
+            donor_atom = atom_i
+        else:
+            h_atom = atom_i
+            donor_atom = atom_j
+
+        bl = bondlength(info.fortran_xyz, donor_atom, h_atom)
+        vdw_dist = info.vander_matrix[donor_atom, h_atom]
+
+        if bl >= factor * vdw_dist:
+            continue
+
+        bonded_to_h = []
+        for neighbor_idx in range(info.nat):
+            if neighbor_idx != donor_atom and neighbor_idx != h_atom:
+                if info.bo_matrix[h_atom, neighbor_idx] > 0:
+                    bonded_to_h.append(neighbor_idx)
+        logger.debug(f"Atom {h_atom} is bonded to atoms: {bonded_to_h}")
+
+        for bonded_atom in bonded_to_h:
+            ang = angle(info.fortran_xyz, donor_atom, h_atom, bonded_atom)
+            logger.debug(
+                f"Calculating angle for pair ({donor_atom}, {h_atom}, {bonded_atom}): {math.degrees(ang):.2f}°"
+            )
+
+            if abs(ang - math.pi) < angle_threshold_rad:
+                hydrogen_bonds[(donor_atom, h_atom)] = {
+                    "bl": bl,
+                    "angle": ang,
+                    "bonded_atom": bonded_atom,
+                }
+                logger.info(
+                    f"Hydrogen bond found: {info.atom_types[donor_atom]}"
+                    f"({donor_atom})-H({h_atom})"
+                    f"...{info.atom_types[bonded_atom]}({bonded_atom}), "
+                    f"angle: {math.degrees(ang):.2f}°, "
+                    f"distance: {bl:.4f}"
+                )
+    logger.debug(f"Total hydrogen bonds detected: {hydrogen_bonds}")
+    return hydrogen_bonds
