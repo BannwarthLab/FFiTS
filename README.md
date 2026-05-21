@@ -303,3 +303,11 @@ $$f_{ij, \mathrm{prod}} = 1- f_{ij, \mathrm{reac}} $$
 
 The sharpness parameter $\alpha$ modulates how decisive the Hessian weighting is. The higher $\alpha$, the closer $f_{ij}$ to 0.5. The lower, the stronger the structure with a higher Hessian element is weighted. The default is 0.2.
 
+
+
+# minimum working example python API 
+
+```python
+# get a ts guess from structure 1 and 2 on file. 
+
+```
