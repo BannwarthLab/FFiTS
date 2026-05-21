@@ -57,22 +57,25 @@ def create_tsff(
             info1, info2, tsff.bonds, tsff.angles, tsff.dihedrals, sharpness=sharpness
         )
         # get average reac parameter for bond terms (so tupels with only two entries)
-        average_bond_param_reac = np.mean(
-            [factor for atoms, factor in params_mix.items() if len(atoms) == 2]
-        )
-        average_param_reac = np.mean(list(params_mix.values()))
-        logger.debug(
-            f"Average mixing factor for reactant across bond terms: {average_bond_param_reac:.4f}."
-        )
+        if params_mix:
+            average_bond_param_reac = np.mean(
+                [factor for atoms, factor in params_mix.items() if len(atoms) == 2]
+            )
+        else:
+            average_bond_param_reac = 0.5
 
-        if average_bond_param_reac <= 0.5:
+        if average_bond_param_reac < 0.5:
             logger.info(
-                f"The optimization with the TSFF will start from the product geometry, since the average mixing factor for bond terms is {average_bond_param_reac:.4f} (<= 0.5)."
+                f"The optimization with the TSFF will start from the product geometry, since the average mixing factor for bond terms is {average_bond_param_reac:.4f} (< 0.5)."
             )
             tsff.start_from_reactant = False
+        elif average_bond_param_reac >= 0.5:
+            logger.info(
+                f"The optimization with the TSFF will start from the reactant geometry, since the average mixing factor for bond terms is {average_bond_param_reac:.4f} (>= 0.5)."
+            )
         else:
             logger.info(
-                f"The optimization with the TSFF will start from the reactant geometry, since the average mixing factor for bond terms is {average_bond_param_reac:.4f} (> 0.5)."
+                f"The optimization with the TSFF will start from the reactant geometry per default, since the average mixing factor for bond terms is {average_bond_param_reac:.4f}."
             )
 
     mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds, fact1, fact2, params_mix)
