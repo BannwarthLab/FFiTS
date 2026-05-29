@@ -10,7 +10,7 @@
 ***Force Field-interpolated Transition States***
 
 **Author:** *Daria Babushkina*  
-**Version:** 0.2.1-alpha  
+**Version:** 0.3.1-alpha  
 **License:** MIT  
 **Status:** Development  
 **Python:** >=3.11  
@@ -214,6 +214,8 @@ perform_two_optimizations = true
 ---
 
 #### **Postprocessing Settings** (`[postprocessing]`)
+
+!!! Does NOT DO ANYTHING YET
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
