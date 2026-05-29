@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 import os
 
+
 def test_standard_rctpath_run():
     """
     Test that ffits creates optimized.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
@@ -28,9 +29,7 @@ def test_standard_rctpath_run():
             ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
             output = temp_path / "path_trj.xyz"
-            assert (
-                output.exists()
-            ), f"path_trj.xyz was not created in {temp_path}"
+            assert output.exists(), f"path_trj.xyz was not created in {temp_path}"
 
             ff_csv_file = temp_path / "tsff_2.csv"
             assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"

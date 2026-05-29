@@ -10,9 +10,7 @@ import contextlib
 logger = logging.getLogger(__name__)
 
 
-def get_one_image(
-    cd: CalculationData, trajectory: list, step: int
-) -> list:
+def get_one_image(cd: CalculationData, trajectory: list, step: int) -> list:
     """Calculates an image of the path, adds it to the existing trajectory and returns the whole trajectory
 
     Args:
@@ -77,7 +75,7 @@ def create_path(
         )
         calcdata.ts_calc.factor_reactant = fact1
         calcdata.ts_calc.factor_product = fact2
-        
+
         trajectory, converged = get_one_image(calcdata, trajectory, step)
         energy = xtb.singlepoint(f"optimized_{step}.xyz", f"{step}")
         if not converged:
@@ -95,4 +93,4 @@ def create_path(
     trajectory[-1]["energy"] = energy
 
     write_trajectory_to_xyz(trajectory, "path_trj.xyz")
-    return trajectory,
+    return (trajectory,)

@@ -88,7 +88,7 @@ def run_reaction_path_mode(
     calcdata.reactant_path.xyz_filename = reactant_filename
     calcdata.product_path.xyz_filename = product_filename
     trajectory = create_path(
-        calcdata, steps=steps-2, minfact1=0 + 1 / steps, maxfact1=1 - 1 / steps
+        calcdata, steps=steps - 2, minfact1=0 + 1 / steps, maxfact1=1 - 1 / steps
     )
 
     return trajectory
