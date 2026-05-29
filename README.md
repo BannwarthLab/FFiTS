@@ -48,6 +48,14 @@ ffits reactant.xyz product.xyz
 ```bash
 ffits struc.xyz --opt ff.csv
 ```
+3. Path generation mode: Generates a trajectory `path_trj.xyz` between reactant and product by changing the mixing factors of reactant and product structures. Basically performs the TS guess mode `nr_of_images - 2` times and assembles them to a trj. 
+```bash
+ffits reactant.xyz product.xyz --reaction_path nr_of_images
+```
+4. Parameterization mode: Creates a parameterized FF for given `struc.xyz`. IMPORTANT: This may create different dihedral definitions as in TS guess mode for the same structure, as no comparison of reactant and product can be performed. 
+```bash
+ffits struc.xyz --parameterization
+```
 
 Command line keywords are:
 - `--config`
@@ -82,14 +90,17 @@ ffits reactant.xyz product.xyz --config config.toml
 | `charge` | int | 0 | Total charge of the molecular system |
 | `multiplicity` | int | 1 | Spin multiplicity (1=singlet, 2=doublet, 3=triplet, etc.). Must be between 1 and 3. |
 | `xtb_path` | str | 'xtb' | Path to xtb binary |
-| `xtb_input_name` | str | 'None' | xtb input name for `xtb coord.xyz --input xtb_input_name` call |
-| `xtb_alpb_solvent` | str | 'None' | Solvent for `--alpb` xtb commandline argument |
+| `use_gxtb` | bool | false | Whether to use gxtb (GPU version) instead of xtb |
+| `xtb_input_name` | str | None | xtb input name for `xtb coord.xyz --input xtb_input_name` call |
+| `xtb_alpb_solvent` | str | None | Solvent for `--alpb` xtb commandline argument |
 
 **Example:**
 ```toml
 [system]
 charge = -1
 multiplicity = 1
+use_gxtb = false
+xtb_path = "xtb"
 ```
 
 ---
@@ -111,6 +122,7 @@ multiplicity = 1
 | `geometry_optimization` | bool | false | Whether to perform geometry optimization with GFN2-xTB |
 | `wbo_calc` | bool | true | Whether to calculate WBO at runtime. If false, read from `wbo_filename` |
 | `hessian_calc` | bool | true | Whether to calculate Hessian at runtime. If false, read from `hessian_filename` |
+| `bo_treshold` | float | 0.0 | Threshold for defining bonds based on Wiberg bond orders |
 | `ff_parameterization` | bool | false | Whether to parameterize force field. If false, read from `ff_filename` |
 | `test_parameterization` | bool | false | If true, use parameterized FF to optimize structure and print RMSD |
 | `ff_parameterization_maxiteration` | int | 1000 | Maximum iterations for FF parameterization |
@@ -128,6 +140,7 @@ hessian_filename = "reactant.hess"
 [reactant.calculation]
 wbo_calc = true
 hessian_calc = false
+bo_treshold = 0.1
 ff_parameterization = true
 ff_parameterization_threshold = 0.001
 ```
@@ -166,6 +179,7 @@ ff_parameterization = true
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
+| `hessian_filename` | string | "ts.hess" | Path to file with Hessian matrix for TS |
 | `ff_filename` | string | "tsff.csv" | Output path for TS FF parameters |
 
 ##### TS Calculations (`[ts_guess_calculation.calculation]`)
@@ -174,8 +188,9 @@ ff_parameterization = true
 |-----------|------|---------|-------------|
 | `factor_reactant` | float | 0.5 | Weight of reactant in TS interpolation (0.0-1.0) |
 | `factor_product` | float | 0.5 | Weight of product in TS interpolation (0.0-1.0). Must sum to 1.0 with factor_reactant |
-| `optimizer` | string | "molbar-optimizer" | Which optimizer to use. Options: `"molbar-optimizer"`|
-| `molbar_optimizer_e_tol` | float | 1e-8 | Energy tolerance for molbar optimizer |
+| `optimizer` | string | "molbar-optimizer" | Which optimizer to use. Options: `"molbar-optimizer"`, `"scipy-optimizer"` |
+| `average_with_hess_weight` | bool | true | Whether to weight reactant/product factors based on Hessian values (see Hessian-Based Bond Weighting). If false, uses simple averaging |
+| `molbar_optimizer_e_tol` | float | 1e-4 | Energy tolerance for molbar optimizer |
 | `molbar_optimizer_x_tol` | float | 1e-3 | Step size tolerance for molbar optimizer |
 | `molbar_optimizer_max_micro_steps` | int | 1 | Maximum micro-steps in molbar optimizer |
 | `energy_threshold_two_optimizations` | float | 0.15 | Energy threshold for repeating optimization from product if reactant path is too high |
@@ -184,18 +199,20 @@ ff_parameterization = true
 **Example:**
 ```toml
 [ts_guess_calculation.path]
-ff_filename = "ts_forcefield.ff"
+hessian_filename = "ts.hess"
+ff_filename = "ts_forcefield.csv"
 
 [ts_guess_calculation.calculation]
 factor_reactant = 0.6
 factor_product = 0.4
 optimizer = "molbar-optimizer"
-molbar_optimizer_e_tol = 1e-7
+average_with_hess_weight = true
+molbar_optimizer_e_tol = 1e-5
 perform_two_optimizations = true
 ```
 
 ---
-<!-- 
+
 #### **Postprocessing Settings** (`[postprocessing]`)
 
 | Parameter | Type | Default | Description |
@@ -205,7 +222,7 @@ perform_two_optimizations = true
 **Example:**
 ```toml
 [postprocessing]
-relaxation = "gfn2-xtb" -->
+relaxation = "gfn2-xtb"
 ```
 
 ---
@@ -216,6 +233,8 @@ relaxation = "gfn2-xtb" -->
 [system]
 charge = 0
 multiplicity = 1
+use_gxtb = false
+xtb_path = "xtb"
 
 [reactant.path]
 wbo_filename = "reactant.wbo"
@@ -226,8 +245,10 @@ ff_filename = "reactant.ff"
 geometry_optimization = false
 wbo_calc = true
 hessian_calc = true
+bo_treshold = 0.0
 ff_parameterization = false
 test_parameterization = false
+ff_parameter_repulsion = 0.01
 ff_parameterization_maxiteration = 1000
 ff_parameterization_stepsize = 0.15
 ff_parameterization_threshold = 0.0005
@@ -242,39 +263,42 @@ ff_filename = "product.ff"
 geometry_optimization = false
 wbo_calc = true
 hessian_calc = true
+bo_treshold = 0.0
 ff_parameterization = false
 test_parameterization = false
+ff_parameter_repulsion = 0.01
 ff_parameterization_maxiteration = 1000
 ff_parameterization_stepsize = 0.15
 ff_parameterization_threshold = 0.0005
 ff_parameterization_constant_repulsion = true
 
 [ts_guess_calculation.path]
-ff_filename = "ts_forcefield.ff"
+hessian_filename = "ts.hess"
+ff_filename = "ts_forcefield.csv"
 
 [ts_guess_calculation.calculation]
 factor_reactant = 0.5
 factor_product = 0.5
 optimizer = "molbar-optimizer"
-molbar_optimizer_e_tol = 1e-8
+average_with_hess_weight = true
+molbar_optimizer_e_tol = 1e-4
 molbar_optimizer_x_tol = 1e-3
 molbar_optimizer_max_micro_steps = 1
 energy_threshold_two_optimizations = 0.15
 perform_two_optimizations = false
 
+[postprocessing]
+relaxation = "None"
 ```
-
-<!-- # [postprocessing]
-# relaxation = "None"
-``` -->
 
 ### Notes
 
 - **Constraints**: 
   - `multiplicity` must be 1, 2, or 3
   - `factor_reactant + factor_product` must equal 1.0
-  - `optimizer` must be one of the specified options
-  - `relaxation` must be one of the specified options
+  - `optimizer` must be one of the specified options (`"molbar-optimizer"` or `"scipy-optimizer"`)
+  - `relaxation` must be one of the specified options (`"None"`, `"gfn2-xtb"`, or `"pbeh-3c"`)
+  - If `hessian_calc` is false, the corresponding `hessian_filename` file must exist
 
 - **Command-line Override**: You can override specific settings using command-line arguments:
   ```bash
