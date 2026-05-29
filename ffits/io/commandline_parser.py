@@ -74,21 +74,34 @@ def parse_args():
         "--charge",
         "-chrg",
         type=int,
-        default=None,
+        default=0,
         help="Charge for the system (default: 0).",
     )
     parser.add_argument(
         "--multiplicity",
         "-mult",
         type=int,
-        default=None,
+        default=1,
         help="Multiplicity of the system (default: 1).",
     )
     parser.add_argument(
         "--opt",
         type=str,
         default=None,
-        help="Run optimizer mode with specified csv ff.",
+        help="Runs optimizer mode with specified csv ff.",
+    )
+    parser.add_argument(
+        "--parameterize",
+        action="store_true",
+        default=False,
+        help="Runs parameterization mode to create FF for given structure.",
+    )
+    parser.add_argument(
+        "--reaction_path",
+        "--rctpath",
+        type=int,
+        default=None,
+        help="Runs reaction path mode with specified number of frames along the reaction path.",
     )
     parser.add_argument(
         "--debug",
@@ -103,6 +116,10 @@ def parse_args():
         parser.error("Exactly two structure files must be provided for TS guess mode.")
     if args.opt and len(args.structures) != 1:
         parser.error("Exactly one structure file must be provided for optimizer mode.")
+    if args.reaction_path and len(args.structures) != 2:
+        parser.error(
+            "Exactly two structure files must be provided for reaction path mode."
+        )
 
     # Validate structure files
     for f in args.structures:
@@ -128,6 +145,8 @@ def parse_args():
         "config_file": args.config,
         "charge": args.charge,
         "multiplicity": args.multiplicity,
+        "parameterize": args.parameterize,
+        "reaction_path": args.reaction_path,
         "optff": args.opt,
         "debug": args.debug,
     }

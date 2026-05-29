@@ -104,24 +104,33 @@ class TestReactantPathConfig:
     def test_reactant_hessian_filename_from_config(self):
         """Verify that reactant hessian_filename from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write('[reactant.path]\nhessian_filename = "reactant_hessian_matrix.hess"\n')
+            f.write(
+                '[reactant.path]\nhessian_filename = "reactant_hessian_matrix.hess"\n'
+            )
             f.flush()
             temp_path = f.name
         try:
             calcdata = CalculationData.from_config(temp_path, test=True)
-            assert calcdata.reactant_path.hessian_filename == "reactant_hessian_matrix.hess"
+            assert (
+                calcdata.reactant_path.hessian_filename
+                == "reactant_hessian_matrix.hess"
+            )
         finally:
             os.unlink(temp_path)
 
     def test_reactant_ff_filename_from_config(self):
         """Verify that reactant ff_filename from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write('[reactant.path]\nff_filename = "reactant_force_field_params.csv"\n')
+            f.write(
+                '[reactant.path]\nff_filename = "reactant_force_field_params.csv"\n'
+            )
             f.flush()
             temp_path = f.name
         try:
             calcdata = CalculationData.from_config(temp_path, test=True)
-            assert calcdata.reactant_path.ff_filename == "reactant_force_field_params.csv"
+            assert (
+                calcdata.reactant_path.ff_filename == "reactant_force_field_params.csv"
+            )
         finally:
             os.unlink(temp_path)
 
@@ -294,12 +303,16 @@ class TestReactantCalculationConfig:
     def test_reactant_ff_parameterization_constant_repulsion_from_config(self):
         """Verify that reactant ff_parameterization_constant_repulsion from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[reactant.calculation]\nff_parameterization_constant_repulsion = false\n")
+            f.write(
+                "[reactant.calculation]\nff_parameterization_constant_repulsion = false\n"
+            )
             f.flush()
             temp_path = f.name
         try:
             calcdata = CalculationData.from_config(temp_path)
-            assert calcdata.reactant_calc.ff_parameterization_constant_repulsion is False
+            assert (
+                calcdata.reactant_calc.ff_parameterization_constant_repulsion is False
+            )
         finally:
             os.unlink(temp_path)
 
@@ -432,7 +445,9 @@ class TestProductCalculationConfig:
     def test_product_ff_parameterization_constant_repulsion_from_config(self):
         """Verify that product ff_parameterization_constant_repulsion from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[product.calculation]\nff_parameterization_constant_repulsion = true\n")
+            f.write(
+                "[product.calculation]\nff_parameterization_constant_repulsion = true\n"
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -448,7 +463,9 @@ class TestTSPathConfig:
     def test_ts_hessian_filename_from_config(self):
         """Verify that TS hessian_filename from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write('[ts_guess_calculation.path]\nhessian_filename = "ts_hessian.hess"\n')
+            f.write(
+                '[ts_guess_calculation.path]\nhessian_filename = "ts_hessian.hess"\n'
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -476,7 +493,9 @@ class TestTSCalculationConfig:
     def test_ts_factor_reactant_from_config(self):
         """Verify that TS factor_reactant from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[ts_guess_calculation.calculation]\nfactor_reactant = 0.3\nfactor_product = 0.7\n")
+            f.write(
+                "[ts_guess_calculation.calculation]\nfactor_reactant = 0.3\nfactor_product = 0.7\n"
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -488,7 +507,9 @@ class TestTSCalculationConfig:
     def test_ts_factor_product_from_config(self):
         """Verify that TS factor_product from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[ts_guess_calculation.calculation]\nfactor_reactant = 0.4\nfactor_product = 0.6\n")
+            f.write(
+                "[ts_guess_calculation.calculation]\nfactor_reactant = 0.4\nfactor_product = 0.6\n"
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -500,7 +521,9 @@ class TestTSCalculationConfig:
     def test_ts_optimizer_molbar_from_config(self):
         """Verify that TS optimizer molbar-optimizer from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write('[ts_guess_calculation.calculation]\noptimizer = "molbar-optimizer"\n')
+            f.write(
+                '[ts_guess_calculation.calculation]\noptimizer = "molbar-optimizer"\n'
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -512,7 +535,9 @@ class TestTSCalculationConfig:
     def test_ts_optimizer_scipy_from_config(self):
         """Verify that TS optimizer scipy-optimizer from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write('[ts_guess_calculation.calculation]\noptimizer = "scipy-optimizer"\n')
+            f.write(
+                '[ts_guess_calculation.calculation]\noptimizer = "scipy-optimizer"\n'
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -524,7 +549,9 @@ class TestTSCalculationConfig:
     def test_ts_energy_threshold_two_optimizations_from_config(self):
         """Verify that TS energy_threshold_two_optimizations from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[ts_guess_calculation.calculation]\nenergy_threshold_two_optimizations = 0.25\n")
+            f.write(
+                "[ts_guess_calculation.calculation]\nenergy_threshold_two_optimizations = 0.25\n"
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -536,7 +563,9 @@ class TestTSCalculationConfig:
     def test_ts_average_with_hess_weight_from_config(self):
         """Verify that TS average_with_hess_weight from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[ts_guess_calculation.calculation]\naverage_with_hess_weight = false\n")
+            f.write(
+                "[ts_guess_calculation.calculation]\naverage_with_hess_weight = false\n"
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -548,7 +577,9 @@ class TestTSCalculationConfig:
     def test_ts_perform_two_optimizations_from_config(self):
         """Verify that TS perform_two_optimizations from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[ts_guess_calculation.calculation]\nperform_two_optimizations = true\n")
+            f.write(
+                "[ts_guess_calculation.calculation]\nperform_two_optimizations = true\n"
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -560,7 +591,9 @@ class TestTSCalculationConfig:
     def test_ts_molbar_optimizer_e_tol_from_config(self):
         """Verify that TS molbar_optimizer_e_tol from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[ts_guess_calculation.calculation]\nmolbar_optimizer_e_tol = 1e-5\n")
+            f.write(
+                "[ts_guess_calculation.calculation]\nmolbar_optimizer_e_tol = 1e-5\n"
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -572,7 +605,9 @@ class TestTSCalculationConfig:
     def test_ts_molbar_optimizer_x_tol_from_config(self):
         """Verify that TS molbar_optimizer_x_tol from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[ts_guess_calculation.calculation]\nmolbar_optimizer_x_tol = 1e-6\n")
+            f.write(
+                "[ts_guess_calculation.calculation]\nmolbar_optimizer_x_tol = 1e-6\n"
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -584,7 +619,9 @@ class TestTSCalculationConfig:
     def test_ts_molbar_optimizer_max_micro_steps_from_config(self):
         """Verify that TS molbar_optimizer_max_micro_steps from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[ts_guess_calculation.calculation]\nmolbar_optimizer_max_micro_steps = 5\n")
+            f.write(
+                "[ts_guess_calculation.calculation]\nmolbar_optimizer_max_micro_steps = 5\n"
+            )
             f.flush()
             temp_path = f.name
         try:
@@ -733,7 +770,9 @@ relaxation = "gfn2-xtb"
             assert calcdata.reactant_calc.ff_parameterization_maxiteration == 2000
             assert calcdata.reactant_calc.ff_parameterization_stepsize == 0.18
             assert calcdata.reactant_calc.ff_parameterization_threshold == 0.0004
-            assert calcdata.reactant_calc.ff_parameterization_constant_repulsion is False
+            assert (
+                calcdata.reactant_calc.ff_parameterization_constant_repulsion is False
+            )
 
             # Product path
             assert calcdata.product_path.wbo_filename == "p_wbo"
