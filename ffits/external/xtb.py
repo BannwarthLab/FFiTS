@@ -48,7 +48,9 @@ class Xtb:
         logger.info(f"xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
         logger.info(f"Using xTB executable: {self.xtb_path}")
         if self.g_xtb and self.xtb_alpb_solvent is not None:
-            raise ValueError("ALPB solvent model is not compatible with g_xtb. Please choose either g_xtb or ALPB solvent model.")
+            raise ValueError(
+                "ALPB solvent model is not compatible with g_xtb. Please choose either g_xtb or ALPB solvent model."
+            )
         if self.xtb_alpb_solvent is not None:
             logger.info(
                 f"Using ALPB solvent model with solvent: {self.xtb_alpb_solvent}"
@@ -82,8 +84,8 @@ class Xtb:
                 f"Error: {e}"
             )
             raise RuntimeError(error_msg) from e
-    
-    #TODO add _check_output for warnings printed by xTB and print them
+
+    # TODO add _check_output for warnings printed by xTB and print them
     def _run_xtb(self, command: str, cwd: Path) -> int:
         """Run an xTB command inside cwd and handle errors.
 

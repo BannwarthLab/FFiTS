@@ -67,7 +67,9 @@ def get_combinded_priorities(
     mol = Molecule(coordinates=struc1.xyz, elements=struc2.atom_types)
 
     if not np.array_equal(struc1.atom_types, struc2.atom_types):
-        raise ValueError(f"Atom types of struc1 and struc2 must be the same and in the same order. ")
+        raise ValueError(
+            f"Atom types of struc1 and struc2 must be the same and in the same order. "
+        )
 
     _define_bonds_for_molbar(mol, struc1, struc2, bo_threshold=bo_threshold)
     _get_topology_barcode(mol)

@@ -69,6 +69,14 @@ def readin_xyz(xyz_path: str) -> Tuple[int, str, np.ndarray, List[str]]:
     return nat, comment, np.array(coordinates, dtype=float), atom_types
 
 
+def read_xyz_2dict(
+    filename: str,
+) -> dict:
+    """Returns the structure data from an XYZ file as a dict. Wrapper for readin_xyz."""
+    nat, comment, xyz, atom_types = readin_xyz(filename)
+    return {"nat": nat, "comment": comment, "atom_types": atom_types, "xyz": xyz}
+
+
 def read_wbo_file(wbo_path: str) -> Dict[Tuple[int, int], float]:
     """
     Reads xtb-style WBO (Wiberg Bond Order) data from a file and parses it into a dictionary.

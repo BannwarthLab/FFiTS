@@ -17,8 +17,6 @@ from ffits.forcefield.python_interface.ff_energy import (
     complete_hessian,
 )
 
-
-
 # ============================================================
 # Fixtures
 # ============================================================
@@ -44,7 +42,7 @@ def simple_structure():
 
     atom_types = np.array(["O", "H", "C"])
 
-    ff = ForceField(nat=3, ff_filename='s')
+    ff = ForceField(nat=3, ff_filename="s")
 
     info = StructuralInformation(
         nat=3,
@@ -75,7 +73,7 @@ def structure_with_linear_hbond():
 
     atom_types = np.array(["O", "H", "C"])
 
-    ff = ForceField(nat=3, ff_filename='s')
+    ff = ForceField(nat=3, ff_filename="s")
 
     info = StructuralInformation(
         nat=3,
@@ -106,7 +104,7 @@ def structure_with_bent_hbond():
 
     atom_types = np.array(["O", "H", "C"])
 
-    ff = ForceField(nat=3, ff_filename='s')
+    ff = ForceField(nat=3, ff_filename="s")
 
     info = StructuralInformation(
         nat=3,
@@ -254,7 +252,7 @@ class TestFindHydrogenBonding:
 
         result = _find_hydrogen_bonding(ff, info)
 
-        # Should not detect H-bond due to wrong angle 
+        # Should not detect H-bond due to wrong angle
         assert len(result) == 0
 
     def test_angle_approximately_180_degrees(self, structure_with_linear_hbond):
@@ -299,7 +297,7 @@ class TestFindHydrogenBonding:
         wbo_dict = {}
         atom_types = np.array(["C", "C"])
 
-        ff = ForceField(nat=2, ff_filename='s')
+        ff = ForceField(nat=2, ff_filename="s")
         info = StructuralInformation(
             nat=2,
             xyz=xyz,
@@ -331,7 +329,7 @@ class TestFindHydrogenBonding:
         }
 
         atom_types = np.array(["N", "H", "C"])
-        ff = ForceField(nat=3, ff_filename='s')
+        ff = ForceField(nat=3, ff_filename="s")
         info = StructuralInformation(
             nat=3,
             xyz=xyz,
@@ -363,7 +361,7 @@ class TestFindHydrogenBonding:
         }
 
         atom_types = np.array(["F", "H", "C"])
-        ff = ForceField(nat=3, ff_filename='s')
+        ff = ForceField(nat=3, ff_filename="s")
         info = StructuralInformation(
             nat=3,
             xyz=xyz,
@@ -398,6 +396,3 @@ class TestFindHydrogenBonding:
             assert isinstance(value["bl"], (int, float))
             assert isinstance(value["angle"], (int, float))
             assert isinstance(value["bonded_atom"], (int, np.integer))
-
-
-
