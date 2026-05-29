@@ -58,9 +58,10 @@ ffits struc.xyz --parameterization
 ```
 
 Command line keywords are:
-- `--config`
+- `--config` to read in the toml based config file
 - `--multiplicity`
 - `--charge`
+- `--debug` for printout of more information
 
 For using the configuration options, see chapter [Configuration File](#configuration-file). In both modes the final structure is `optimized.xyz` with the corresponding trajectory in `trajectory.xyz`. The TS guess mode will additionally generate (if it was not read-in) the FF, WBO and Hessian files of reactant and product, as well as the TS FF file. If a specific change is needed in the TS guess, the TS FF file can be modified and used in the optimization mode. 
 
