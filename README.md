@@ -64,6 +64,20 @@ Command line keywords are:
 
 For using the configuration options, see chapter [Configuration File](#configuration-file). In both modes the final structure is `optimized.xyz` with the corresponding trajectory in `trajectory.xyz`. The TS guess mode will additionally generate (if it was not read-in) the FF, WBO and Hessian files of reactant and product, as well as the TS FF file. If a specific change is needed in the TS guess, the TS FF file can be modified and used in the optimization mode. 
 
+# Python API
+To call the main mode, you can simply execute following code:
+```Python 
+from ffits.main import run_tsguess_mode
+tsff, converged, energy, final_geom = run_tsguess_mode('reactant.xyz', 'product.xyz'). 
+```
+The config is created automatically. If you want to change some setting, you can create the config object and change the fields you want, for example: 
+```Python
+cd = CalculationData.from_default()
+cd.system.charge = -1
+```
+
+This approach works similar for the other modes. 
+
 # Theory
 
 ## Force Field
