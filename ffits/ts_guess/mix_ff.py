@@ -15,10 +15,7 @@ def create_tsff(
     info1: StructuralInformation,
     ff2: ForceField,
     info2: StructuralInformation,
-    calcdata: CalculationData,
-    fact1: float = 0.5,
-    fact2: float = 0.5,
-    weigh_bonds_with_hessian: bool = True,
+    calcdata: CalculationData = CalculationData.from_default(),
 ) -> dict[ForceField, dict]:
     """Creates TS force field (TS FF) from two given structures.
 
@@ -35,7 +32,9 @@ def create_tsff(
     Returns:
         dict[ForceField, dict]: ForceField object representing the TS FF and a dictionary with the mixing factors for each term if weigh_bonds_with_hessian is True.
     """
-    if weigh_bonds_with_hessian and fact1 != 0.5:
+    fact1 = calcdata.ts_calc.factor_reactant
+    fact2 = calcdata.ts_calc.factor_product
+    if calcdata.ts_calc.average_with_hess_weight and fact1 != 0.5:
         logger.warning(
             "Bonds from FFs are not averaged with chosen factors, since weigh_bonds_with_hessian is set to True. Weighting will be determined through Hessian analysis. "
         )
@@ -50,7 +49,8 @@ def create_tsff(
         combine_ff_atoms(ff1.bonds, ff2.bonds),
     )
 
-    if weigh_bonds_with_hessian:
+    params_mix = {}
+    if calcdata.ts_calc.average_with_hess_weight:
         logger.info("Calculating mixing factors based on Hessian analysis.")
         sharpness = 0.8
         params_mix = hessian_weighting_mix_list(

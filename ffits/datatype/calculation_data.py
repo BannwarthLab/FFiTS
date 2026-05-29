@@ -32,6 +32,7 @@ class System:
     charge: int = 0
     multiplicity: int = 1
     xtb_path: str = "xtb"
+    use_gxtb: bool = False
     xtb_input_name: str | None = None
     xtb_alpb_solvent: str | None = None
 
@@ -99,6 +100,7 @@ class TSCalculationOptions:
     factor_product: float = 0.5
     optimizer: str = "molbar-optimizer"
     energy_threshold_two_optimizations: float = 0.15
+    average_with_hess_weight: bool = True
     perform_two_optimizations: bool = False
     molbar_optimizer_e_tol: float = 1e-4
     molbar_optimizer_x_tol: float = 1e-3
@@ -171,7 +173,6 @@ class CalculationData:
         Returns:
             CalculationData: CalculationData object initialized with values from the config file.
         """
-        print("TEST TEST TEST TEST TEST")
         cd: CalculationData = CalculationData.from_default()
         if not os.path.exists(path_to_config):
             raise FileNotFoundError(f"Config file {path_to_config} not found.")
@@ -183,6 +184,7 @@ class CalculationData:
         sys_data = data.get("system", {})
         cd.system.charge = sys_data.get("charge", cd.system.charge)
         cd.system.multiplicity = sys_data.get("multiplicity", cd.system.multiplicity)
+        cd.system.use_gxtb = sys_data.get("use_gxtb", cd.system.use_gxtb)
         cd.system.xtb_path = sys_data.get("xtb_path", cd.system.xtb_path)
         cd.system.xtb_input_name = sys_data.get(
             "xtb_input_name", cd.system.xtb_input_name
@@ -245,6 +247,10 @@ class CalculationData:
             "ff_parameterization_constant_repulsion",
             cd.reactant_calc.ff_parameterization_constant_repulsion,
         )
+        cd.reactant_calc.bo_treshold = react_calc.get(
+            "bo_treshold",
+            cd.reactant_calc.bo_treshold,
+        )
 
         # =======================
         # Product
@@ -283,6 +289,9 @@ class CalculationData:
             "ff_parameterization_maxiteration",
             cd.product_calc.ff_parameterization_maxiteration,
         )
+        cd.product_calc.ff_parameter_repulsion = prod_calc.get(
+            "ff_parameter_repulsion", cd.product_calc.ff_parameter_repulsion
+        )
         cd.product_calc.ff_parameterization_stepsize = prod_calc.get(
             "ff_parameterization_stepsize", cd.product_calc.ff_parameterization_stepsize
         )
@@ -293,6 +302,10 @@ class CalculationData:
         cd.product_calc.ff_parameterization_constant_repulsion = prod_calc.get(
             "ff_parameterization_constant_repulsion",
             cd.product_calc.ff_parameterization_constant_repulsion,
+        )
+        cd.product_calc.bo_treshold = prod_calc.get(
+            "bo_treshold",
+            cd.product_calc.bo_treshold,
         )
 
         # =======================
@@ -319,6 +332,9 @@ class CalculationData:
         cd.ts_calc.energy_threshold_two_optimizations = ts_calc.get(
             "energy_threshold_two_optimizations",
             cd.ts_calc.energy_threshold_two_optimizations,
+        )
+        cd.ts_calc.average_with_hess_weight = ts_calc.get(
+            "average_with_hess_weight", cd.ts_calc.average_with_hess_weight
         )
         cd.ts_calc.perform_two_optimizations = ts_calc.get(
             "perform_two_optimizations", cd.ts_calc.perform_two_optimizations
