@@ -52,10 +52,7 @@ def get_ts_guess(
         info1=struc1.info,
         ff2=struc2.ff,
         info2=struc2.info,
-        fact1=calcdata.ts_calc.factor_reactant,
-        fact2=calcdata.ts_calc.factor_product,
         calcdata=calcdata,
-        weigh_bonds_with_hessian=True,
     )
     tsff: ForceField = res["tsff"]
     tsff.energy_calculator = energy_ff

@@ -1,5 +1,7 @@
 #!/bin/python
 
+from pathlib import Path
+
 import numpy as np
 
 
@@ -94,3 +96,22 @@ def write_hessian_to_orcahessfile(
     with open(filename, "w") as text_file:
         for line in lines:
             text_file.write(line)
+
+def write_trajectory_to_xyz(trajectory: list, filename: Path) -> None:
+    """Writes a trajectory which is saved as 
+
+    Args:
+        trajectory (list): List of directories for every frame. Each directory should contain the keys 'nat', 'atom_types' (np.ndarray), 'xyz', and optionally 'energy'.
+        filename (Path): _description_
+    """
+    with open(filename, 'w') as f:
+        for frame in trajectory:
+            nat = frame['nat']
+            atom_types = frame['atom_types']
+            xyz = frame['xyz']
+            
+            f.write(f"{nat}\n")
+            f.write(f"{frame.get('energy', 0):.8f}\n")
+            for i, atom_type in enumerate(atom_types):
+                f.write(f"{atom_type} {xyz[i][0]:.8f} {xyz[i][1]:.8f} {xyz[i][2]:.8f}\n")
+            

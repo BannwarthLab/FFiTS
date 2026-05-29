@@ -23,6 +23,7 @@ class Xtb:
         xtb_alpb_solvent: str | None = None,
         xtb_input_name: str | None = None,
         xtb_path: str = "xtb",
+        g_xtb: bool = False,
     ) -> None:
         """_summary_
 
@@ -41,8 +42,13 @@ class Xtb:
         self.xtb_input_name = xtb_input_name
         self.xtb_alpb_solvent = xtb_alpb_solvent
         self._check_xtb_loaded()
+        self.g_xtb = g_xtb
+        # if self.g_xtb:
+        #     self._check_xtb_loaded('g_xtb')
         logger.info(f"xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
         logger.info(f"Using xTB executable: {self.xtb_path}")
+        if self.g_xtb and self.xtb_alpb_solvent is not None:
+            raise ValueError("ALPB solvent model is not compatible with g_xtb. Please choose either g_xtb or ALPB solvent model.")
         if self.xtb_alpb_solvent is not None:
             logger.info(
                 f"Using ALPB solvent model with solvent: {self.xtb_alpb_solvent}"
@@ -72,10 +78,12 @@ class Xtb:
                 f"  1. Load the module: module load xtb\n"
                 f"  2. Add xtb to PATH: export PATH=/path/to/xtb/bin:$PATH\n"
                 f"  3. Change variable [system] >> xtb_path in config file to the full path of the xtb executable\n"
+                f"If you are using gxtb, make sure it is properly installed and the gxtb executable is available.\n"
                 f"Error: {e}"
             )
             raise RuntimeError(error_msg) from e
-
+    
+    #TODO add _check_output for warnings printed by xTB and print them
     def _run_xtb(self, command: str, cwd: Path) -> int:
         """Run an xTB command inside cwd and handle errors.
 
@@ -107,6 +115,8 @@ class Xtb:
 
     def _get_command(self, input_xyz: Path, keyword: str) -> str:
         """Build xTB command string."""
+        if self.g_xtb:
+            keyword += " --gxtb"
         if self.xtb_alpb_solvent is not None:
             keyword += f" --alpb {self.xtb_alpb_solvent}"
         if self.xtb_input_name is not None:
