@@ -52,4 +52,4 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
-        packages-dir: wheels-3.11  # Use one Python version for PyPI
+        packages-dir: wheels-3.14  # Use one Python version for PyPI

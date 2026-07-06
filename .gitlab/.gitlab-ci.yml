@@ -7,10 +7,10 @@ stages:
   - deploy
 
 # build-container
-build-python3.11:
+build-python3.14:
   stage: build
   cache:
-    key: "python3.11-$CI_COMMIT_REF_SLUG"
+    key: "python3.14-$CI_COMMIT_REF_SLUG"
     paths:
       - containers/
   script:
@@ -19,21 +19,21 @@ build-python3.11:
   tags:
     - shell
   variables:
-    CONTAINER_NAME: "python3.11"
+    CONTAINER_NAME: "python3.14"
 
 
 # Test job - runs on merge requests and main branch
 test:
   stage: test
   cache:
-    key: "python3.11-$CI_COMMIT_REF_SLUG"
+    key: "python3.14-$CI_COMMIT_REF_SLUG"
     paths:
       - containers/
   dependencies:
-    - build-python3.11
+    - build-python3.14
   variables:
     IMAGE_NAME: ""
-    CONTAINER_NAME: "containers/python3.11.sif"
+    CONTAINER_NAME: "containers/python3.14.sif"
     APPTAINER_EXEC_ARGS: "" 
   tags:
     - cpu
@@ -43,11 +43,12 @@ test:
     # Install molbar optimizer from dev branch
     - pwd
     - echo $PATH
-    - export PYTHON=python3.11
-    - export CFLAGS="$(python3.11-config --cflags)"
-    - export LDFLAGS="$(python3.11-config --ldflags)"
+    - module load python gnu-compilers compiler make
+    - export PYTHON=python3.14
+    - export CFLAGS="$(python3.14-config --cflags)"
+    - export LDFLAGS="$(python3.14-config --ldflags)"
     - printenv
-    - python3.11 -m venv venv && source venv/bin/activate
+    - python -m venv venv && source venv/bin/activate
     - make install-dev
     - pip list
     # Run tests
