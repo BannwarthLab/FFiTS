@@ -75,6 +75,8 @@ def get_combinded_priorities(
     _get_topology_barcode(mol)
     _calculate_priorities(mol)
 
+    logger.debug(f"Combined priorities for atoms: {mol.priorities}")
+
     return {i: int(mol.priorities[i]) for i in range(len(mol.priorities))}
 
 

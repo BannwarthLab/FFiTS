@@ -1,7 +1,7 @@
 .PHONY: test coverage clean help build-wheels build-wheel dist upload-test upload release
 
 # Configuration
-PYTHON_VERSIONS := 3.11 
+PYTHON_VERSIONS := 3.14 
 DIST_DIR := dist
 
 # Default target
@@ -31,7 +31,6 @@ help:
 
 # installing molbar and all the dependencies 
 install-dev:
-	git submodule update --init --recursive
 	pip install -r requirements-dev.txt
 	pip install --pre molbar
 	rm -rf _skbuild/ ffits.egg-info/ 
