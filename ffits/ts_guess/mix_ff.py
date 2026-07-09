@@ -39,11 +39,11 @@ def create_tsff(
             "Bonds from FFs are not averaged with chosen factors, since weigh_bonds_with_hessian is set to True. Weighting will be determined through Hessian analysis. "
         )
 
-    # TODO add parameter transfer for averaginc dg and add that in printout too
     tsff = ForceField(ff1.nat, calcdata.ts_path.ff_filename, readff=False)
     tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
     tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
-    tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals)
+    tsff.dihedrals = combine_dihedrals(ff1, info1, ff2, info2)
+    # tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals, term_type="dihedral")
     tsff.repulsive = remove_bonds_from_repulsive(
         combine_ff_atoms(ff1.repulsive, ff2.repulsive),
         combine_ff_atoms(ff1.bonds, ff2.bonds),
@@ -106,7 +106,7 @@ def create_tsff(
 
 def combine_ff_atoms(
     df1: pd.DataFrame, df2: pd.DataFrame, term_type: str = "bond"
-) -> pd.Series:
+) -> pd.DataFrame:
     """
     Combine two force field term DataFrames (bonds, angles, dihedrals, LJ, etc.)
     without duplicating entries based on their atom connectivity.
@@ -157,6 +157,35 @@ def combine_ff_atoms(
     combined = combined.drop(columns=["atoms_norm"])
 
     return combined.sort_values("atoms").reset_index(drop=True)
+
+def combine_dihedrals(
+    ff1: ForceField,
+    info1: StructuralInformation,
+    ff2: ForceField,
+    info2: StructuralInformation) -> pd.DataFrame:
+
+    bo_threshold = 0.0  # threshold for WBO to consider a bond as present
+    def has_significant_bond(row):
+        atoms = row["atoms"]
+        proper_dihedral = row["proper_dihedral"] 
+        if proper_dihedral:
+            return True
+
+        return (
+            info1.bo_matrix[atoms[0], atoms[1]] > bo_threshold
+            and info1.bo_matrix[atoms[0], atoms[2]] > bo_threshold
+            and info1.bo_matrix[atoms[0], atoms[3]] > bo_threshold
+            and info2.bo_matrix[atoms[0], atoms[1]] > bo_threshold
+            and info2.bo_matrix[atoms[0], atoms[2]] > bo_threshold
+            and info2.bo_matrix[atoms[0], atoms[3]] > bo_threshold
+        )
+
+    dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals, term_type="dihedral")
+
+    dihedrals = dihedrals[
+        dihedrals.apply(has_significant_bond, axis=1)
+    ]
+    return dihedrals.sort_values("atoms").reset_index(drop=True)
 
 
 def remove_bonds_from_repulsive(
@@ -567,7 +596,7 @@ def _average_single_dihedral(val1, val2, fact1: float, fact2: float):
         phi_avg -= 2.0 * pi
     elif phi_avg <= -pi:
         phi_avg += 2.0 * pi
-
+    print(f"val1: {val1}, val2: {val2}, fact1: {fact1}, fact2: {fact2}, phi_avg: {phi_avg}")
     return round(phi_avg, 8)
 
 

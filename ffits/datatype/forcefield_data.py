@@ -46,7 +46,7 @@ class ForceField:
             xyz_displaced (np.ndarray): Displaced xyz. Can be in shape (nat, 3) or (nat*3,).
 
         Returns:
-            enerty (float): The calculated energy.
+            energy (float): The calculated energy.
         """
         if np.shape(xyz_displaced) == (self.nat, 3):
             return self.energy_calculator(
