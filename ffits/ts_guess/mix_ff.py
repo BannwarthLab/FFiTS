@@ -179,7 +179,6 @@ def combine_dihedrals(
             and info2.bo_matrix[atoms[0], atoms[2]] > bo_threshold
             and info2.bo_matrix[atoms[0], atoms[3]] > bo_threshold
         )
-
     dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals, term_type="dihedral")
 
     dihedrals = dihedrals[

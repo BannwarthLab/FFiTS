@@ -153,6 +153,7 @@ xtb_path = "xtb"
 | `wbo_calc` | bool | true | Whether to calculate WBO at runtime. If false, read from `wbo_filename` |
 | `hessian_calc` | bool | true | Whether to calculate Hessian at runtime. If false, read from `hessian_filename` |
 | `bo_treshold` | float | 0.0 | Threshold for defining bonds based on Wiberg bond orders |
+| `only_proper_dihedrals` | bool | true | If False, improper dihedrals are also included in the FF generation |
 | `ff_parameterization` | bool | false | Whether to parameterize force field. If false, read from `ff_filename` |
 | `test_parameterization` | bool | false | If true, use parameterized FF to optimize structure and print RMSD |
 | `ff_parameterization_maxiteration` | int | 1000 | Maximum iterations for FF parameterization |
