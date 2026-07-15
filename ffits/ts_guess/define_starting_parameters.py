@@ -347,6 +347,9 @@ def fill_ff(
         ff.dihedrals = pd.DataFrame(
             {"type": "dihedrals", "atoms": atoms_list, "proper_dihedral": is_proper}
         )
+    else:
+        ff.dihedrals["proper_dihedral"] = True
+        
     ff.dihedrals["reference_value"] = ff.dihedrals["atoms"].apply(ref_dihedral)
     ff.dihedrals["parameter"] = ff.dihedrals["atoms"].apply(param_dihedral)
 

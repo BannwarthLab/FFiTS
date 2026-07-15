@@ -109,6 +109,60 @@ hessian_calc = false
             os.chdir(original_cwd)
 
 
+def test_ffits_with_improperdihedrals():
+    """
+    Test which first calculates with present hessian and then without hessian and wbo calculation but reading in the files created in the first run, by changing the filenames in the config file
+    """
+    examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        shutil.copy2(examples_dir / "struc1.xyz", temp_path / "reac.xyz")
+        shutil.copy2(examples_dir / "struc2.xyz", temp_path / "prod.xyz")
+
+        original_cwd = os.getcwd()
+        os.chdir(temp_path)
+
+        custom_input = """
+[reactant.calculation]
+only_proper_dihedrals = false
+[product.calculation]
+only_proper_dihedrals = false
+"""
+        with open(temp_path / "custom_config.toml", "w") as f:
+            f.write(custom_input)
+
+        try:
+            stdout, stderr, returncode = run_ffits_as_subprocess(
+                ["reac.xyz", "prod.xyz", "--config", "custom_config.toml"]
+            )
+
+            assert (
+                returncode == 0
+            ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
+
+            optimized_file = temp_path / "optimized.xyz"
+            assert (
+                optimized_file.exists()
+            ), f"optimized.xyz was not created in {temp_path}"
+
+            ff_csv_file = temp_path / "tsff.csv"
+            assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
+            ff_csv_file = temp_path / "ff1.csv"
+            assert ff_csv_file.exists(), f"ff1.csv was not created in {temp_path}"
+            ff_csv_file = temp_path / "ff2.csv"
+            assert ff_csv_file.exists(), f"ff2.csv was not created in {temp_path}"
+            ff_csv_file = temp_path / "wbo1"
+            assert ff_csv_file.exists(), f"wbo1 was not created in {temp_path}"
+            ff_csv_file = temp_path / "wbo2"
+            assert ff_csv_file.exists(), f"wbo2 was not created in {temp_path}"
+            ff_csv_file = temp_path / "struc1.hess"
+            assert ff_csv_file.exists(), f"struc1.hess was not created in {temp_path}"
+            ff_csv_file = temp_path / "struc2.hess"
+            assert ff_csv_file.exists(), f"struc2.hess was not created in {temp_path}"
+        finally:
+            os.chdir(original_cwd)
+
+
 def test_ffits_with_wboreadin():
     """
     Test which first calculates with present hessian and then without hessian and wbo calculation but reading in the files created in the first run, by changing the filenames in the config file

@@ -123,8 +123,12 @@ def get_ts_guess_from_xyz(
         pathdata=calcdata.product_path,
     )
 
-    # Compute combined priorities for dihedral classification
-    priorities = get_combinded_priorities(struc1.info, struc2.info)
+    priorities = None
+    if not calcdata.reactant_calc.only_proper_dihedrals or not calcdata.product_calc.only_proper_dihedrals:
+        logger.info(
+            "The option only_proper_dihedrals is set to False for either the reactant or product structure. This means that improper dihedrals will be included in the TS FF creation and optimization."
+        )
+        priorities = get_combinded_priorities(struc1.info, struc2.info)
 
     if calcdata.reactant_calc.ff_parameterization:
         parameterize_ff(struc1, calcdata.reactant_calc, priorities)
