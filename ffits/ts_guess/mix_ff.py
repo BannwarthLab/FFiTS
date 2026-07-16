@@ -51,8 +51,10 @@ def create_tsff(
 
     params_mix = {}
     if calcdata.ts_calc.average_with_hess_weight:
-        logger.info("Calculating mixing factors based on Hessian analysis.")
         sharpness = 0.8
+        logger.info(
+            f"Calculating mixing factors based on Hessian analysis with sharpness {sharpness}"
+        )
         params_mix = hessian_weighting_mix_list(
             info1, info2, tsff.bonds, tsff.angles, tsff.dihedrals, sharpness=sharpness
         )
@@ -158,16 +160,19 @@ def combine_ff_atoms(
 
     return combined.sort_values("atoms").reset_index(drop=True)
 
+
 def combine_dihedrals(
     ff1: ForceField,
     info1: StructuralInformation,
     ff2: ForceField,
-    info2: StructuralInformation) -> pd.DataFrame:
+    info2: StructuralInformation,
+) -> pd.DataFrame:
 
     bo_threshold = 0.0  # threshold for WBO to consider a bond as present
+
     def has_significant_bond(row):
         atoms = row["atoms"]
-        proper_dihedral = row["proper_dihedral"] 
+        proper_dihedral = row["proper_dihedral"]
         if proper_dihedral:
             return True
 
@@ -179,11 +184,10 @@ def combine_dihedrals(
             and info2.bo_matrix[atoms[0], atoms[2]] > bo_threshold
             and info2.bo_matrix[atoms[0], atoms[3]] > bo_threshold
         )
+
     dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals, term_type="dihedral")
 
-    dihedrals = dihedrals[
-        dihedrals.apply(has_significant_bond, axis=1)
-    ]
+    dihedrals = dihedrals[dihedrals.apply(has_significant_bond, axis=1)]
     return dihedrals.sort_values("atoms").reset_index(drop=True)
 
 
@@ -384,6 +388,7 @@ def hessian_weighting_mix_list(
     for idx, row in bonds_df.iterrows():
         atoms = row["atoms"]
         factor = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
+        logger.debug(f"Bond {atoms}: Mixing factor {factor}")
         if factor is not None:
             param_dict[atoms] = factor
 
@@ -595,7 +600,9 @@ def _average_single_dihedral(val1, val2, fact1: float, fact2: float):
         phi_avg -= 2.0 * pi
     elif phi_avg <= -pi:
         phi_avg += 2.0 * pi
-    print(f"val1: {val1}, val2: {val2}, fact1: {fact1}, fact2: {fact2}, phi_avg: {phi_avg}")
+    print(
+        f"val1: {val1}, val2: {val2}, fact1: {fact1}, fact2: {fact2}, phi_avg: {phi_avg}"
+    )
     return round(phi_avg, 8)
 
 

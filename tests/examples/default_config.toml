@@ -66,11 +66,11 @@ ff_parameter_repulsion = 0.01 # starting parameter for the repulsive term in FF
 # TS Guess calculation
 # ============================
 
-[ts_guess_calculation.path]
+[ts_guess.path]
 ff_filename = "tsff.csv"
 hessian_filename = "ts.hess"
 
-[ts_guess_calculation.calculation]
+[ts_guess.calculation]
 factor_reactant = 0.5
 factor_product = 0.5
 optimizer = "molbar-optimizer"

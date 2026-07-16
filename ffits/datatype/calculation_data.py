@@ -225,7 +225,7 @@ class CalculationData:
         )
         cd.reactant_calc.only_proper_dihedrals = react_calc.get(
             "only_proper_dihedrals", cd.reactant_calc.only_proper_dihedrals
-        )    
+        )
         cd.reactant_calc.ff_parameterization = react_calc.get(
             "ff_parameterization", cd.reactant_calc.ff_parameterization
         )
@@ -318,7 +318,7 @@ class CalculationData:
         # =======================
         # TS Guess calculation
         # =======================
-        ts_guess = data.get("ts_guess_calculation", {})
+        ts_guess = data.get("ts_guess", {})
 
         # TS path
         ts_path = ts_guess.get("path", {})
@@ -389,11 +389,17 @@ class CalculationData:
             raise ValueError(
                 f"Multiplicity of {cd.system.multiplicity} is chemically unreasonable on this theory level."
             )
-        if cd.reactant_calc.only_proper_dihedrals != cd.product_calc.only_proper_dihedrals:
+        if (
+            cd.reactant_calc.only_proper_dihedrals
+            != cd.product_calc.only_proper_dihedrals
+        ):
             raise ValueError(
                 "The option only_proper_dihedrals is set differently for the reactant and product structures. This option must be the same for both structures, as it affects the TS FF creation and optimization."
             )
-        if ((not cd.reactant_calc.ff_parameterization and not cd.product_calc.ff_parameterization)):
+        if (
+            not cd.reactant_calc.ff_parameterization
+            and not cd.product_calc.ff_parameterization
+        ):
             logger.warning(
                 "FF parameterization is not enabled for either the reactant or product structure. This means that the TS FF will be created using the default FF parameters and no comparison of reactant and product structures will be performed. Thus the option only_proper_dihedrals will be ignored if it is in the config file."
             )

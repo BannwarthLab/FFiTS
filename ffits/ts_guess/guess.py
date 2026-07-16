@@ -124,7 +124,10 @@ def get_ts_guess_from_xyz(
     )
 
     priorities = None
-    if not calcdata.reactant_calc.only_proper_dihedrals or not calcdata.product_calc.only_proper_dihedrals:
+    if (
+        not calcdata.reactant_calc.only_proper_dihedrals
+        or not calcdata.product_calc.only_proper_dihedrals
+    ):
         logger.info(
             "The option only_proper_dihedrals is set to False for either the reactant or product structure. This means that improper dihedrals will be included in the TS FF creation and optimization."
         )

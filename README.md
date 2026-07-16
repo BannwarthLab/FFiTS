@@ -204,16 +204,16 @@ ff_parameterization = true
 
 ---
 
-### **Transition State Guess Settings** (`[ts_guess_calculation]`)
+### **Transition State Guess Settings** (`[ts_guess]`)
 
-#### TS Paths (`[ts_guess_calculation.path]`)
+#### TS Paths (`[ts_guess.path]`)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `hessian_filename` | string | "ts.hess" | Path to file with Hessian matrix for TS |
 | `ff_filename` | string | "tsff.csv" | Output path for TS FF parameters |
 
-##### TS Calculations (`[ts_guess_calculation.calculation]`)
+##### TS Calculations (`[ts_guess.calculation]`)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -228,11 +228,11 @@ ff_parameterization = true
 
 **Example:**
 ```toml
-[ts_guess_calculation.path]
+[ts_guess.path]
 hessian_filename = "ts.hess"
 ff_filename = "ts_forcefield.csv"
 
-[ts_guess_calculation.calculation]
+[ts_guess.calculation]
 factor_reactant = 0.6
 factor_product = 0.4
 optimizer = "molbar-optimizer"
@@ -304,11 +304,11 @@ ff_parameterization_stepsize = 0.15
 ff_parameterization_threshold = 0.0005
 ff_parameterization_constant_repulsion = true
 
-[ts_guess_calculation.path]
+[ts_guess.path]
 hessian_filename = "ts.hess"
 ff_filename = "ts_forcefield.csv"
 
-[ts_guess_calculation.calculation]
+[ts_guess.calculation]
 factor_reactant = 0.5
 factor_product = 0.5
 optimizer = "molbar-optimizer"
