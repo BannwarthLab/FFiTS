@@ -349,7 +349,7 @@ def fill_ff(
         )
     else:
         ff.dihedrals["proper_dihedral"] = True
-        
+
     ff.dihedrals["reference_value"] = ff.dihedrals["atoms"].apply(ref_dihedral)
     ff.dihedrals["parameter"] = ff.dihedrals["atoms"].apply(param_dihedral)
 

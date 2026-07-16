@@ -464,7 +464,7 @@ class TestTSPathConfig:
         """Verify that TS hessian_filename from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                '[ts_guess_calculation.path]\nhessian_filename = "ts_hessian.hess"\n'
+                '[ts_guess.path]\nhessian_filename = "ts_hessian.hess"\n'
             )
             f.flush()
             temp_path = f.name
@@ -477,7 +477,7 @@ class TestTSPathConfig:
     def test_ts_ff_filename_from_config(self):
         """Verify that TS ff_filename from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write('[ts_guess_calculation.path]\nff_filename = "ts_forcefield.csv"\n')
+            f.write('[ts_guess.path]\nff_filename = "ts_forcefield.csv"\n')
             f.flush()
             temp_path = f.name
         try:
@@ -494,7 +494,7 @@ class TestTSCalculationConfig:
         """Verify that TS factor_reactant from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                "[ts_guess_calculation.calculation]\nfactor_reactant = 0.3\nfactor_product = 0.7\n"
+                "[ts_guess.calculation]\nfactor_reactant = 0.3\nfactor_product = 0.7\n"
             )
             f.flush()
             temp_path = f.name
@@ -508,7 +508,7 @@ class TestTSCalculationConfig:
         """Verify that TS factor_product from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                "[ts_guess_calculation.calculation]\nfactor_reactant = 0.4\nfactor_product = 0.6\n"
+                "[ts_guess.calculation]\nfactor_reactant = 0.4\nfactor_product = 0.6\n"
             )
             f.flush()
             temp_path = f.name
@@ -522,7 +522,7 @@ class TestTSCalculationConfig:
         """Verify that TS optimizer molbar-optimizer from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                '[ts_guess_calculation.calculation]\noptimizer = "molbar-optimizer"\n'
+                '[ts_guess.calculation]\noptimizer = "molbar-optimizer"\n'
             )
             f.flush()
             temp_path = f.name
@@ -536,7 +536,7 @@ class TestTSCalculationConfig:
         """Verify that TS optimizer scipy-optimizer from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                '[ts_guess_calculation.calculation]\noptimizer = "scipy-optimizer"\n'
+                '[ts_guess.calculation]\noptimizer = "scipy-optimizer"\n'
             )
             f.flush()
             temp_path = f.name
@@ -550,7 +550,7 @@ class TestTSCalculationConfig:
         """Verify that TS energy_threshold_two_optimizations from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                "[ts_guess_calculation.calculation]\nenergy_threshold_two_optimizations = 0.25\n"
+                "[ts_guess.calculation]\nenergy_threshold_two_optimizations = 0.25\n"
             )
             f.flush()
             temp_path = f.name
@@ -564,7 +564,7 @@ class TestTSCalculationConfig:
         """Verify that TS average_with_hess_weight from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                "[ts_guess_calculation.calculation]\naverage_with_hess_weight = false\n"
+                "[ts_guess.calculation]\naverage_with_hess_weight = false\n"
             )
             f.flush()
             temp_path = f.name
@@ -578,7 +578,7 @@ class TestTSCalculationConfig:
         """Verify that TS perform_two_optimizations from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                "[ts_guess_calculation.calculation]\nperform_two_optimizations = true\n"
+                "[ts_guess.calculation]\nperform_two_optimizations = true\n"
             )
             f.flush()
             temp_path = f.name
@@ -592,7 +592,7 @@ class TestTSCalculationConfig:
         """Verify that TS molbar_optimizer_e_tol from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                "[ts_guess_calculation.calculation]\nmolbar_optimizer_e_tol = 1e-5\n"
+                "[ts_guess.calculation]\nmolbar_optimizer_e_tol = 1e-5\n"
             )
             f.flush()
             temp_path = f.name
@@ -606,7 +606,7 @@ class TestTSCalculationConfig:
         """Verify that TS molbar_optimizer_x_tol from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                "[ts_guess_calculation.calculation]\nmolbar_optimizer_x_tol = 1e-6\n"
+                "[ts_guess.calculation]\nmolbar_optimizer_x_tol = 1e-6\n"
             )
             f.flush()
             temp_path = f.name
@@ -620,7 +620,7 @@ class TestTSCalculationConfig:
         """Verify that TS molbar_optimizer_max_micro_steps from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                "[ts_guess_calculation.calculation]\nmolbar_optimizer_max_micro_steps = 5\n"
+                "[ts_guess.calculation]\nmolbar_optimizer_max_micro_steps = 5\n"
             )
             f.flush()
             temp_path = f.name
@@ -722,11 +722,11 @@ ff_parameterization_stepsize = 0.20
 ff_parameterization_threshold = 0.0006
 ff_parameterization_constant_repulsion = true
 
-[ts_guess_calculation.path]
+[ts_guess.path]
 hessian_filename = "ts_hess"
 ff_filename = "ts_ff.csv"
 
-[ts_guess_calculation.calculation]
+[ts_guess.calculation]
 factor_reactant = 0.4
 factor_product = 0.6
 optimizer = "scipy-optimizer"
