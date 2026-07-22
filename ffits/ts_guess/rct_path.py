@@ -10,6 +10,16 @@ import contextlib
 logger = logging.getLogger(__name__)
 
 
+def _write_structure_to_xyz(structure: dict, filename: str) -> None:
+    with open(filename, "w", encoding="utf-8") as file:
+        file.write(f"{structure['nat']}\n")
+        file.write(f"{structure.get('comment', '')}\n")
+        for atom_type, coords in zip(structure["atom_types"], structure["xyz"]):
+            file.write(
+                f"{atom_type} {coords[0]:.8f} {coords[1]:.8f} {coords[2]:.8f}\n"
+            )
+
+
 def get_one_image(cd: CalculationData, trajectory: list, step: int) -> list:
     """Calculates an image of the path, adds it to the existing trajectory and returns the whole trajectory
 
@@ -44,7 +54,7 @@ def create_path(
     steps: int = 10,
     minfact1: float = 0.1,
     maxfact1: float = 0.9,
-) -> list:
+) -> tuple[list, dict | None]:
     if calcdata.ts_calc.average_with_hess_weight:
         logger.warning(
             "Weighting the reactant and product FF with the hessian is currently not implemented for the reaction path mode. The factors will be varied from minfact1 to maxfact1 for the reactant to get the reaction path."
@@ -52,6 +62,8 @@ def create_path(
         calcdata.ts_calc.average_with_hess_weight = False
 
     trajectory = []
+    highest_energy_frame = None
+    highest_energy_value = None
     xtb = Xtb(
         chrg=calcdata.system.charge,
         mult=calcdata.system.multiplicity,
@@ -66,6 +78,9 @@ def create_path(
     energy = xtb.singlepoint(f"{calcdata.reactant_path.xyz_filename}", f"out_r.txt")
     trajectory.append(struc1)
     trajectory[-1]["energy"] = energy
+    highest_energy_frame = trajectory[-1].copy()
+    highest_energy_frame["xyz"] = trajectory[-1]["xyz"].copy()
+    highest_energy_value = energy
 
     for step in range(steps):
         fact2 = minfact1 + (maxfact1 - minfact1) * step / (steps - 1)
@@ -84,6 +99,10 @@ def create_path(
             )
         # add energy to trajectory
         trajectory[-1]["energy"] = energy
+        if highest_energy_value is None or energy > highest_energy_value:
+            highest_energy_frame = trajectory[-1].copy()
+            highest_energy_frame["xyz"] = trajectory[-1]["xyz"].copy()
+            highest_energy_value = energy
         print(f"Energy at step {step}: {energy:.8f} Hartree")
 
     # Add ending structure
@@ -91,6 +110,12 @@ def create_path(
     energy = xtb.singlepoint(f"{calcdata.product_path.xyz_filename}", f"out_p.txt")
     trajectory.append(struc2)
     trajectory[-1]["energy"] = energy
+    if highest_energy_value is None or energy > highest_energy_value:
+        highest_energy_frame = trajectory[-1].copy()
+        highest_energy_frame["xyz"] = trajectory[-1]["xyz"].copy()
+        highest_energy_value = energy
 
     write_trajectory_to_xyz(trajectory, "path_trj.xyz")
-    return (trajectory,)
+    if highest_energy_frame is not None:
+        _write_structure_to_xyz(highest_energy_frame, "optimized.xyz")
+    return trajectory, highest_energy_frame

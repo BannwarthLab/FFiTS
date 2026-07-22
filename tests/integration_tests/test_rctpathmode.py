@@ -31,6 +31,42 @@ def test_standard_rctpath_run():
             output = temp_path / "path_trj.xyz"
             assert output.exists(), f"path_trj.xyz was not created in {temp_path}"
 
+            optimized_output = temp_path / "optimized.xyz"
+            assert optimized_output.exists(), f"optimized.xyz was not created in {temp_path}"
+
+            with open(temp_path / "path_trj.xyz", "r", encoding="utf-8") as f:
+                trajectory_lines = [line.strip() for line in f.readlines() if line.strip()]
+
+            frames = []
+            idx = 0
+            while idx < len(trajectory_lines):
+                nat = int(trajectory_lines[idx])
+                energy = float(trajectory_lines[idx + 1])
+                atom_types = []
+                coordinates = []
+                for pos in range(idx + 2, idx + 2 + nat):
+                    parts = trajectory_lines[pos].split()
+                    atom_types.append(parts[0])
+                    coordinates.append([float(value) for value in parts[1:4]])
+                frames.append((energy, atom_types, coordinates))
+                idx += nat + 2
+
+            highest_energy_frame = max(frames, key=lambda frame: frame[0])
+            with open(optimized_output, "r", encoding="utf-8") as f:
+                optimized_lines = [line.strip() for line in f.readlines() if line.strip()]
+
+            optimized_nat = int(optimized_lines[0])
+            optimized_atom_types = []
+            optimized_coordinates = []
+            for pos in range(2, 2 + optimized_nat):
+                parts = optimized_lines[pos].split()
+                optimized_atom_types.append(parts[0])
+                optimized_coordinates.append([float(value) for value in parts[1:4]])
+
+            assert optimized_nat == nat
+            assert optimized_atom_types == highest_energy_frame[1]
+            assert optimized_coordinates == highest_energy_frame[2]
+
             ff_csv_file = temp_path / "tsff_2.csv"
             assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
             ff_csv_file = temp_path / "ff1.csv"

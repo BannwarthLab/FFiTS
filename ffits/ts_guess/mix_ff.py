@@ -51,7 +51,7 @@ def create_tsff(
 
     params_mix = {}
     if calcdata.ts_calc.average_with_hess_weight:
-        sharpness = 0.8
+        sharpness = calcdata.ts_calc.hess_weight_sharpness
         logger.info(
             f"Calculating mixing factors based on Hessian analysis with sharpness {sharpness}"
         )
@@ -387,10 +387,10 @@ def hessian_weighting_mix_list(
     # Process bonds
     for idx, row in bonds_df.iterrows():
         atoms = row["atoms"]
-        factor = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
-        logger.debug(f"Bond {atoms}: Mixing factor {factor}")
-        if factor is not None:
-            param_dict[atoms] = factor
+        param_reac = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
+        logger.debug(f"Bond {atoms}: Mixing factor {param_reac}")
+        if param_reac is not None:
+            param_dict[atoms] = param_reac
 
     # # Process angles
     # for idx, row in angles_df.iterrows():

@@ -100,8 +100,8 @@ class TSCalculationOptions:
     factor_reactant: float = 0.5
     factor_product: float = 0.5
     optimizer: str = "molbar-optimizer"
-    energy_threshold_two_optimizations: float = 0.15
     average_with_hess_weight: bool = True
+    hess_weight_sharpness: float = 0.8
     perform_two_optimizations: bool = False
     molbar_optimizer_e_tol: float = 1e-4
     molbar_optimizer_x_tol: float = 1e-3
@@ -343,6 +343,9 @@ class CalculationData:
         cd.ts_calc.average_with_hess_weight = ts_calc.get(
             "average_with_hess_weight", cd.ts_calc.average_with_hess_weight
         )
+        cd.ts_calc.hess_weight_sharpness = ts_calc.get(
+            "hess_weight_sharpness", cd.ts_calc.hess_weight_sharpness
+        )
         cd.ts_calc.perform_two_optimizations = ts_calc.get(
             "perform_two_optimizations", cd.ts_calc.perform_two_optimizations
         )
@@ -384,7 +387,6 @@ class CalculationData:
             raise FileNotFoundError(
                 f"No Hessian calculation requested, but file {cd.product_path.hessian_filename} not found."
             )
-
         if cd.system.multiplicity > 3 or cd.system.multiplicity < 1:
             raise ValueError(
                 f"Multiplicity of {cd.system.multiplicity} is chemically unreasonable on this theory level."

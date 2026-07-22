@@ -27,7 +27,7 @@ The goal of this program is to generate a transition state (TS) guess from a rea
 # Requirements 
 Part of the code is written in Fortran which needs to be compiled. For that reason you need gfortran and cmake. On our cluster please load following modules before doing the installation:
 ```bash
-module load cmake gnu_compilers compiler python
+module load cmake make gnu-compilers compiler python
 ```
 
 
