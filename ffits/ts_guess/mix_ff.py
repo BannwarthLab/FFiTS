@@ -167,6 +167,17 @@ def combine_dihedrals(
     ff2: ForceField,
     info2: StructuralInformation,
 ) -> pd.DataFrame:
+    """This combinationo only includes improper dihedrals if they are present in both structures. 
+
+    Args:
+        ff1 (ForceField): _description_
+        info1 (StructuralInformation): _description_
+        ff2 (ForceField): _description_
+        info2 (StructuralInformation): _description_
+
+    Returns:
+        pd.DataFrame: _description_
+    """
 
     bo_threshold = 0.0  # threshold for WBO to consider a bond as present
 
@@ -175,6 +186,7 @@ def combine_dihedrals(
         proper_dihedral = row["proper_dihedral"]
         if proper_dihedral:
             return True
+        return True
 
         return (
             info1.bo_matrix[atoms[0], atoms[1]] > bo_threshold
