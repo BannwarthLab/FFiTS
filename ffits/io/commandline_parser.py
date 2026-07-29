@@ -74,14 +74,14 @@ def parse_args():
         "--charge",
         "-chrg",
         type=int,
-        default=0,
+        default=None,
         help="Charge for the system (default: 0).",
     )
     parser.add_argument(
         "--multiplicity",
         "-mult",
         type=int,
-        default=1,
+        default=None,
         help="Multiplicity of the system (default: 1).",
     )
     parser.add_argument(
