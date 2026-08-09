@@ -409,9 +409,9 @@ def _find_hydrogen_bonding(ff: ForceField, info: StructuralInformation) -> dict:
     import math
 
     hbond_donors = {"O", "N", "F"}
-    angle_threshold_deg = 20.0
+    angle_threshold_deg = 30.0
     angle_threshold_rad = math.radians(angle_threshold_deg)
-    factor = 0.95
+    factor = 1.0
 
     hydrogen_bonds = {}
     logger.debug(
