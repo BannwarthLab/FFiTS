@@ -5,7 +5,26 @@ import pytest
 
 from ffits.io.commandline_parser import _get_version, parse_args
 
+from ffits.io.commandline_parser import parse_args
 
+
+def test_parse_args_includes_timing_flag(monkeypatch, tmp_path):
+    reactant = tmp_path / "reactant.xyz"
+    product = tmp_path / "product.xyz"
+    reactant.write_text("1\n\nH 0.0 0.0 0.0\n")
+    product.write_text("1\n\nH 0.0 0.0 0.1\n")
+
+    monkeypatch.setattr(
+        "sys.argv",
+        ["ffits", str(reactant), str(product), "--timing"],
+    )
+
+    args = parse_args()
+
+    assert args["timing"] is True
+    assert args["debug"] is False
+    assert args["structures"] == [str(reactant), str(product)]
+    
 def test_get_version_returns_a_string():
     # Whatever pyproject.toml resolution finds (or "unknown" as a fallback),
     # this should never raise.
