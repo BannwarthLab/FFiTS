@@ -40,7 +40,7 @@ build:
 # Testing
 test:
   <<: [*test_template, *matrix]
-  stage: testing
+  stage: test
   needs:
     - build
   tags:
