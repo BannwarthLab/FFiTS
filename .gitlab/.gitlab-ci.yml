@@ -45,7 +45,7 @@ build-containers:
     - mkdir -p containers
     - if [ ! -e "containers/${CONTAINER_NAME}.sif" ]; then
         python3 .gitlab/generate_recipe.py ${CONTAINER_NAME};
-        apptainer build containers/${CONTAINER_NAME}.sif ${APPTAINER_RECIPE};
+        /gitlab-runner/build_container.sh ${APPTAINER_RECIPE} containers/${CONTAINER_NAME}.sif;
       fi
   tags:
     - shell
