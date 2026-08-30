@@ -37,10 +37,6 @@ build-containers:
   <<: *matrix
   variables:
     <<: *container_vars
-  cache:
-    key: "container-$CONTAINER_NAME"
-    paths:
-      - containers/
   script:
     - mkdir -p containers
     - if [ ! -e "containers/${CONTAINER_NAME}.sif" ]; then
@@ -49,6 +45,10 @@ build-containers:
       fi
   tags:
     - shell
+  artifacts:
+    paths:
+      - containers/${CONTAINER_NAME}.sif
+    expire_in: 1 day
 
 # ---------------------------------------------------------------------------
 # Test stage: run the matrix inside each container via pytest
@@ -59,11 +59,12 @@ test:
   variables:
     <<: *container_vars
   needs:
-    - build-containers
-  cache:
-    key: "container-$CONTAINER_NAME"
-    paths:
-      - containers/
+    - job: build-containers
+      parallel:
+        matrix:
+          - OS: "${OS}"
+            COMPILER: "${COMPILER}"
+            PYTHON: "${PYTHON}"
   tags:
     - cpu
   script:
@@ -71,7 +72,7 @@ test:
         python -m venv venv &&
         source venv/bin/activate &&
         make install-dev &&
-        make test"
+        pytest"
   artifacts:
     when: on_failure
     paths:
