@@ -67,7 +67,8 @@ test:
     # cached .sif path on THIS job's runner: on a cache hit this is fast
     # and does not rebuild, it just reports where the .sif already is.
     - python3 .gitlab/generate_recipe.py ${CONTAINER_NAME}
-    - BUILD_OUTPUT=$(/gitlab-runner/build_container.sh ${CONTAINER_NAME}.def | tee /dev/stderr)
+    - BUILD_OUTPUT=$(/gitlab-runner/build_container.sh ${CONTAINER_NAME}.def 2>&1)
+    - echo "$BUILD_OUTPUT"
     - SIF_PATH=$(echo "$BUILD_OUTPUT" | grep -oE '/[^[:space:]]+\.sif' | tail -n1)
     - |
       if [ -z "$SIF_PATH" ]; then
