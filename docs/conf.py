@@ -21,6 +21,9 @@ extensions = [
 
 # Auto-generate stub pages for autosummary directives
 autosummary_generate = True
+autodoc_mock_imports = [
+    "ffits.forcefield.fortran.fortran_forcefield",
+]
 
 # By default autodoc only shows a class's own docstring, not its methods.
 # These options make it recurse into members so methods/functions inside

@@ -39,11 +39,10 @@ build-containers:
   variables:
     <<: *container_vars
   script:
-    - mkdir -p containers
-    - if [ ! -e "containers/${CONTAINER_NAME}.sif" ]; then
-        python3 .gitlab/generate_recipe.py ${CONTAINER_NAME};
-        /gitlab-runner/build_container.sh ${APPTAINER_RECIPE} containers/${CONTAINER_NAME}.sif;
-      fi
+    - export CONTAINER_NAME="${OS}-${COMPILER}-${PYTHON}"
+    - echo $CONTAINER_NAME
+    - python3 .gitlab/generate_recipe.py ${CONTAINER_NAME}
+    - /gitlab-runner/build_container.sh ${CONTAINER_NAME}.def
   tags:
     - shell
   artifacts:
