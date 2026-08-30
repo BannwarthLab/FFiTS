@@ -69,11 +69,11 @@ test:
         source venv/bin/activate &&
         make install-dev &&
         pytest"
-  artifacts:
-    when: on_failure
-    paths:
-      - tests/test_results/
-    expire_in: 1 week
+  # artifacts:
+  #   when: on_failure
+  #   paths:
+  #     - tests/_failure
+  #   expire_in: 1 week
 
 # ---------------------------------------------------------------------------
 # Docs stage: build with Sphinx, deploy to GitLab Pages on default branch
