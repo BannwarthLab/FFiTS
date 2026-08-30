@@ -32,7 +32,6 @@ help:
 # installing molbar and all the dependencies 
 install-dev:
 	pip install -r requirements-dev.txt
-	pip install --pre molbar
 	rm -rf _skbuild/ ffits.egg-info/ 
 	python setup.py build_ext --inplace 
 	pip install .
