@@ -38,6 +38,16 @@ autodoc_default_options = {
 # Show type hints in the description body rather than cluttering the signature
 autodoc_typehints = "description"
 
+# Some functions default to constructing a full object (e.g.
+# `calcdata: CalculationData = CalculationData.from_default()`) or a
+# function reference (e.g. `optimizer: Callable = anc_optimizer`).
+# Without this, autodoc evaluates those defaults and renders their full
+# repr() in the signature (a huge wall of nested dataclass fields, or
+# `<function anc_optimizer at 0x...>`). This makes autodoc show the
+# literal source expression instead, e.g. `CalculationData.from_default()`
+# and `anc_optimizer`.
+autodoc_preserve_defaults = True
+
 # MyST: enable dollar-math so the LaTeX in the README ($$...$$) renders
 myst_enable_extensions = [
     "dollarmath",
