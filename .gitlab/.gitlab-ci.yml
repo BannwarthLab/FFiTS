@@ -74,7 +74,7 @@ test:
         echo "Could not determine .sif path from build_container.sh output" >&2
         exit 1
       fi
-    - echo "Using container: $SIF_PATH"
+    - 'echo "Using container: $SIF_PATH"'
     - apptainer exec "$SIF_PATH" bash -c "
         python -m venv venv &&
         source venv/bin/activate &&
