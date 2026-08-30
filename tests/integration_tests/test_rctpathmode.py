@@ -4,7 +4,6 @@ from pathlib import Path
 import tempfile
 import os
 
-
 # def test_standard_rctpath_run():
 #     """
 #     Test that ffits creates optimized.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration

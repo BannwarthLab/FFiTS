@@ -10,13 +10,23 @@ OS_CONFIG = {
 COMPILER_CONFIG = {
     "gnu": {
         "packages": "gcc-gfortran",
-        "env": {"CC": "gcc", "CXX": "g++", "FC": "gfortran", "F77": "gfortran", "F90": "gfortran"},
+        "env": {
+            "CC": "gcc",
+            "CXX": "g++",
+            "FC": "gfortran",
+            "F77": "gfortran",
+            "F90": "gfortran",
+        },
     },
     "intel2023.2.0": {
         "repo": True,
         "packages": "intel-oneapi-compiler-dpcpp-cpp-2023.2.0 intel-oneapi-compiler-fortran-2023.2.0",
         "env": {
-            "CC": "icx", "CXX": "icpx", "FC": "ifx", "F77": "ifx", "F90": "ifx",
+            "CC": "icx",
+            "CXX": "icpx",
+            "FC": "ifx",
+            "F77": "ifx",
+            "F90": "ifx",
             "PATH": "/opt/intel/oneapi/compiler/2023.2.0/linux/bin:$PATH",
             "TBBROOT": "/opt/intel/oneapi/tbb/2021.10.0",
             "COMPILERROOT": "/opt/intel/oneapi/compiler/2023.2.0",
@@ -26,7 +36,11 @@ COMPILER_CONFIG = {
         "repo": True,
         "packages": "intel-oneapi-compiler-dpcpp-cpp-2025.3.0 intel-oneapi-compiler-fortran-2025.3.0",
         "env": {
-            "CC": "icx", "CXX": "icpx", "FC": "ifx", "F77": "ifx", "F90": "ifx",
+            "CC": "icx",
+            "CXX": "icpx",
+            "FC": "ifx",
+            "F77": "ifx",
+            "F90": "ifx",
             "PATH": "/opt/intel/oneapi/compiler/2025.3.0/linux/bin:$PATH",
             "TBBROOT": "/opt/intel/oneapi/tbb/2022.3",
             "COMPILERROOT": "/opt/intel/oneapi/compiler/2025.3",
@@ -55,18 +69,26 @@ def parse_recipe_name(name: str) -> Tuple[str, str, str]:
     """Parse recipe name in format: OS-COMPILER-PYTHON"""
     parts = name.lower().split("-")
     if len(parts) != 3:
-        raise ValueError(f"Invalid recipe name format. Expected: OS-COMPILER-PYTHON, got: {name}")
+        raise ValueError(
+            f"Invalid recipe name format. Expected: OS-COMPILER-PYTHON, got: {name}"
+        )
     return tuple(parts)
 
 
 def validate_config(os_name: str, compiler: str, python: str) -> None:
     """Validate that all configuration values are supported."""
     if os_name not in OS_CONFIG:
-        raise ValueError(f"Unknown OS: {os_name} (supported: {', '.join(OS_CONFIG.keys())})")
+        raise ValueError(
+            f"Unknown OS: {os_name} (supported: {', '.join(OS_CONFIG.keys())})"
+        )
     if compiler not in COMPILER_CONFIG:
-        raise ValueError(f"Unknown compiler: {compiler} (supported: {', '.join(COMPILER_CONFIG.keys())})")
+        raise ValueError(
+            f"Unknown compiler: {compiler} (supported: {', '.join(COMPILER_CONFIG.keys())})"
+        )
     if python not in PYTHON_CONFIG:
-        raise ValueError(f"Unknown python: {python} (supported: {', '.join(PYTHON_CONFIG.keys())})")
+        raise ValueError(
+            f"Unknown python: {python} (supported: {', '.join(PYTHON_CONFIG.keys())})"
+        )
 
 
 def generate_recipe(name: str) -> str:
@@ -86,7 +108,7 @@ def generate_recipe(name: str) -> str:
     lines.append("    export DEBIAN_FRONTEND=noninteractive")
     lines.append("    export TZ=Europe/Berlin")
     lines.append("    dnf -y update")
-    lines.append("    dnf groupinstall -y \"Development Tools\"")
+    lines.append('    dnf groupinstall -y "Development Tools"')
     lines.append("    dnf install -y wget git cmake")
     lines.append("    dnf install -y epel-release")
     lines.append("    dnf config-manager --set-enabled crb")
@@ -103,7 +125,9 @@ def generate_recipe(name: str) -> str:
         lines.append("enabled=1")
         lines.append("gpgcheck=1")
         lines.append("repo_gpgcheck=1")
-        lines.append("gpgkey=https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB")
+        lines.append(
+            "gpgkey=https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB"
+        )
         lines.append("EOF")
         lines.append("    mv /tmp/oneAPI.repo /etc/yum.repos.d")
         lines.append("")
@@ -118,13 +142,19 @@ def generate_recipe(name: str) -> str:
     lines.append(f"    dnf install -y {PYTHON_CONFIG[python]}")
     lines.append(f"    ln -sf /usr/bin/{python} /usr/local/bin/python")
     lines.append(f"    ln -sf /usr/bin/{python} /usr/local/bin/python3")
-    lines.append(f"    ln -sf /usr/bin/{python.replace('python', 'pip')} /usr/local/bin/pip")
-    lines.append(f"    ln -sf /usr/bin/{python.replace('python', 'pip')} /usr/local/bin/pip3")
+    lines.append(
+        f"    ln -sf /usr/bin/{python.replace('python', 'pip')} /usr/local/bin/pip"
+    )
+    lines.append(
+        f"    ln -sf /usr/bin/{python.replace('python', 'pip')} /usr/local/bin/pip3"
+    )
     lines.append("")
 
     # xtb installation (pinned version)
     lines.append(f"    # xtb {XTB_VERSION} Installation")
-    lines.append(f"    wget https://github.com/grimme-lab/xtb/releases/download/v{XTB_VERSION}/xtb-{XTB_VERSION}-linux-x86_64.tar.xz")
+    lines.append(
+        f"    wget https://github.com/grimme-lab/xtb/releases/download/v{XTB_VERSION}/xtb-{XTB_VERSION}-linux-x86_64.tar.xz"
+    )
     lines.append(f"    tar -xvf xtb-{XTB_VERSION}-linux-x86_64.tar.xz")
     lines.append("    chmod 777 -R xtb-dist")
     lines.append("")
@@ -136,7 +166,7 @@ def generate_recipe(name: str) -> str:
 
     # Environment section
     lines.append("%environment")
-    lines.append("    export PATH=\"/root/.local/bin:/usr/local/bin:/usr/bin:${PATH}\"")
+    lines.append('    export PATH="/root/.local/bin:/usr/local/bin:/usr/bin:${PATH}"')
     lines.append("    export XTBEXE=/xtb-dist/bin/")
     lines.append("    export PATH=$XTBEXE:$PATH")
 

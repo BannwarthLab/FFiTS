@@ -13,10 +13,10 @@ release = "0.3.1-alpha"
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",      # Google/NumPy-style docstrings
-    "sphinx.ext.viewcode",      # links to highlighted source
-    "sphinx.ext.autosummary",   # generates per-module summary tables
-    "myst_parser",              # lets Sphinx read Markdown (for the README)
+    "sphinx.ext.napoleon",  # Google/NumPy-style docstrings
+    "sphinx.ext.viewcode",  # links to highlighted source
+    "sphinx.ext.autosummary",  # generates per-module summary tables
+    "myst_parser",  # lets Sphinx read Markdown (for the README)
 ]
 
 # Auto-generate stub pages for autosummary directives
@@ -29,10 +29,10 @@ autodoc_mock_imports = [
 # These options make it recurse into members so methods/functions inside
 # classes actually show up.
 autodoc_default_options = {
-    "members": True,           # include methods/attributes, not just the class docstring
-    "undoc-members": True,     # include members even if they have no docstring yet
+    "members": True,  # include methods/attributes, not just the class docstring
+    "undoc-members": True,  # include members even if they have no docstring yet
     "show-inheritance": True,  # show base classes
-    "inherited-members": True, # include methods inherited from base classes
+    "inherited-members": True,  # include methods inherited from base classes
 }
 
 # Show type hints in the description body rather than cluttering the signature

@@ -167,7 +167,7 @@ def combine_dihedrals(
     ff2: ForceField,
     info2: StructuralInformation,
 ) -> pd.DataFrame:
-    """This combinationo only includes improper dihedrals if they are present in both structures. 
+    """This combinationo only includes improper dihedrals if they are present in both structures.
 
     Args:
         ff1 (ForceField): _description_
@@ -612,9 +612,6 @@ def _average_single_dihedral(val1, val2, fact1: float, fact2: float):
         phi_avg -= 2.0 * pi
     elif phi_avg <= -pi:
         phi_avg += 2.0 * pi
-    print(
-        f"val1: {val1}, val2: {val2}, fact1: {fact1}, fact2: {fact2}, phi_avg: {phi_avg}"
-    )
     return round(phi_avg, 8)
 
 

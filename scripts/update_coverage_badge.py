@@ -9,8 +9,10 @@ Usage:
 Generates a License / Python (tested versions) / Coverage badge row and
 rewrites it between the BADGES markers in README.md.
 """
+
 import re
 import sys
+
 try:
     import tomllib
 except ModuleNotFoundError:  # Python < 3.11
@@ -74,10 +76,14 @@ def shield(label: str, message: str, color: str) -> str:
     return f"![{label}](https://img.shields.io/badge/{label_enc}-{message_enc}-{color})"
 
 
-def build_badge_row(license_name: str, python_versions: list[str], coverage_pct: float) -> str:
+def build_badge_row(
+    license_name: str, python_versions: list[str], coverage_pct: float
+) -> str:
     license_badge = shield("License", license_name, "blue")
     python_badge = shield("python", " | ".join(python_versions), "blue")
-    coverage_badge = shield("coverage", f"{coverage_pct:g}%", coverage_color(coverage_pct))
+    coverage_badge = shield(
+        "coverage", f"{coverage_pct:g}%", coverage_color(coverage_pct)
+    )
     return " ".join([license_badge, python_badge, coverage_badge])
 
 
@@ -115,8 +121,10 @@ def main() -> int:
     badge_line = build_badge_row(license_name, python_versions, coverage_pct)
     update_readme(badge_line)
 
-    print(f"Updated README badges: License={license_name}, "
-          f"Python={', '.join(python_versions)}, Coverage={coverage_pct:g}%")
+    print(
+        f"Updated README badges: License={license_name}, "
+        f"Python={', '.join(python_versions)}, Coverage={coverage_pct:g}%"
+    )
     return 0
 
 
