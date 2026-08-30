@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class ForceField:
     """
-    FF definition through FF parameters (np arrays starting with c_), reference values (bondlenghts, angles, etc) and corresponding atom numbers, which construct the bond / angle / dihedral angle / lj term.
+    FF definition through FF parameters (np arrays starting with ``c_``), reference values (bondlenghts, angles, etc) and corresponding atom numbers, which construct the bond / angle / dihedral angle / lj term.
     """
 
     def __init__(
