@@ -1,90 +1,112 @@
-# define the 2 stages here
 stages:
   - build
   - test
-  - building-docs
+  - docs-build
+  - docs-deploy
 
-# Define the matrix for all OS and Python combinations here
+# ---------------------------------------------------------------------------
+# Matrix: OS x Compiler x Python
+# ---------------------------------------------------------------------------
 .matrix: &matrix
   parallel:
     matrix:
       - OS:
-          - "RL9"
-          - "RL10"
+          - "rl9"
+          - "rl10"
+        COMPILER:
+          - "gnu"
+          - "intel2023.2.0"
+          - "intel2025.3.0"
         PYTHON:
+          - "python3.9"
+          - "python3.10"
+          - "python3.11"
           - "python3.12"
           - "python3.13"
           - "python3.14"
 
-# Container building
-build:
-  stage: build # Add the correct stage name here
-  script:
-    - export CONTAINER_NAME="${OS}-${PYTHON}"
-    - echo $CONTAINER_NAME
-    - mkdir -p containers
-    - python3 .gitlab/generate_recipe.py ${CONTAINER_NAME}
-    - /gitlab-runner/build_container.sh ${CONTAINER_NAME}.def containers/${CONTAINER_NAME}.sif
-  tags:
-    - shell # Add the correct tag here
+.container_vars: &container_vars
+  CONTAINER_NAME: "${OS}-${COMPILER}-${PYTHON}"
+  APPTAINER_RECIPE: "${OS}-${COMPILER}-${PYTHON}.def"
+
+# ---------------------------------------------------------------------------
+# Build stage: build one .sif container per matrix combination
+# ---------------------------------------------------------------------------
+build-containers:
+  stage: build
   <<: *matrix
-
-# Define the test job here
-# General testing
-.test_template: &test_template
   variables:
-    CONTAINER_NAME: "${OS}-${PYTHON}"
-    APPTAINER_RECIPE: "${OS}-${PYTHON}.def"
-    APPTAINER_RECIPE_GENERATE_CMD: "python3 .gitlab/generate_recipe.py ${CONTAINER_NAME}"
+    <<: *container_vars
+  cache:
+    key: "container-$CONTAINER_NAME"
+    paths:
+      - containers/
+  script:
+    - mkdir -p containers
+    - if [ ! -e "containers/${CONTAINER_NAME}.sif" ]; then
+        python3 .gitlab/generate_recipe.py ${CONTAINER_NAME};
+        apptainer build containers/${CONTAINER_NAME}.sif ${APPTAINER_RECIPE};
+      fi
+  tags:
+    - shell
 
-# Testing
+# ---------------------------------------------------------------------------
+# Test stage: run the matrix inside each container via pytest
+# ---------------------------------------------------------------------------
 test:
-  <<: [*test_template, *matrix]
   stage: test
+  <<: *matrix
+  variables:
+    <<: *container_vars
   needs:
-    - build
+    - build-containers
+  cache:
+    key: "container-$CONTAINER_NAME"
+    paths:
+      - containers/
   tags:
     - cpu
   script:
-    - module load python gnu-compilers compiler make
-    - export PYTHON=python3.14
-    - export CFLAGS="$(python3.14-config --cflags)"
-    - export LDFLAGS="$(python3.14-config --ldflags)"
-    - printenv
-    - python -m venv venv && source venv/bin/activate
-    - make install-dev
-    - pip list
-    # Run tests
-    - pytest tests/
+    - apptainer exec containers/${CONTAINER_NAME}.sif bash -c "
+        python -m venv venv &&
+        source venv/bin/activate &&
+        make install-dev &&
+        make test"
+  artifacts:
+    when: on_failure
+    paths:
+      - tests/test_results/
+    expire_in: 1 week
 
-# # Build documentation
-# build-docs:
-#   stage: building-docs
-#   needs:
-#     - build
-#   image: python:3.14-slim
-#   tags:
-#     - docker
-#   script:
-#     - pip install -r requirements.txt
-#     - pip install sphinx
-#     - sphinx-build -b html docs docs/_build
-#   artifacts:
-#     paths:
-#       - docs/_build
+# ---------------------------------------------------------------------------
+# Docs stage: build with Sphinx, deploy to GitLab Pages on default branch
+# ---------------------------------------------------------------------------
+docs-build:
+  stage: docs-build
+  image: python:3.12-slim
+  needs: []
+  tags:
+    - docker
+  script:
+    - pip install -r requirements-dev.txt
+    - pip install sphinx sphinx-rtd-theme
+    - pip install .
+    - sphinx-build -b html docs docs/_build
+  artifacts:
+    paths:
+      - docs/_build
 
-# # Deploy docs
-# pages: # this job name is fixed
-#   stage: building-docs # add the correct stage and a "needs" to the job only runs when build-docs is finished
-#   needs:
-#     - build-docs
-#   tags:
-#     - shell # which runner shall be used for these commands?
-#   script:
-#     - mkdir -p public
-#     - mv docs/_build/* public/
-#   rules:
-#     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-#   artifacts: # make sure that the public folder is saved
-#     paths:
-#       - public
+pages:
+  stage: docs-deploy
+  needs:
+    - docs-build
+  tags:
+    - shell
+  script:
+    - mkdir -p public
+    - mv docs/_build/* public/
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
