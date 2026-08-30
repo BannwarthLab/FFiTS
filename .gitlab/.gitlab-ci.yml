@@ -14,9 +14,9 @@ stages:
           # - "rl9"
           - "rl10"
         COMPILER:
-          # - "gnu"
+          - "gnu"
           # - "intel2023.2.0"
-          - "intel2025.3.0"
+          # - "intel2025.3.0"
         PYTHON:
           # - "python3.9"
           # - "python3.10"
