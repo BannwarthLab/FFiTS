@@ -6,13 +6,17 @@
 
 # FFiTS
 
+<!-- COVERAGE-BADGE-START -->
+![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey)
+<!-- COVERAGE-BADGE-END -->
+
 ***Force Field-interpolated Transition States***
 
 **Author:** *Daria Babushkina*  
 **Version:** 0.3.1-alpha  
 **License:** MIT  
 **Status:** Development  
-**Python:** >=3.11  
+**Python:** 3.12, 3.13, 3.14 (tested)
 
 
 # Introduction
@@ -23,21 +27,26 @@ The goal of this program is to generate a transition state (TS) guess from a rea
 2. **Parametrizing system-specific FFs**: The data from step 1 is used to construct two FFs - one for reactant and one for product structure - by parameterizing the FFs to represent curvature at the given minima. 
 3. **Constructing and optimizing to TS guess**: The TS FF is generated from the reactant and product FF and used as the potential for a geometry optimization to its minimum. The resulting structure is the TS. 
 
-# Requirements 
+# Requirements
 Part of the code is written in Fortran which needs to be compiled. For that reason you need gfortran and cmake. On our cluster please load following modules before doing the installation:
 ```bash
 module load cmake make gnu-compilers compiler python
 ```
 
+**Tested configurations** (see CI, `.gitlab/.gitlab-ci.yml`):
+- OS: Rocky Linux 10
+- Compiler: GNU (gfortran)
+- Python: 3.12, 3.13, 3.14
+- xtb: 6.7.1
+
 
 # Installation
 To get this code running, please execute following lines:
 ```bash
-git clone git@git.rwth-aachen.de:bannwarthlab/ffits.git
+git clone git@gitlab.git.nrw:rwth-bannwarthlab/ffits.git
 cd ffits 
 python -m venv venv
 source venv/bin/activate
-git checkout dev
 make install-dev 
 ```
 
