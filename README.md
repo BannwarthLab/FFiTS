@@ -7,7 +7,7 @@
 # FFiTS
 
 <!-- COVERAGE-BADGE-START -->
-![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey)
+![coverage](https://img.shields.io/badge/coverage-77.1%25-green)
 <!-- COVERAGE-BADGE-END -->
 
 ***Force Field-interpolated Transition States***
