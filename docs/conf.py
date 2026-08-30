@@ -54,6 +54,11 @@ myst_enable_extensions = [
     "colon_fence",
 ]
 
+# README.md links to its own sections with GitHub-style anchors, e.g.
+# [Configuration File](#configuration-file). Auto-generate matching
+# heading anchors so those in-page links resolve here too.
+myst_heading_anchors = 3
+
 # Treat both .rst and .md files as documentation sources
 source_suffix = {
     ".rst": "restructuredtext",
@@ -65,3 +70,10 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+
+# README.md (included on the docs landing page, see index.md) references
+# logo.png with a plain relative HTML <img> tag, so unlike a Markdown
+# image it won't get its path rewritten or copied automatically by
+# Sphinx/MyST. Copy it into the build root verbatim so that reference
+# keeps resolving.
+html_extra_path = ["../logo.png"]
