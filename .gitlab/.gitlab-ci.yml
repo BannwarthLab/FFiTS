@@ -28,6 +28,7 @@ stages:
 .container_vars: &container_vars
   CONTAINER_NAME: "${OS}-${COMPILER}-${PYTHON}"
   APPTAINER_RECIPE: "${OS}-${COMPILER}-${PYTHON}.def"
+  APPTAINER_RECIPE_GENERATE_CMD: "python3 .gitlab/generate_recipe.py ${CONTAINER_NAME}"
 
 # ---------------------------------------------------------------------------
 # Build stage: build one .sif container per matrix combination
