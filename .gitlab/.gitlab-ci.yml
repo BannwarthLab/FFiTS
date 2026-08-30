@@ -11,15 +11,15 @@ stages:
   parallel:
     matrix:
       - OS:
-          - "rl9"
+          # - "rl9"
           - "rl10"
         COMPILER:
-          - "gnu"
-          - "intel2023.2.0"
+          # - "gnu"
+          # - "intel2023.2.0"
           - "intel2025.3.0"
         PYTHON:
-          - "python3.9"
-          - "python3.10"
+          # - "python3.9"
+          # - "python3.10"
           - "python3.11"
           - "python3.12"
           - "python3.13"
