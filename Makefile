@@ -1,45 +1,59 @@
-.PHONY: test coverage clean help build-wheels build-wheel dist upload-test upload release
+.PHONY: help install-dev test test-unit test-integration coverage clean
 
+# ---------------------------------------------------------------------------
 # Configuration
-PYTHON_VERSIONS := 3.14 
+# ---------------------------------------------------------------------------
 DIST_DIR := dist
 
+# ---------------------------------------------------------------------------
 # Default target
+# ---------------------------------------------------------------------------
 help:
 	@echo "Available commands:"
-	@echo "  Development:"
-	@echo "    test          - Run tests with coverage reporting"
-	@echo "    coverage      - Update coverage badge in README"
-# 	@echo "    build         - Build the Fortran xtension in place"
-# 	@echo "    test-only     - Run tests without coverage"
-	@echo "    install-dev   - Build and install the package with development dependencies"
-# 	@echo "    clean         - Clean coverage and cache files"
-# 	@echo ""
-# 	@echo "  Building:"
-# 	@echo "    build-wheel   - Build wheel for current Python version"
-# 	@echo "    build-wheels  - Build cross-platform wheels using cibuildwheel (requires Docker for Linux)"
-# 	@echo "    build-macos   - Build macOS wheels only using cibuildwheel"
-# 	@echo "    build-linux   - Build manylinux wheels only using cibuildwheel"
-# 	@echo "    build-local   - Build wheels locally for available Python versions"
-# 	@echo "    dist          - Create source distribution"
-# 	@echo ""
-# 	@echo "  Release:"
-# 	@echo "    upload-test   - Upload to TestPyPI"
-# 	@echo "    upload        - Upload to PyPI"
-# 	@echo "    release       - Full release (clean, build, test, upload)"
+	@echo "  install-dev      - Build and install the package with development dependencies"
+	@echo "  test             - Run the full test suite"
+	@echo "  test-unit        - Run unit tests only"
+	@echo "  test-integration - Run integration tests only"
+	@echo "  coverage         - Run tests and generate a coverage report (coverage.xml)"
+	@echo "  clean            - Remove build artifacts and caches"
 
+# ---------------------------------------------------------------------------
+# Development
+# ---------------------------------------------------------------------------
 
-# installing molbar and all the dependencies 
+# Install all dependencies, then build and install ffits in-place
 install-dev:
 	pip install -r requirements-dev.txt
-	rm -rf _skbuild/ ffits.egg-info/ 
-	python setup.py build_ext --inplace 
+	rm -rf _skbuild/ ffits.egg-info/
+	python setup.py build_ext --inplace
 	pip install .
-# Run tests with coverage
-test:
-	pytest 
 
-# Update coverage badge
+# ---------------------------------------------------------------------------
+# Testing
+# ---------------------------------------------------------------------------
+
+# Run the full test suite
+test:
+	pytest tests/
+
+# Run unit tests only
+test-unit:
+	pytest tests/unit_tests
+
+# Run integration tests only
+test-integration:
+	pytest tests/integration_tests
+
+# Run tests with coverage report and update the README badge
 coverage:
-	python -m pytest --cov=ffits --cov-report=xml
+	pytest tests/ --cov=ffits --cov-report=xml --cov-report=term
 	python scripts/update_coverage_badge.py
+
+# ---------------------------------------------------------------------------
+# Cleanup
+# ---------------------------------------------------------------------------
+
+clean:
+	rm -rf _skbuild/ ffits.egg-info/ build/ $(DIST_DIR)/
+	rm -rf .pytest_cache/ .coverage coverage.xml
+	find . -type d -name "__pycache__" -not -path "./venv/*" -exec rm -rf {} +
