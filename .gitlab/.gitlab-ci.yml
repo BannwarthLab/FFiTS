@@ -59,12 +59,7 @@ test:
   variables:
     <<: *container_vars
   needs:
-    - job: build-containers
-      parallel:
-        matrix:
-          - OS: "${OS}"
-            COMPILER: "${COMPILER}"
-            PYTHON: "${PYTHON}"
+    - build-containers
   tags:
     - cpu
   script:
