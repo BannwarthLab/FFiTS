@@ -5,7 +5,6 @@
 
 
 # FFiTS
-==============
 
 ***Force Field-interpolated Transition States***
 
