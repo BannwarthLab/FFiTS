@@ -20,7 +20,7 @@ stages:
         PYTHON:
           # - "python3.9"
           # - "python3.10"
-          - "python3.11"
+          # - "python3.11"
           - "python3.12"
           - "python3.13"
           - "python3.14"
@@ -89,7 +89,7 @@ docs-build:
     - docker
   script:
     - pip install -r requirements-dev.txt
-    - pip install sphinx sphinx-rtd-theme
+    - pip install sphinx myst-parser sphinx-rtd-theme
     - pip install .
     - sphinx-build -b html docs docs/_build
   artifacts:
