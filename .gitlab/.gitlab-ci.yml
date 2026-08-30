@@ -62,13 +62,13 @@ test:
   needs:
     - build-containers
   tags:
-    - cpu
+    - shell
   script:
     - apptainer exec containers/${CONTAINER_NAME}.sif bash -c "
         python -m venv venv &&
         source venv/bin/activate &&
         make install-dev &&
-        pytest"
+        pytest tests/"
   # artifacts:
   #   when: on_failure
   #   paths:
