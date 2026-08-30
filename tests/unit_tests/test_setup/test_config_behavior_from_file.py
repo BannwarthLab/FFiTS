@@ -463,9 +463,7 @@ class TestTSPathConfig:
     def test_ts_hessian_filename_from_config(self):
         """Verify that TS hessian_filename from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                '[ts_guess.path]\nhessian_filename = "ts_hessian.hess"\n'
-            )
+            f.write('[ts_guess.path]\nhessian_filename = "ts_hessian.hess"\n')
             f.flush()
             temp_path = f.name
         try:
@@ -521,9 +519,7 @@ class TestTSCalculationConfig:
     def test_ts_optimizer_molbar_from_config(self):
         """Verify that TS optimizer molbar-optimizer from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                '[ts_guess.calculation]\noptimizer = "molbar-optimizer"\n'
-            )
+            f.write('[ts_guess.calculation]\noptimizer = "molbar-optimizer"\n')
             f.flush()
             temp_path = f.name
         try:
@@ -535,9 +531,7 @@ class TestTSCalculationConfig:
     def test_ts_optimizer_scipy_from_config(self):
         """Verify that TS optimizer scipy-optimizer from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                '[ts_guess.calculation]\noptimizer = "scipy-optimizer"\n'
-            )
+            f.write('[ts_guess.calculation]\noptimizer = "scipy-optimizer"\n')
             f.flush()
             temp_path = f.name
         try:
@@ -563,9 +557,7 @@ class TestTSCalculationConfig:
     def test_ts_average_with_hess_weight_from_config(self):
         """Verify that TS average_with_hess_weight from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                "[ts_guess.calculation]\naverage_with_hess_weight = false\n"
-            )
+            f.write("[ts_guess.calculation]\naverage_with_hess_weight = false\n")
             f.flush()
             temp_path = f.name
         try:
@@ -577,9 +569,7 @@ class TestTSCalculationConfig:
     def test_ts_perform_two_optimizations_from_config(self):
         """Verify that TS perform_two_optimizations from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                "[ts_guess.calculation]\nperform_two_optimizations = true\n"
-            )
+            f.write("[ts_guess.calculation]\nperform_two_optimizations = true\n")
             f.flush()
             temp_path = f.name
         try:
@@ -591,9 +581,7 @@ class TestTSCalculationConfig:
     def test_ts_molbar_optimizer_e_tol_from_config(self):
         """Verify that TS molbar_optimizer_e_tol from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                "[ts_guess.calculation]\nmolbar_optimizer_e_tol = 1e-5\n"
-            )
+            f.write("[ts_guess.calculation]\nmolbar_optimizer_e_tol = 1e-5\n")
             f.flush()
             temp_path = f.name
         try:
@@ -605,9 +593,7 @@ class TestTSCalculationConfig:
     def test_ts_molbar_optimizer_x_tol_from_config(self):
         """Verify that TS molbar_optimizer_x_tol from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                "[ts_guess.calculation]\nmolbar_optimizer_x_tol = 1e-6\n"
-            )
+            f.write("[ts_guess.calculation]\nmolbar_optimizer_x_tol = 1e-6\n")
             f.flush()
             temp_path = f.name
         try:
@@ -619,9 +605,7 @@ class TestTSCalculationConfig:
     def test_ts_molbar_optimizer_max_micro_steps_from_config(self):
         """Verify that TS molbar_optimizer_max_micro_steps from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write(
-                "[ts_guess.calculation]\nmolbar_optimizer_max_micro_steps = 5\n"
-            )
+            f.write("[ts_guess.calculation]\nmolbar_optimizer_max_micro_steps = 5\n")
             f.flush()
             temp_path = f.name
         try:

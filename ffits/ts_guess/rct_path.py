@@ -15,9 +15,7 @@ def _write_structure_to_xyz(structure: dict, filename: str) -> None:
         file.write(f"{structure['nat']}\n")
         file.write(f"{structure.get('comment', '')}\n")
         for atom_type, coords in zip(structure["atom_types"], structure["xyz"]):
-            file.write(
-                f"{atom_type} {coords[0]:.8f} {coords[1]:.8f} {coords[2]:.8f}\n"
-            )
+            file.write(f"{atom_type} {coords[0]:.8f} {coords[1]:.8f} {coords[2]:.8f}\n")
 
 
 def get_one_image(cd: CalculationData, trajectory: list, step: int) -> list:

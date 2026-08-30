@@ -28,10 +28,15 @@ The goal of this program is to generate a transition state (TS) guess from a rea
 3. **Constructing and optimizing to TS guess**: The TS FF is generated from the reactant and product FF and used as the potential for a geometry optimization to its minimum. The resulting structure is the TS. 
 
 # Requirements
-Part of the code is written in Fortran which needs to be compiled. For that reason you need gfortran and cmake. On our cluster please load following modules before doing the installation:
-```bash
-module load cmake make gnu-compilers compiler python
-```
+
+**To install:**
+- Python 3.12, 3.13 or 3.14
+- A Fortran compiler (`gfortran`) and `cmake`, to build the Fortran extension
+
+**To run:**
+- [`xtb`](https://github.com/grimme-lab/xtb) on your `PATH` (or point to it via `xtb_path` in the config, see [Configuration File](#configuration-file)) — required for the TS guess and parameterization modes, as `xtb` is used to compute the Hessian and Wiberg bond orders. Get it from the [xtb releases page](https://github.com/grimme-lab/xtb/releases) or via conda (`conda install -c conda-forge xtb`).
+
+All Python dependencies (numpy, networkx, pandas, scipy, ...) are installed automatically by `make install-dev`, see [Installation](#installation).
 
 **Tested configurations** (see CI, `.gitlab/.gitlab-ci.yml`):
 - OS: Rocky Linux 10
