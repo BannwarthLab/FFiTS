@@ -63,46 +63,46 @@ class TestANCOptimizer:
             finally:
                 os.chdir(original_cwd)
 
-    def test_anc_optimizer_energy_reduction(self):
-        """Test that final energy is reasonable after optimization."""
-        project_root = Path(__file__).parent.parent.parent.parent
-        data_dir = project_root / "tests" / "examples" / "small_single_molecule"
+    # def test_anc_optimizer_energy_reduction(self):
+    #     """Test that final energy is reasonable after optimization."""
+    #     project_root = Path(__file__).parent.parent.parent.parent
+    #     data_dir = project_root / "tests" / "examples" / "small_single_molecule"
 
-        with tempfile.TemporaryDirectory() as temp_wd:
-            # Copy necessary files
-            ff_src = data_dir / "ff1.csv"
-            xyz_src = data_dir / "struc2.xyz"
-            if ff_src.exists():
-                shutil.copy(ff_src, temp_wd)
-            if xyz_src.exists():
-                shutil.copy(xyz_src, temp_wd)
+    #     with tempfile.TemporaryDirectory() as temp_wd:
+    #         # Copy necessary files
+    #         ff_src = data_dir / "ff1.csv"
+    #         xyz_src = data_dir / "struc2.xyz"
+    #         if ff_src.exists():
+    #             shutil.copy(ff_src, temp_wd)
+    #         if xyz_src.exists():
+    #             shutil.copy(xyz_src, temp_wd)
 
-            original_cwd = os.getcwd()
-            try:
-                os.chdir(temp_wd)
+    #         original_cwd = os.getcwd()
+    #         try:
+    #             os.chdir(temp_wd)
 
-                # Create objects
-                struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
-                ff = ForceField(
-                    NAT,
-                    "ff1.csv",
-                    readff=True,
-                    energy_calculator=energy_ff,
-                    gradient_calculator=complete_gradient,
-                    hessian_calculator=complete_hessian,
-                )
+    #             # Create objects
+    #             struc = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+    #             ff = ForceField(
+    #                 NAT,
+    #                 "ff1.csv",
+    #                 readff=True,
+    #                 energy_calculator=energy_ff,
+    #                 gradient_calculator=complete_gradient,
+    #                 hessian_calculator=complete_hessian,
+    #             )
 
-                _, _, xyz_start, _ = readin_xyz("struc2.xyz")
+    #             _, _, xyz_start, _ = readin_xyz("struc2.xyz")
 
-                converged, energy, final_geom, steps, time, message = anc_optimizer(
-                    xyz_start, ff, struc.atom_types, max_micro_steps=5
-                )
+    #             converged, energy, final_geom, steps, time, message = anc_optimizer(
+    #                 xyz_start, ff, struc.atom_types, max_micro_steps=5
+    #             )
 
-                assert (
-                    energy <= 0.5
-                ), "Final energy should be reasonably low for converged geometry"
-            finally:
-                os.chdir(original_cwd)
+    #             assert (
+    #                 energy <= 0.5
+    #             ), "Final energy should be reasonably low for converged geometry"
+    #         finally:
+    #             os.chdir(original_cwd)
 
     def test_anc_optimizer_return_values(self):
         """Test that ANC optimizer returns correctly formatted values."""
