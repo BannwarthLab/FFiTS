@@ -7,7 +7,7 @@
 # FFiTS
 
 <!-- BADGES-START -->
-![License](https://img.shields.io/badge/License-MIT-blue) ![python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue) ![coverage](https://img.shields.io/badge/coverage-77.1%25-green)
+![License](https://img.shields.io/badge/License-MIT-blue) ![python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue) ![coverage](https://img.shields.io/badge/coverage-85.5%25-green)
 <!-- BADGES-END -->
 
 ***Force Field-interpolated Transition States***
