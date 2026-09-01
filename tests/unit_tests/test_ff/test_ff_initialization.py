@@ -7,6 +7,7 @@ from ffits.datatype.structure_data import (
 from ffits.datatype.forcefield_data import ForceField
 import numpy as np
 import pandas as pd
+import pytest
 import os
 from ffits.ts_guess.define_starting_parameters import fill_ff
 from ffits.forcefield.python_interface.ff_energy import (
@@ -14,6 +15,7 @@ from ffits.forcefield.python_interface.ff_energy import (
     complete_gradient,
     complete_hessian,
 )
+from ffits.utils.geometry import bondlength, angle, dihedral_angle
 from tests.test_utils import NAT, XYZ, WBO, ATOM_TYPES
 
 
@@ -127,26 +129,18 @@ class TestStructuralInformation:
         assert info.molecule_count == 1
 
     def test_bond_order_matrix_creation(self):
-        """Test that bond order matrix is correctly constructed from WBO."""
-        expected_bo_matrix = np.array(
-            [
-                [
-                    0,
-                    1.02668632226515,
-                    0,
-                    0.955689824153634,
-                    0.955863695522291,
-                    0,
-                    0.982636418257069,
-                ],
-                [1.02668632226515, 0, 1.92755303185758, 0, 0, 0.933812077856736, 0],
-                [0, 1.92755303185758, 0, 0, 0, 0, 0],
-                [0.955689824153634, 0, 0, 0, 0, 0, 0],
-                [0.955863695522291, 0, 0, 0, 0, 0, 0],
-                [0, 0.933812077856736, 0, 0, 0, 0, 0],
-                [0.982636418257069, 0, 0, 0, 0, 0, 0],
-            ]
-        )
+        """Test that bond order matrix is correctly constructed from WBO.
+
+        Builds the expected matrix by placing each WBO dict entry directly
+        (symmetrically) rather than hardcoding a second literal copy of the
+        WBO values here: a hardcoded copy previously went stale when the
+        wbo1 fixture (and the WBO constant derived from it) was
+        regenerated, since nothing kept the two in sync.
+        """
+        expected_bo_matrix = np.zeros((NAT, NAT))
+        for (atom_i, atom_j), value in WBO.items():
+            expected_bo_matrix[atom_i, atom_j] = value
+            expected_bo_matrix[atom_j, atom_i] = value
 
         info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
         np.testing.assert_allclose(info.bo_matrix, expected_bo_matrix, rtol=1e-7)
@@ -203,148 +197,22 @@ class TestVanDerWaalsMatrix:
 
 
 class TestFillForceField:
-    """Tests for filling force field parameters from structural information."""
+    """Tests for fill_ff, which derives initial bonds/angles/dihedrals/repulsive
+    terms from structural information.
 
-    @staticmethod
-    def _create_reference_ff() -> ForceField:
-        """Helper to create reference force field for comparison."""
-        ff_ref = ForceField(NAT, "dummy_path", readff=False)
-
-        ff_ref.bonds = pd.DataFrame(
-            {
-                "type": ["bonds"] * 6,
-                "atoms": [[0, 1], [0, 3], [0, 4], [0, 6], [1, 2], [1, 5]],
-                "reference_value": [
-                    2.8482134514,
-                    2.0730618879,
-                    2.0728922799,
-                    2.0621791428,
-                    2.2878212238,
-                    2.1059095046,
-                ],
-                "parameter": [
-                    0.30795441,
-                    0.38313140,
-                    0.38325460,
-                    0.39383956,
-                    0.64039171,
-                    0.34563851,
-                ],
-            }
-        )
-        ff_ref.angles = pd.DataFrame(
-            {
-                "type": ["angles"] * 9,
-                "atoms": [
-                    [0, 1, 2],
-                    [0, 1, 5],
-                    [1, 0, 3],
-                    [1, 0, 4],
-                    [1, 0, 6],
-                    [2, 1, 5],
-                    [3, 0, 4],
-                    [3, 0, 6],
-                    [4, 0, 6],
-                ],
-                "reference_value": [
-                    2.17528567,
-                    2.00315781,
-                    1.91550051,
-                    1.91559648,
-                    1.92842546,
-                    2.10474182,
-                    1.86118849,
-                    1.92084246,
-                    1.92116183,
-                ],
-                "parameter": [
-                    0.29646144,
-                    0.14188003,
-                    0.20087313,
-                    0.20110327,
-                    0.23096817,
-                    0.35160379,
-                    0.19145774,
-                    0.19774637,
-                    0.19782851,
-                ],
-            }
-        )
-        ff_ref.dihedrals = pd.DataFrame(
-            {
-                "type": ["dihedrals"] * 6,
-                "atoms": [
-                    [2, 1, 0, 3],
-                    [2, 1, 0, 4],
-                    [2, 1, 0, 6],
-                    [3, 0, 1, 5],
-                    [4, 0, 1, 5],
-                    [5, 1, 0, 6],
-                ],
-                "reference_value": [
-                    2.11933159,
-                    -2.12383049,
-                    -0.00201816,
-                    -1.02233516,
-                    1.01768806,
-                    3.13950040,
-                ],
-                "parameter": [
-                    0.27810253,
-                    0.27831880,
-                    0.26302920,
-                    0.19815370,
-                    0.19808951,
-                    0.30038770,
-                ],
-            }
-        )
-        # Repulsive values from fill_ff are in Bohr; convert from Angstroms
-        repulsive_ref_angstrom = [
-            4.27622813,
-            3.75432627,
-            3.75432627,
-            3.75432627,
-            3.75432627,
-            3.58597083,
-            3.58597083,
-            3.58597083,
-            3.58597083,
-            3.06406897,
-            3.06406897,
-            3.06406897,
-            3.06406897,
-            3.06406897,
-            3.06406897,
-        ]
-        repulsive_ref_bohr = angstrom2bohr(np.array(repulsive_ref_angstrom))
-
-        ff_ref.repulsive = pd.DataFrame(
-            {
-                "type": ["repulsive"] * 15,
-                "atoms": [
-                    [0, 2],
-                    [0, 5],
-                    [1, 3],
-                    [1, 4],
-                    [1, 6],
-                    [2, 3],
-                    [2, 4],
-                    [2, 5],
-                    [2, 6],
-                    [3, 4],
-                    [3, 5],
-                    [3, 6],
-                    [4, 5],
-                    [4, 6],
-                    [5, 6],
-                ],
-                "reference_value": repulsive_ref_bohr,
-                "parameter": [0.01] * 15,
-            }
-        )
-
-        return ff_ref
+    reference_value and parameter are checked by independently recomputing
+    them from the same closed-form formulas fill_ff itself documents
+    (bondlength/angle/dihedral_angle from ffits.utils.geometry, combined
+    with info.bo_matrix / info.vander_matrix), rather than against a
+    hardcoded snapshot of numbers. A hardcoded snapshot here previously
+    went stale as soon as the example geometry (tests/examples/.../struc1.xyz)
+    was regenerated, since nothing tied the "expected" numbers to the
+    fixture. Recomputing from the formulas means this test tracks whatever
+    geometry is currently in the fixture automatically, and still catches a
+    real regression in fill_ff's math (a wrong exponent, a swapped
+    numerator/denominator, etc.) because the formulas are written
+    independently here, not by calling fill_ff a second time.
+    """
 
     def test_fill_ff_bonds_structure(self):
         """Test that fill_ff correctly generates bond structure."""
@@ -419,60 +287,57 @@ class TestFillForceField:
         # Should have one repulsive term for every non-bonded pair
         assert len(ff.repulsive) == 15
 
-    def test_fill_ff_complete_comparison(self):
-        """Test that filled FF matches reference FF completely for key properties."""
+    def test_fill_ff_reference_values_and_parameters_match_formulas(self):
+        """Test that every reference_value/parameter fill_ff produces matches
+        the documented closed-form formula, recomputed independently here."""
         info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
         ff = ForceField(NAT, "dummy_path", readff=False)
         fill_ff(ff, info, repulsive_start=0.0)
 
-        ff_ref = self._create_reference_ff()
+        xyz = info.fortran_xyz
+        bo = info.bo_matrix
+        vdw = info.vander_matrix
 
-        # Compare bonds reference values
-        pd.testing.assert_series_equal(
-            ff_ref.bonds["reference_value"],
-            ff.bonds["reference_value"],
-            rtol=1e-5,
-            atol=1e-8,
-            check_index=False,
-        )
-        # Compare bond atoms
-        pd.testing.assert_series_equal(
-            ff_ref.bonds["atoms"], ff.bonds["atoms"], check_index=False
-        )
+        for row in ff.bonds.itertuples():
+            i, j = row.atoms
+            expected_ref = bondlength(xyz, i, j)
+            expected_param = bo[i, j] / expected_ref
+            assert row.reference_value == pytest.approx(expected_ref, abs=1e-7)
+            assert row.parameter == pytest.approx(expected_param, abs=1e-7)
 
-        # Compare angles reference values
-        pd.testing.assert_series_equal(
-            ff_ref.angles["reference_value"],
-            ff.angles["reference_value"],
-            rtol=1e-5,
-            atol=1e-8,
-            check_index=False,
-        )
-        # Compare angle atoms
-        pd.testing.assert_series_equal(
-            ff_ref.angles["atoms"], ff.angles["atoms"], check_index=False
-        )
+        for row in ff.angles.itertuples():
+            i, j, k = row.atoms
+            expected_ref = angle(xyz, i, j, k)
+            bl1 = bondlength(xyz, i, j)
+            bl2 = bondlength(xyz, j, k)
+            expected_param = ((bo[i, j] * bo[j, k]) / (bl1 * bl2)) ** 0.5
+            assert row.reference_value == pytest.approx(expected_ref, abs=1e-7)
+            assert row.parameter == pytest.approx(expected_param, abs=1e-7)
 
-        # Compare dihedrals reference values
-        pd.testing.assert_series_equal(
-            ff_ref.dihedrals["reference_value"],
-            ff.dihedrals["reference_value"],
-            rtol=1e-5,
-            atol=1e-8,
-            check_index=False,
-        )
-        # Compare dihedral atoms
-        pd.testing.assert_series_equal(
-            ff_ref.dihedrals["atoms"], ff.dihedrals["atoms"], check_index=False
-        )
+        for row in ff.dihedrals.itertuples():
+            i, j, k, l = row.atoms
+            expected_ref = dihedral_angle(xyz, i, j, k, l)
+            assert row.reference_value == pytest.approx(expected_ref, abs=1e-7)
 
-        # For repulsive terms, just verify correct number and atom pairs (values may vary)
-        assert len(ff.repulsive) == len(ff_ref.repulsive)
-        pd.testing.assert_series_equal(
-            ff_ref.repulsive["atoms"], ff.repulsive["atoms"], check_index=False
-        )
-        # Verify repulsive reference values are positive and reasonable magnitude
-        assert all(ff.repulsive["reference_value"] > 0)
-        assert all(
-            ff.repulsive["reference_value"] > 3.0
-        )  # Van der Waals distances should be > 3 Bohr
+            # param_dihedral substitutes 0.5 for any zero (non-bonded, i.e.
+            # improper-dihedral) bond order in the i-j-k-l chain.
+            bo_ij = bo[i, j] or 0.5
+            bo_jk = bo[j, k] or 0.5
+            bo_kl = bo[k, l] or 0.5
+            bl1 = bondlength(xyz, i, j)
+            bl2 = bondlength(xyz, j, k)
+            bl3 = bondlength(xyz, k, l)
+            expected_param = ((bo_ij * bo_jk * bo_kl) / (bl1 * bl2 * bl3)) ** (1 / 3)
+            assert row.parameter == pytest.approx(expected_param, abs=1e-7)
+
+        for row in ff.repulsive.itertuples():
+            i, j = row.atoms
+            assert row.reference_value == pytest.approx(vdw[i, j], abs=1e-7)
+            # repulsive_start=0.0 was passed above; every repulsive term
+            # starts at that constant regardless of atom pair.
+            assert row.parameter == pytest.approx(0.0, abs=1e-9)
+
+        # Van der Waals (repulsive) reference distances should be a
+        # physically reasonable magnitude in Bohr, independent of exactly
+        # which geometry the fixture currently holds.
+        assert all(ff.repulsive["reference_value"] > 3.0)

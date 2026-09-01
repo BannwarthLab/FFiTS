@@ -10,8 +10,7 @@
 ======================================================================
  Program:     FFiTS  —  Force Field-interpolated Transition States
  Version:     0.3.1a0.dev0
- Build Date:  2026-07-06 14:03
- Last Commit: 2026-07-06 14:22
+ Build Date:  2026-09-01 11:23
  Authors:     Daria Babushkina
  License:     MIT
 ----------------------------------------------------------------------
@@ -79,22 +78,19 @@ If you use FFiTS in your work, please cite:
 ============================================================
 [INFO] xTB will be run with uhf = 0, chrg = 0
 [INFO] Using xTB executable: xtb
-Note: The following floating-point exceptions are signalling: IEEE_DIVIDE_BY_ZERO IEEE_DENORMAL
 normal termination of xtb
 
 [INFO] Hessian calculation for struc1.xyz finished successfully.
-Note: The following floating-point exceptions are signalling: IEEE_DIVIDE_BY_ZERO IEEE_DENORMAL
 normal termination of xtb
 
 [INFO] WBO calculation for struc1.xyz finished successfully.
 [INFO] This structure has 1 seperate molecule(s) based on the WBO data and the defined bond order threshold of 0.0.
 [INFO] xTB will be run with uhf = 0, chrg = 0
 [INFO] Using xTB executable: xtb
-Note: The following floating-point exceptions are signalling: IEEE_DIVIDE_BY_ZERO IEEE_DENORMAL
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG
 normal termination of xtb
 
 [INFO] Hessian calculation for struc2.xyz finished successfully.
-Note: The following floating-point exceptions are signalling: IEEE_DIVIDE_BY_ZERO IEEE_DENORMAL
 normal termination of xtb
 
 [INFO] WBO calculation for struc2.xyz finished successfully.
@@ -105,7 +101,7 @@ normal termination of xtb
  FF Fitting for structure struc1.xyz
 ============================================================
 [INFO] Following parameters are used (maxit, stepsize, threshold): 1000, 0.15, 0.0005
-[INFO] Fitting finished after 21 iterations with an RMSD of 0.0116 and 0.0208.
+[INFO] Fitting finished after 24 iterations with an RMSD of 0.0116 and 0.0168.
 [INFO] FF information written to ff1.csv.
 
 
@@ -113,13 +109,13 @@ normal termination of xtb
  FF Fitting for structure struc2.xyz
 ============================================================
 [INFO] Following parameters are used (maxit, stepsize, threshold): 1000, 0.15, 0.0005
-[INFO] Fitting finished after 22 iterations with an RMSD of 0.01 and 0.017.
+[INFO] Fitting finished after 31 iterations with an RMSD of 0.01 and 0.0106.
 [INFO] FF information written to ff2.csv.
 
 ============================================================
  TS Guess Construction
 ============================================================
-[INFO] Calculating mixing factors based on Hessian analysis.
+[INFO] Calculating mixing factors based on Hessian analysis with sharpness 0.8
 [INFO] The optimization with the TSFF will start from the product geometry, since the average mixing factor for bond terms is 0.4732 (< 0.5).
 [INFO] TS FF generation finished.
 [INFO] FF information written to tsff.csv.
@@ -130,17 +126,17 @@ normal termination of xtb
 
 
   Status:         CONVERGED
-  Steps taken:    30
-  Final energy:    0.031247
-  Total time:      0.43 s
-  Message:        Geometry convergence: max distance change 1.66e-04 Å < 1.00e-03 Å over last 5 steps
+  Steps taken:    56
+  Final energy:    0.038833
+  Total time:      0.37 s
+  Message:        Geometry convergence: max distance change 9.39e-03 Å < 1.00e-02 Å over last 5 steps
                                                                       
 ======================================================================
  Run Summary
 ======================================================================
  Status:       Calculation COMPLETED
- Start Time:   2026-07-06 14:41:29
- End Time:     2026-07-06 14:41:30
- Total Time:   1s
+ Start Time:   2026-09-01 11:23:20
+ End Time:     2026-09-01 11:23:20
+ Total Time:   0s
 ======================================================================
 

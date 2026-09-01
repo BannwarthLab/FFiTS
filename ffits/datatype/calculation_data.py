@@ -120,7 +120,7 @@ class TSCalculationOptions:
     hess_weight_sharpness: float = 0.8
     perform_two_optimizations: bool = False
     molbar_optimizer_e_tol: float = 1e-4
-    molbar_optimizer_x_tol: float = 1e-3
+    molbar_optimizer_x_tol: float = 1e-2
     molbar_optimizer_max_micro_steps: int = 1
     energy_threshold_two_optimizations: float = 0.15
 

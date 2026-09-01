@@ -17,32 +17,16 @@ from ffits.forcefield.python_interface.ff_energy import (
     complete_hessian,
 )
 
-XYZ = np.array(
-    [
-        [-2.33287094, 3.31176687, 0.20110100],
-        [-0.91630217, 2.85867268, -0.04327585],
-        [0.06256276, 3.55862185, 0.08938727],
-        [-2.92591176, 3.18375556, -0.71288068],
-        [-2.79725946, 2.67965821, 0.96793335],
-        [-0.81484498, 1.79716556, -0.36699673],
-        [-2.35087245, 4.35655928, 0.51563164],
-    ]
-)
-
-WBO = {
-    (0, 1): 1.02668632226515,
-    (1, 2): 1.92755303185758,
-    (0, 3): 0.955689824153634,
-    (0, 4): 0.955863695522291,
-    (1, 5): 0.933812077856736,
-    (0, 6): 0.982636418257069,
-}
-
-ATOM_TYPES = ["C", "C", "O", "H", "H", "H", "H"]
-
-NAT = 7
-
 SMALL_MOLECULE_DIR = Path(__file__).parent / "examples" / "small_single_molecule"
+
+# NAT/XYZ/ATOM_TYPES/WBO used to be hardcoded literal copies of struc1.xyz and
+# wbo1. That's a second source of truth for the same data: regenerating the
+# example fixtures (see scripts/regenerate_examples.py) silently left these
+# constants stale, since nothing re-derived them. Reading the fixture files
+# directly here means there is exactly one source of truth, and these
+# constants automatically track the fixtures whenever they're regenerated.
+NAT, _reactant_comment, XYZ, ATOM_TYPES = readin_xyz(str(SMALL_MOLECULE_DIR / "struc1.xyz"))
+WBO = read_wbo_file(str(SMALL_MOLECULE_DIR / "wbo1"))
 
 
 def run_ffits_as_subprocess(args):

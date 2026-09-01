@@ -1,4 +1,4 @@
-.PHONY: help install-dev test test-unit test-integration coverage clean
+.PHONY: help install-dev test test-unit test-integration coverage regenerate-examples clean
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -15,6 +15,7 @@ help:
 	@echo "  test-unit        - Run unit tests only"
 	@echo "  test-integration - Run integration tests only"
 	@echo "  coverage         - Run tests and generate a coverage report (coverage.xml)"
+	@echo "  regenerate-examples - Regenerate tests/examples/ fixtures from their raw structures (needs xtb+molbar)"
 	@echo "  clean            - Remove build artifacts and caches"
 
 # ---------------------------------------------------------------------------
@@ -48,6 +49,12 @@ test-integration:
 coverage:
 	pytest tests/ --cov=ffits --cov-report=xml --cov-report=term
 	python scripts/update_coverage_badge.py
+
+# Regenerate the derived example fixtures under tests/examples/ (see
+# tests/examples/README.md for what's raw vs. derived). Requires ffits,
+# xtb, and molbar to be installed and on PATH/importable.
+regenerate-examples:
+	python scripts/regenerate_examples.py
 
 # ---------------------------------------------------------------------------
 # Cleanup
