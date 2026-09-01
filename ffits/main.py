@@ -1,4 +1,5 @@
 #!/bin/python
+"""Entry point and top-level run modes for the ffits command-line program."""
 from collections.abc import Callable
 import logging
 import time
@@ -28,9 +29,18 @@ def run_optimizer_mode(
     optimizer: Callable = anc_optimizer,
     calcdata: CalculationData = CalculationData.from_default(),
 ):
-    """
-    Run in optimizer mode: takes a single structure and optimizes it using the specified optimizer.
+    """Run in optimizer mode: optimize a single structure with a force field.
+
     Usage: ffits structure.xyz --opt ff
+
+    Args:
+        structure_filename (str): Structure file (xyz) to optimize.
+        ff_filename (str): Force field file used for the optimization.
+        optimizer (Callable, optional): Optimizer function to use.
+        calcdata (CalculationData, optional): Calculation options to use.
+
+    Returns:
+        tuple: ``(converged, energy, final_geom)``.
     """
     converged, energy, final_geom = optimize_with_forcefield_from_file(
         structure_filename,
@@ -80,10 +90,19 @@ def run_reaction_path_mode(
     steps: int = 10,
     calcdata: CalculationData = CalculationData.from_default(),
 ):
-    """
-    Run in reaction path mode: takes two structures and generates a specified number of frames along the reaction path between them. Currently not implemented.
+    """Run in reaction path mode: interpolate frames between two structures.
+
     Usage: ffits reactant.xyz product.xyz --rctpath 10
-    step number include reactant and product.
+
+    Args:
+        reactant_filename (str): Reactant structure file (xyz).
+        product_filename (str): Product structure file (xyz).
+        steps (int, optional): Total number of frames, including reactant
+            and product. Defaults to 10.
+        calcdata (CalculationData, optional): Calculation options to use.
+
+    Returns:
+        The generated reaction-path trajectory.
     """
     calcdata.reactant_path.xyz_filename = reactant_filename
     calcdata.product_path.xyz_filename = product_filename
@@ -99,11 +118,15 @@ def run_tsguess_mode(
     product_filename: str,
     calcdata: CalculationData = CalculationData.from_default(),
 ):
-    """
-    Normal mode: processes reactant (calcdata.reactant_path.xyz_filename) and product coordinate files (calcdata.product_path.xyz_filename) to generate a TS guess.
+    """Run in default (TS guess) mode: generate a transition-state guess.
 
     Args:
-        calcdata (CalculationData, optional): Calculation data containing paths to reactant and product structures, as well as calculation options. Defaults to CalculationData.from_default().
+        reactant_filename (str): Reactant structure file (xyz).
+        product_filename (str): Product structure file (xyz).
+        calcdata (CalculationData, optional): Calculation options to use.
+
+    Returns:
+        tuple: ``(tsff, converged, energy, final_geom)``.
     """
     calcdata.reactant_path.xyz_filename = reactant_filename
     calcdata.product_path.xyz_filename = product_filename
@@ -116,6 +139,8 @@ def run_tsguess_mode(
 
 
 def main():
+    """Run the ffits command-line program: parse args, dispatch to the
+    selected run mode, and print a run summary."""
     print_program_header()
     start_time = time.time()
 

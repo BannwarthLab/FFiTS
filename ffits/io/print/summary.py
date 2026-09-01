@@ -1,3 +1,4 @@
+"""Prints a formatted summary of a completed (or failed) ffits run."""
 import datetime
 
 
@@ -7,16 +8,11 @@ def print_run_summary(
     """
     Prints a formatted summary of the run completion.
 
-    Parameters
-    ----------
-    start_time : float
-        Start time as returned by time.time()
-    end_time : float, optional
-        End time as returned by time.time(). If None, uses current time.
-    success : bool, optional
-        Whether the run completed successfully. Default is True.
-    message : str, optional
-        Additional message to display in the summary.
+    Args:
+        start_time (float): Start time as returned by time.time().
+        end_time (float, optional): End time as returned by time.time(). Defaults to now.
+        success (bool, optional): Whether the run completed successfully. Defaults to True.
+        message (str, optional): Additional message to display in the summary.
     """
 
     if end_time is None:

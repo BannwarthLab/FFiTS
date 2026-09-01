@@ -1,3 +1,4 @@
+"""RMSD calculation helpers, including Kabsch-aligned RMSD."""
 import numpy as np
 
 
@@ -8,6 +9,7 @@ def compute_com(coordinates):
 
 ## From COMET
 def kabsch_rmsd(xyz1, xyz2):
+    """RMSD between two coordinate sets after optimal Kabsch rotation/translation alignment."""
     xyz1 -= xyz1.mean(axis=0)
     xyz2 -= xyz2.mean(axis=0)
 

@@ -17,17 +17,15 @@ def setup_logger(log_level: Optional[str] = None) -> logging.Logger:
     """
     Configure and return the root logger for FFiTS.
 
-    Log level is determined by (in order of precedence):
-    1. log_level parameter (if provided)
-    2. Default to INFO
+    Log level defaults to INFO unless ``log_level`` is given.
 
-    Parameters
-        log_level (str, optional): Log level as a string (e.g., 'DEBUG', 'INFO'). Overrides environment variable if provided.
+    Args:
+        log_level (str, optional): Log level as a string (e.g., 'DEBUG', 'INFO').
 
-    Returns
+    Returns:
         logging.Logger: Configured logger instance for the 'ffits' package.
 
-    Examples
+    Examples:
         >>> logger = setup_logger('DEBUG')  # Forces DEBUG level
     """
     global _LOGGER

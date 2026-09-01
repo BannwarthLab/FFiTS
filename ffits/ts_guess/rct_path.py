@@ -1,3 +1,4 @@
+"""Reaction path generation by interpolating the TS force field mixing factors."""
 from ffits.external.xtb import Xtb
 from ffits.ts_guess.guess import get_ts_guess_from_xyz
 from ffits.datatype.calculation_data import CalculationData
@@ -11,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def _write_structure_to_xyz(structure: dict, filename: str) -> None:
+    """Write a structure dict (with 'nat', 'atom_types', 'xyz', optional 'comment') to an xyz file."""
     with open(filename, "w", encoding="utf-8") as file:
         file.write(f"{structure['nat']}\n")
         file.write(f"{structure.get('comment', '')}\n")
@@ -19,15 +21,20 @@ def _write_structure_to_xyz(structure: dict, filename: str) -> None:
 
 
 def get_one_image(cd: CalculationData, trajectory: list, step: int) -> list:
-    """Calculates an image of the path, adds it to the existing trajectory and returns the whole trajectory
+    """Generates one TS guess image along the path and appends it to the trajectory.
+
+    For steps after the first, reuses the already-computed WBO/Hessian/FF
+    data instead of recomputing it.
 
     Args:
-        cd (CalculationData): _description_
-        trajectory (list): _description_
-        step (int): _description_
+        cd (CalculationData): Calculation data, with ``ts_calc.factor_reactant``/
+            ``factor_product`` set for this step's mixing weights.
+        trajectory (list): Trajectory frames accumulated so far.
+        step (int): Index of the current step, used to name output files.
 
     Returns:
-        list: _description_
+        tuple[list, bool]: The updated trajectory and whether the TS
+        optimization for this step converged.
     """
     nat, _, xyz, atom_types = readin_xyz(cd.reactant_path.xyz_filename)
     if step != 0:
@@ -53,6 +60,19 @@ def create_path(
     minfact1: float = 0.1,
     maxfact1: float = 0.9,
 ) -> tuple[list, dict | None]:
+    """Builds a reaction-path trajectory by sweeping the TS mixing factor between reactant and product.
+
+    Args:
+        calcdata (CalculationData, optional): Calculation data; its
+            ``ts_calc`` mixing factors are overwritten for each step.
+        steps (int, optional): Number of intermediate steps to generate. Defaults to 10.
+        minfact1 (float, optional): Reactant-product mixing factor at the first step. Defaults to 0.1.
+        maxfact1 (float, optional): Reactant-product mixing factor at the last step. Defaults to 0.9.
+
+    Returns:
+        tuple[list, dict | None]: The full trajectory (including reactant
+        and product endpoints) and the highest-energy frame found, if any.
+    """
     if calcdata.ts_calc.average_with_hess_weight:
         logger.warning(
             "Weighting the reactant and product FF with the hessian is currently not implemented for the reaction path mode. The factors will be varied from minfact1 to maxfact1 for the reactant to get the reaction path."

@@ -1,4 +1,5 @@
 #!/bin/python
+"""The ForceField class: parameters, reference values and I/O for a force field."""
 
 import numpy as np
 import pandas as pd
@@ -24,6 +25,17 @@ class ForceField:
         gradient_calculator: Callable = None,
         hessian_calculator: Callable = None,
     ):
+        """Initialize the force field, optionally reading parameters from a file.
+
+        Args:
+            nat (int): Number of atoms the force field applies to.
+            ff_filename (str): Path to the force field csv file.
+            readff (bool, optional): If True, read parameters from
+                ``ff_filename`` immediately. Defaults to False.
+            energy_calculator (Callable, optional): Function used by :meth:`get_energy`.
+            gradient_calculator (Callable, optional): Function used by :meth:`get_gradient`.
+            hessian_calculator (Callable, optional): Function used by :meth:`get_hessian`.
+        """
         self.nat = nat
         self.ff_filename = ff_filename
         self.columns = ["type", "atoms", "parameter", "reference_value"]
@@ -107,6 +119,7 @@ class ForceField:
         """
 
         def format_atoms(t):
+            """Format an atom-index tuple as a bracketed, space-separated string for the csv."""
             return "[" + " ".join(map(str, t)) + "]"
 
         df_combined = pd.concat(

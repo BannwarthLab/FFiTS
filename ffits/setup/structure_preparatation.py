@@ -1,3 +1,4 @@
+"""Structure preparation helpers (currently just coordinate randomization)."""
 import logging
 
 
@@ -10,11 +11,14 @@ logger = logging.getLogger(__name__)
 def randomize_coordinates(
     xyz: np.ndarray, displacement: float = 0.01, random_seed: int = 42
 ) -> np.ndarray:
-    """Randomizes the coordinates of a structure by adding small random displacements to each atom's position. This can be useful for testing the robustness of the TS guess generation process against small perturbations in the input geometry.
+    """Randomly perturbs each atom's coordinates by a fixed displacement (random sign only).
+
+    Useful for testing the robustness of TS guess generation against small
+    perturbations in the input geometry.
 
     Args:
         xyz (np.ndarray): Original coordinates of the structure (shape: [nat, 3]).
-        displacement (float, optional): Maximum displacement for each atom. Defaults to 0.1.
+        displacement (float, optional): Displacement magnitude for each atom. Defaults to 0.01.
         random_seed (int, optional): Seed for reproducibility of randomization. Defaults to 42.
 
     Returns:

@@ -1,3 +1,4 @@
+"""Readers for xyz, WBO, and Hessian files produced by xtb."""
 from __future__ import annotations
 import os
 import numpy as np
@@ -9,18 +10,15 @@ logger = logging.getLogger(__name__)
 
 def readin_xyz(xyz_path: str) -> Tuple[int, str, np.ndarray, List[str]]:
     """
-    Reads an XYZ file and returns the number of atoms, comment line, coordinates, and atom types. It is assumed that the XYZ file follows the standard format where the first line contains the number of atoms, the second line is a comment, and the subsequent lines contain the atom type followed by x, y, z coordinates, given in Angström.
+    Reads a standard-format XYZ file (atom count, comment, then one line per
+    atom with symbol and x/y/z coordinates in Angström).
 
     Args:
         xyz_path (str): path to xyz file
 
     Raises:
-        FileNotFoundError: xyz_path does not exist
-        ValueError: xyz_path is invalid
-        ValueError: xyz_path contains invalid data
-        ValueError: xyz_path has mismatched atom count
-        ValueError: xyz_path has malformed lines
-        ValueError: xyz_path has invalid numeric values
+        FileNotFoundError: If xyz_path does not exist.
+        ValueError: If the file is too short, malformed, or has a mismatched atom count.
 
     Returns:
         Tuple[int, str, np.ndarray, List[str]]: nat, comment, coordinates , atom types
@@ -114,7 +112,17 @@ def read_wbo_file(wbo_path: str) -> Dict[Tuple[int, int], float]:
 
 def read_xtb_hessian(file_path):
     """
-    Reads a Hessian matrix from the xtb output format
+    Reads a Hessian matrix from the xtb output format.
+
+    Args:
+        file_path (str): Path to the xtb Hessian file.
+
+    Raises:
+        ValueError: If the parsed values don't form a square matrix whose
+            dimension is divisible by 3.
+
+    Returns:
+        np.ndarray: The Hessian matrix, shape (dim, dim).
     """
 
     with open(file_path, "r") as f:

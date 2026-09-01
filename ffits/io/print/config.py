@@ -1,3 +1,4 @@
+"""Console printouts summarizing calculation configuration."""
 from ffits.datatype.calculation_data import (
     CalculationData,
     PathData,
@@ -6,7 +7,7 @@ from ffits.datatype.calculation_data import (
 
 
 def print_header_setup():
-
+    """Print the "SETUP" section header."""
     print("\n" + "\n" + "=" * 60)
     print(" SETUP ")
     print("=" * 60)

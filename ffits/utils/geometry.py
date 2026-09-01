@@ -1,3 +1,4 @@
+"""Geometry helpers: unit conversion and bond length/angle/dihedral calculations."""
 import numpy as np
 
 
@@ -18,40 +19,31 @@ def angstrom2bohr(val: float | np.ndarray):
 
 
 def bondlength(geometry: np.array, atom1: int, atom2: int):
-    """
-    Returns bond length between atom1 and atom2.
+    """Returns bond length between atom1 and atom2.
 
-    Parameters
-    ----------
-    geometry : np.ndarray
-        Shape (3, n_atoms). Coordinates of atoms.
-    atom1, atom2 : int
-        Indices of atoms (0-based).
+    Args:
+        geometry (np.ndarray): Coordinates, shape (3, n_atoms).
+        atom1 (int): Index of the first atom (0-based).
+        atom2 (int): Index of the second atom (0-based).
 
-    Returns
-    -------
-    float
-        Bond length.
+    Returns:
+        float: Bond length.
     """
     vector_12 = geometry[:, atom1] - geometry[:, atom2]
     return np.linalg.norm(vector_12)
 
 
 def angle(geometry: np.array, atom1: int, atom2: int, atom3: int):
-    """
-    Returns angle formed by atoms (atom1 - atom2 - atom3).
+    """Returns angle formed by atoms (atom1 - atom2 - atom3).
 
-    Parameters
-    ----------
-    geometry : np.ndarray
-        Shape (3, n_atoms). Coordinates of atoms.
-    atom1, atom2, atom3 : int
-        Indices of atoms (0-based).
+    Args:
+        geometry (np.ndarray): Coordinates, shape (3, n_atoms).
+        atom1 (int): Index of the first atom (0-based).
+        atom2 (int): Index of the vertex atom (0-based).
+        atom3 (int): Index of the third atom (0-based).
 
-    Returns
-    -------
-    float
-        Angle in radians.
+    Returns:
+        float: Angle in radians.
     """
     xyz1 = geometry[:, atom1]
     xyz2 = geometry[:, atom2]
@@ -68,20 +60,17 @@ def angle(geometry: np.array, atom1: int, atom2: int, atom3: int):
 
 
 def dihedral_angle(geometry: np.array, atom1: int, atom2: int, atom3: int, atom4: int):
-    """
-    Returns dihedral angle formed by atoms (atom1 - atom2 - atom3 - atom4).
+    """Returns dihedral angle formed by atoms (atom1 - atom2 - atom3 - atom4).
 
-    Parameters
-    ----------
-    geometry : np.ndarray
-        Shape (3, n_atoms). Coordinates of atoms.
-    atom1, atom2, atom3, atom4 : int
-        Indices of atoms (0-based).
+    Args:
+        geometry (np.ndarray): Coordinates, shape (3, n_atoms).
+        atom1 (int): Index of the first atom (0-based).
+        atom2 (int): Index of the second atom (0-based).
+        atom3 (int): Index of the third atom (0-based).
+        atom4 (int): Index of the fourth atom (0-based).
 
-    Returns
-    -------
-    float
-        Dihedral angle in radians.
+    Returns:
+        float: Dihedral angle in radians.
     """
     xyz1 = geometry[:, atom1]
     xyz2 = geometry[:, atom2]

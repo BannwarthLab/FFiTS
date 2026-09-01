@@ -1,4 +1,5 @@
 #!/bin/python
+"""Xtb class: a thin subprocess wrapper around the xtb quantum chemistry program."""
 
 import logging
 import os
@@ -25,14 +26,15 @@ class Xtb:
         xtb_path: str = "xtb",
         g_xtb: bool = False,
     ) -> None:
-        """_summary_
+        """Initialize the xtb interface and check that the executable is available.
 
         Args:
             chrg (int): charge of the system
             mult (int): multiplicity of the system
-            xtb_alpb_solvent (str | None, optional): _description_. Defaults to None.
-            xtb_input_name (str | None, optional): _description_. Defaults to None.
-            xtb_path (str, optional): _description_. Defaults to "xtb".
+            xtb_alpb_solvent (str | None, optional): ALPB solvent name. Defaults to None.
+            xtb_input_name (str | None, optional): Name of an xtb input file to pass via --input. Defaults to None.
+            xtb_path (str, optional): Path to the xtb executable. Defaults to "xtb".
+            g_xtb (bool, optional): Whether to run with the --gxtb flag. Defaults to False.
         """
         # If xtb_path not provided, try to find it
 
@@ -94,10 +96,10 @@ class Xtb:
             cwd (Path): Current working directory where the command will be executed
 
         Raises:
-            RuntimeError: _description_
+            RuntimeError: If the command exits with a non-zero return code.
 
         Returns:
-            int: _description_
+            int: The command's return code.
         """
         stdout = cwd / "xtb.out"
         stderr = cwd / "xtb_err.out"
@@ -295,7 +297,6 @@ class Xtb:
         """
         Perform geometry optimization and check if topology (WBOs) changed. If Debug mode, save all files in debug directory, otherwise use temporary directory.
 
-
         Args:
             input_xyz: path to input geometry file (xyz format)
             output_basename: basename for the optimized geometry file
@@ -303,8 +304,9 @@ class Xtb:
             threshold: threshold for WBO change to flag topology change
 
         Returns:
-            Tuple of (path to optimized xyz file, dictionary of final WBOs)
-            If topology changes significantly, prints warning but still returns both values.
+            tuple: ``(opt_filename, nat, comment, coordinates, atom_types)`` for
+            the optimized geometry. Logs a warning (but still returns) if the
+            topology changed significantly between input and output.
         """
         output_base_path = Path(output_basename)
         wbo_base_path = Path(wbo_output_basename)

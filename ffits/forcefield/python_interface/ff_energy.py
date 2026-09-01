@@ -1,3 +1,4 @@
+"""FF energy, gradient and hessian evaluation (per-term and combined) via the Fortran bindings."""
 import ffits.forcefield.python_interface.fortran_bindings as fb
 from ffits.datatype.forcefield_data import ForceField
 from ffits.utils.geometry import angle, bondlength, dihedral_angle
@@ -12,7 +13,7 @@ def energy_ff(xyz_displaced: np.ndarray, ff: ForceField) -> float:
         ff (ForceField): Force field object containing parameters and lists for energy calculation
 
     Raises:
-        Exception: _description_
+        Exception: If the geometry is not column-major or its atom count doesn't match the force field.
 
     Returns:
         float: The computed energy.

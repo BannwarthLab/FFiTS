@@ -11,18 +11,13 @@ from ffits.datatype.structure_data import StructuralInformation, Structure
 
 
 def _normalize_wbo_to_0based(wbo_dict: Dict) -> Dict:
-    """
-    Convert WBO dictionary from 1-based to 0-based atom indexing.
+    """Convert a WBO dictionary from 1-based to 0-based, sorted bond-tuple keys.
 
-    Parameters
-    ----------
-    wbo_dict : dict
-        Dictionary with 1-based bond tuples as keys
+    Args:
+        wbo_dict (dict): Dictionary with 1-based bond tuples as keys.
 
-    Returns
-    -------
-    dict
-        Dictionary with 0-based bond tuples as keys
+    Returns:
+        dict: Dictionary with 0-based bond tuples as keys.
     """
     normalized = {}
     for bond, value in wbo_dict.items():
@@ -38,41 +33,25 @@ def compare_wbo_differences(
     prod_info: StructuralInformation,
     threshold: float = 0.5,
 ) -> Dict:
-    """
-    Compare WBO differences between reactant and product structures to identify changing bonds.
+    """Compare WBO differences between reactant and product structures to identify changing bonds.
 
-    This function calculates the absolute difference in Wiberg Bond Order (WBO) for each bond
-    between reactant and product structures, and identifies bonds where the difference exceeds
-    a specified threshold. Uses 0-based atom indexing.
+    Computes the absolute WBO difference for every bond present in either
+    structure and flags those exceeding ``threshold``. Uses 0-based atom
+    indexing.
 
-    Parameters
-    ----------
-    reac_info : StructuralInformation
-        Reactant structure containing WBO data in info.wbo dictionary
-    prod_info : StructuralInformation
-        Product structure containing WBO data in info.wbo dictionary
-    threshold : float, optional
-        Minimum WBO difference to consider a bond as "changing" (default: 0.5)
+    Args:
+        reac_info (StructuralInformation): Reactant structure with WBO data in info.wbo.
+        prod_info (StructuralInformation): Product structure with WBO data in info.wbo.
+        threshold (float, optional): Minimum WBO difference to flag a bond as "changing". Defaults to 0.5.
 
-    Returns
-    -------
-    dict
-        Dictionary containing (all with 0-based atom indices):
-        - 'changing_bonds': List of tuples (bond_pair, wbo_change, reactant_wbo, product_wbo)
-        - 'disappearing_bonds': List of tuples (bond, reactant_wbo) for bonds in reactant but not product
-        - 'forming_bonds': List of tuples (bond, product_wbo) for bonds in product but not reactant
-        - 'all_wbo_changes': Dict mapping each bond to its WBO change
+    Returns:
+        dict: 'changing_bonds' (list of (bond, change, reactant_wbo,
+        product_wbo)), 'disappearing_bonds' (list of (bond, reactant_wbo)),
+        'forming_bonds' (list of (bond, product_wbo)), 'all_wbo_changes'
+        (dict per bond), and 'threshold'.
 
-    Raises
-    ------
-    ValueError
-        If structures have no WBO data or incompatible atom counts
-
-    Examples
-    --------
-    >>> result = compare_wbo_differences(reactant_info, product_info, threshold=0.3)
-    >>> for bond, change, r_wbo, p_wbo in result['changing_bonds']:
-    ...     print(f"Bond {bond}: {r_wbo:.3f} -> {p_wbo:.3f} (Δ = {change:.3f})")
+    Raises:
+        ValueError: If either structure has no WBO data, or atom counts differ.
     """
 
     # Validate inputs
@@ -136,22 +115,14 @@ def compare_wbo_differences(
 
 
 def get_wbo_matrix_difference(reactant: Structure, product: Structure) -> np.ndarray:
-    """
-    Calculate element-wise WBO matrix difference between product and reactant.
-    Uses 0-based indexing.
+    """Calculate the element-wise WBO matrix difference (product - reactant), 0-based indexing.
 
-    Parameters
-    ----------
-    reactant : Structure
-        Reactant structure
-    product : Structure
-        Product structure
+    Args:
+        reactant (Structure): Reactant structure.
+        product (Structure): Product structure.
 
-    Returns
-    -------
-    np.ndarray
-        Difference matrix where element [i,j] contains product_wbo[i,j] - reactant_wbo[i,j]
-        with 0-based indexing
+    Returns:
+        np.ndarray: Symmetric matrix where element [i, j] is product_wbo[i,j] - reactant_wbo[i,j].
     """
 
     if reactant.info.nat != product.info.nat:
@@ -178,22 +149,15 @@ def get_wbo_matrix_difference(reactant: Structure, product: Structure) -> np.nda
 def identify_affected_atoms(
     comparison_result: Dict, threshold: float = 0.5
 ) -> List[Tuple[int, List]]:
-    """
-    Identify atoms involved in bonds with WBO changes above threshold.
-    Uses 0-based atom indexing.
+    """Identify atoms involved in bonds with WBO changes above threshold (0-based indexing).
 
-    Parameters
-    ----------
-    comparison_result : dict
-        Result dictionary from compare_wbo_differences()
-    threshold : float, optional
-        Minimum WBO change to consider (default: 0.5)
+    Args:
+        comparison_result (dict): Result from :func:`compare_wbo_differences`.
+        threshold (float, optional): Minimum WBO change to consider. Defaults to 0.5.
 
-    Returns
-    -------
-    list of tuples
-        List of (atom_index, list_of_affected_bonds) tuples with 0-based indices,
-        sorted by number of affected bonds
+    Returns:
+        list[tuple[int, list]]: (atom_index, affected_bonds) pairs, sorted
+        by number of affected bonds (descending).
     """
 
     atom_bonds = {}

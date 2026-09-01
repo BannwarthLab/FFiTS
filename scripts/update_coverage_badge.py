@@ -34,11 +34,13 @@ BADGE_END = "<!-- BADGES-END -->"
 
 
 def get_coverage_percent(xml_path: Path) -> float:
+    """Read the overall line coverage percentage from a coverage.xml report."""
     root = ET.parse(xml_path).getroot()
     return round(float(root.attrib["line-rate"]) * 100, 1)
 
 
 def coverage_color(pct: float) -> str:
+    """Pick a shields.io badge color for a coverage percentage."""
     if pct >= 90:
         return "brightgreen"
     if pct >= 75:
@@ -51,6 +53,7 @@ def coverage_color(pct: float) -> str:
 
 
 def get_license(pyproject_path: Path) -> str:
+    """Read the license name from pyproject.toml's [project] table."""
     data = tomllib.loads(pyproject_path.read_text())
     license_field = data.get("project", {}).get("license", "unknown")
     if isinstance(license_field, dict):
@@ -59,6 +62,7 @@ def get_license(pyproject_path: Path) -> str:
 
 
 def get_tested_python_versions(ci_config_path: Path) -> list[str]:
+    """Extract the sorted list of Python versions tested in the GitLab CI matrix."""
     data = yaml.safe_load(ci_config_path.read_text())
     matrix = data[".matrix"]["parallel"]["matrix"]
     versions = []
@@ -71,6 +75,7 @@ def get_tested_python_versions(ci_config_path: Path) -> list[str]:
 
 
 def shield(label: str, message: str, color: str) -> str:
+    """Build a shields.io badge markdown image for the given label/message/color."""
     label_enc = quote(label, safe="")
     message_enc = quote(message, safe="")
     return f"![{label}](https://img.shields.io/badge/{label_enc}-{message_enc}-{color})"
@@ -79,6 +84,7 @@ def shield(label: str, message: str, color: str) -> str:
 def build_badge_row(
     license_name: str, python_versions: list[str], coverage_pct: float
 ) -> str:
+    """Assemble the license/Python-versions/coverage badge row as a single markdown line."""
     license_badge = shield("License", license_name, "blue")
     python_badge = shield("python", " | ".join(python_versions), "blue")
     coverage_badge = shield(
@@ -88,6 +94,7 @@ def build_badge_row(
 
 
 def update_readme(badge_line: str) -> None:
+    """Write badge_line into README.md between the BADGES markers, inserting them after the title if absent."""
     text = README.read_text()
     block = f"{BADGE_START}\n{badge_line}\n{BADGE_END}"
 
@@ -105,6 +112,11 @@ def update_readme(badge_line: str) -> None:
 
 
 def main() -> int:
+    """Regenerate the README badge row from coverage.xml, pyproject.toml and the CI config.
+
+    Returns:
+        int: Exit code (0 on success, 1 if coverage.xml is missing).
+    """
     if not COVERAGE_XML.exists():
         print(
             f"Error: {COVERAGE_XML} not found. Run "

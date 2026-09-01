@@ -1,3 +1,4 @@
+"""Runs geometry optimization on a ForceField potential, from in-memory data or from files."""
 import logging
 from collections.abc import Callable
 from ffits.datatype.forcefield_data import ForceField

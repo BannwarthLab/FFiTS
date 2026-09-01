@@ -1,4 +1,5 @@
 #!/bin/python
+"""Helpers for writing structures, hessians, and trajectories to disk."""
 
 from pathlib import Path
 
@@ -6,12 +7,14 @@ import numpy as np
 
 
 def print_box(name: str, width=80):
+    """Print ``name`` centered inside a box drawn with box-drawing characters."""
     print("┏" + "━" * width + "┓")
     print("┃" + name.center(width) + "┃")
     print("┗" + "━" * width + "┛")
 
 
 def generate_xtb_fix_input(atoms_to_fix: set) -> str:
+    """Build an xtb ``$fix`` block string listing the given atom indices."""
     string = ""
     for val in list(atoms_to_fix):
         string += str(val) + ", "
@@ -19,8 +22,13 @@ def generate_xtb_fix_input(atoms_to_fix: set) -> str:
 
 
 def write_all_molecules_to_file(seperate_molecule_list, new_filename_prefix):
+    """Write each molecule graph in ``seperate_molecule_list`` to its own numbered xyz file."""
+
     def subgraph_to_xyz(xyz, graph, new_filename: str) -> None:
+        """Write the atoms of one molecule subgraph to an xyz file."""
+
         def relate_index(ind_G: int) -> int:
+            """Convert a 0-based graph node index to a 1-based line index."""
             return ind_G + 1
 
         lines = [str(graph.number_of_nodes()) + "\n", "\n"]
@@ -38,11 +46,13 @@ def write_all_molecules_to_file(seperate_molecule_list, new_filename_prefix):
 
 
 def write_string2file(string, filename):
+    """Write ``string`` to ``filename``, overwriting any existing content."""
     with open(filename, "w") as text_file:
         text_file.write(string)
 
 
 def write_xyz_to_file(xyz: np.ndarray, filename: str) -> None:
+    """Write coordinates to a minimal xyz file (no atom types, one line per atom)."""
     nat = xyz.shape[0]
     lines = [str(nat) + "\n", "\n"]
     for i in range(nat):
@@ -55,6 +65,7 @@ def write_xyz_to_file(xyz: np.ndarray, filename: str) -> None:
 def write_hessian_to_orcahessfile(
     nat: int, hessian: np.ndarray, xyz_with_masses: np.ndarray, filename: str
 ):
+    """Write a Hessian matrix and atom data to an ORCA-format ``.hess`` file."""
     lines = []
     natoms = nat
 
@@ -99,11 +110,12 @@ def write_hessian_to_orcahessfile(
 
 
 def write_trajectory_to_xyz(trajectory: list, filename: Path) -> None:
-    """Writes a trajectory which is saved as
+    """Write a trajectory to a multi-frame xyz file.
 
     Args:
-        trajectory (list): List of directories for every frame. Each directory should contain the keys 'nat', 'atom_types' (np.ndarray), 'xyz', and optionally 'energy'.
-        filename (Path): _description_
+        trajectory (list): List of dicts, one per frame, each with keys
+            'nat', 'atom_types' (np.ndarray), 'xyz', and optionally 'energy'.
+        filename (Path): Output xyz file path.
     """
     with open(filename, "w") as f:
         for frame in trajectory:

@@ -1,3 +1,4 @@
+"""Fits force field parameters to a reference Hessian via Newton-style updates."""
 import logging
 from ffits.ts_guess.define_starting_parameters import fill_ff
 from ffits.datatype.calculation_data import CalculationOptions
@@ -36,8 +37,8 @@ def parameterize_ff(struc: Structure, calcopt: CalculationOptions, priorities):
     )
 
 
-def calculate_hessian_rmsd(hessian_ff, hessian_ref, dim):
-    """rmsd"""
+def calculate_hessian_rmsd(hessian_ff: np.ndarray, hessian_ref: np.ndarray, dim: int):
+    """RMSD between the FF and reference Hessians, restricted to the first ``dim`` rows/cols."""
     diff = hessian_ff[:dim, :dim] - hessian_ref[:dim, :dim]
     rmsd = np.sqrt(np.mean(diff**2))
     return rmsd
@@ -46,6 +47,7 @@ def calculate_hessian_rmsd(hessian_ff, hessian_ref, dim):
 def ff_fit_objective_function(
     hessian_ff: np.ndarray, hessian_ref: np.ndarray, dim: int
 ):
+    """Sum of squared off-diagonal-block differences between the FF and reference Hessians (the fitting objective)."""
     if np.shape(hessian_ff) != (dim, dim):
         raise Exception("Hessian has the wrong dimension")
     if np.shape(hessian_ref) != (dim, dim):
@@ -74,8 +76,22 @@ def fit_ff_to_hessian(
     threshold: float = 0.0005,
     constant_repulsion: bool = True,
 ):
-    """
-    description
+    """Iteratively fits all FF parameters to the structure's reference Hessian.
+
+    Each cycle recomputes the FF Hessian, does a one-step Newton update of
+    every bond/angle/dihedral (and repulsive, unless kept constant)
+    parameter, and stops once the RMSD to the reference Hessian stops
+    changing by more than ``threshold`` or ``maxit`` is reached.
+
+    Args:
+        struc (Structure): Structure with an already-filled FF and reference Hessian.
+        maxit (int, optional): Maximum number of fitting iterations. Defaults to 1000.
+        stepsize (float, optional): Newton step scaling. Defaults to 0.15.
+        threshold (float, optional): Convergence threshold on the RMSD change between iterations. Defaults to 0.0005.
+        constant_repulsion (bool, optional): If True, repulsive parameters are not updated. Defaults to True.
+
+    Returns:
+        dict: ``{"iterations", "final_rmsd", "final_objectiv_function"}``.
     """
     ff = struc.ff
     info = struc.info
@@ -165,6 +181,7 @@ def fit_ff_to_hessian(
 def update_bond(
     row, info: StructuralInformation, hessian_ff: np.ndarray, stepsize: float
 ):
+    """One Newton-step update of a bond parameter from its Hessian derivatives."""
     i = row.atoms[0]
     j = row.atoms[1]
 
@@ -195,6 +212,7 @@ def update_bond(
 def update_angle(
     row, info: StructuralInformation, hessian_ff: np.ndarray, stepsize: float
 ):
+    """One Newton-step update of an angle parameter from its Hessian derivatives."""
     i = row.atoms[0]
     j = row.atoms[1]
     l = row.atoms[2]
@@ -228,6 +246,7 @@ def update_angle(
 def update_dihedral(
     row, info: StructuralInformation, hessian_ff: np.ndarray, stepsize: float
 ):
+    """One Newton-step update of a dihedral parameter from its Hessian derivatives."""
     i = row.atoms[0]
     j = row.atoms[1]
     l = row.atoms[2]
@@ -264,6 +283,7 @@ def update_dihedral(
 def update_repulsive(
     row, info: StructuralInformation, hessian_ff: np.ndarray, stepsize: float
 ):
+    """One Newton-step update of a repulsive parameter from its Hessian derivatives."""
     i = row.atoms[0]
     j = row.atoms[1]
 
@@ -294,6 +314,7 @@ def update_repulsive(
 def update_single_ffparam(
     val: float, deriv1: float, deriv2: float, stepsize: float
 ) -> float:
+    """Newton update ``val - deriv1/deriv2 * stepsize``; returns ``val`` unchanged if deriv2 is zero."""
     if deriv2 == 0.0:
         warnings.warn(
             "Second derivative is zero; skipping parameter update (returning original value)."
@@ -505,7 +526,7 @@ def repulsive_derivative_c_first_atomwise(
     atom2: int,
     c: float,
 ) -> float:
-
+    """First derivative wrt the repulsive FF parameter c for the given atom pair."""
     hess_ff_single = np.zeros((3 * nat, 3 * nat), dtype=np.float64, order="F")
     fb.get_single_repulsive_hessian(
         geometry_ff, np.array([atom1, atom2]), sigma, c**2, hess_ff_single
@@ -527,7 +548,7 @@ def repulsive_derivative_c_second_atomwise(
     atom2: int,
     c: float,
 ) -> float:
-
+    """Second derivative wrt the repulsive FF parameter c for the given atom pair."""
     hess_ff_single = np.zeros((3 * nat, 3 * nat), dtype=np.float64, order="F")
 
     fb.get_single_repulsive_hessian(

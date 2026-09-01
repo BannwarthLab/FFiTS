@@ -1,3 +1,4 @@
+"""TS guess generation: builds a TS force field from reactant/product FFs and optimizes on it."""
 import logging
 import os
 import pandas as pd

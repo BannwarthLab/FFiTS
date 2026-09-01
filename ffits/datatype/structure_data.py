@@ -1,4 +1,12 @@
 #!/bin/python
+"""Data classes describing a molecular structure and its build pipeline.
+
+Defines :class:`StructurePath` (file locations for a structure),
+:class:`StructuralInformation` (derived geometric/connectivity data),
+:class:`Structure` (the combination of path, force field and structural
+information) and :class:`StructureBuilder`, a step-by-step builder used to
+assemble a :class:`Structure` from xyz, Hessian, WBO and force-field inputs.
+"""
 
 import logging
 from dataclasses import dataclass
@@ -166,7 +174,7 @@ class Structure:
     """
     Complete information about a given Structure.
 
-    Variables:
+    Attributes:
         path (StructurePath): Path strings to all related files.
         ff (ForceField): Force field data
         info (StructuralInformation): structural information like connectivities, atom count or geometrical structure.
@@ -267,6 +275,14 @@ class Structure:
 
 
 class StructureBuilder:
+    """Step-by-step builder that assembles a :class:`Structure` object.
+
+    Each ``*_from_*`` method sets one piece of the structure (atom count,
+    atom types, WBO data, Hessian, force field) and returns ``self`` so
+    calls can be chained; :meth:`build` validates that all required pieces
+    are present and constructs the final :class:`Structure`.
+    """
+
     def __init__(
         self,
         xyz: np.ndarray,
@@ -276,6 +292,17 @@ class StructureBuilder:
         ff_filename: str = "ff.csv",
         bondorder_threshold: float = 0.0,
     ):
+        """Initialize the builder with coordinates and file locations.
+
+        Args:
+            xyz (np.ndarray): Coordinates in Angström, shape (nat, 3).
+            xyz_filename (str, optional): Path to the xyz file. Defaults to "struc.xyz".
+            wbo_filename (str, optional): Path to the WBO file. Defaults to "wbo".
+            hessian_filename (str, optional): Path to the Hessian file. Defaults to "hess".
+            ff_filename (str, optional): Path to the force field file. Defaults to "ff.csv".
+            bondorder_threshold (float, optional): Bond order threshold used
+                when deriving connectivity. Defaults to 0.0.
+        """
         self._xyz = xyz  # (np.ndarray): coordinates in Angström in shape (nat, 3)
         self._xyz_filename = xyz_filename
         self._wbo_filename = wbo_filename
@@ -290,6 +317,7 @@ class StructureBuilder:
         self._path: StructurePath = self.path()
 
     def _write_xyz_if_needed(self):
+        """Write the current coordinates to ``self._xyz_filename`` if that file does not already exist."""
         if self._xyz_filename is not None and not os.path.exists(self._xyz_filename):
             logger.warning(
                 f"XYZ file {self._xyz_filename} does not exist. It will be created with the provided xyz data."
@@ -297,34 +325,49 @@ class StructureBuilder:
             write_xyz_to_file(self._xyz, self._xyz_filename)
 
     def nat(self, nat: int) -> "StructureBuilder":
+        """Set the number of atoms and return self for chaining."""
         self._nat = nat
         return self
 
     def atom_types(self, atom_types: np.ndarray) -> "StructureBuilder":
+        """Set the per-atom element symbols and return self for chaining."""
         self._atom_types = atom_types
         return self
 
     # ---- wbo ----
     def wbo_from_xtb(self, xtbrunner: Xtb) -> "StructureBuilder":
+        """Compute WBO data by running xtb and return self for chaining."""
         self._write_xyz_if_needed()
         self._wbo_dict = xtbrunner.wbocalc(self._xyz_filename, self._wbo_filename)
         return self
 
     def wbo_from_file(self) -> "StructureBuilder":
+        """Load WBO data from ``self._wbo_filename`` and return self for chaining."""
         self._wbo_dict = read_wbo_file(self._wbo_filename)
         return self
 
     def wbo_from_dict(self, wbo_dict: dict) -> "StructureBuilder":
+        """Set WBO data directly from a dictionary and return self for chaining."""
         self._wbo_dict = wbo_dict
         return self
 
     # ---- hessian ----
     def hessian_from_xtb(self, xtbrunner: Xtb) -> "StructureBuilder":
+        """Compute the Hessian by running xtb and return self for chaining."""
         self._write_xyz_if_needed()
         self._hessian = xtbrunner.hesscalc(self._xyz_filename, self._hessian_filename)
         return self
 
     def hessian_from_file(self, format: str = "xtb") -> "StructureBuilder":
+        """Load the Hessian from ``self._hessian_filename`` and return self for chaining.
+
+        Args:
+            format (str, optional): Hessian file format. Only "xtb" is
+                currently supported. Defaults to "xtb".
+
+        Raises:
+            ValueError: If an unsupported format is given.
+        """
         if format == "xtb":
             self._hessian = read_xtb_hessian(self._hessian_filename)
         else:
@@ -332,6 +375,7 @@ class StructureBuilder:
         return self
 
     def hessian_from_array(self, hessian_array: np.ndarray) -> "StructureBuilder":
+        """Set the Hessian directly from an array and return self for chaining."""
         self._hessian = hessian_array
         return self
 
@@ -342,7 +386,7 @@ class StructureBuilder:
         gradient_calculator: Callable,
         hessian_calculator: Callable,
     ) -> "StructureBuilder":
-        """sets force field data from ff file"""
+        """Set force field data by reading it from ``self._ff_filename`` and return self for chaining."""
         self._ff = ForceField(
             self._nat,
             self._ff_filename,
@@ -372,6 +416,7 @@ class StructureBuilder:
 
     # ---- path data ----
     def path(self) -> "StructureBuilder":
+        """(Re)build the ``StructurePath`` from the builder's current filenames and return self for chaining."""
         self._path = StructurePath(
             xyz_filename=self._xyz_filename,
             hessian_filename=self._hessian_filename,
@@ -381,6 +426,15 @@ class StructureBuilder:
         return self
 
     def build(self) -> Structure:
+        """Validate that all required data has been set and construct the ``Structure``.
+
+        Raises:
+            ValueError: If ``nat``, the Hessian, WBO dictionary, atom types,
+                or force field have not been set on the builder.
+
+        Returns:
+            Structure: The fully assembled structure.
+        """
         if self._nat is None:
             raise ValueError("Number of atoms (nat) must be specified.")
         if self._hessian is None:
