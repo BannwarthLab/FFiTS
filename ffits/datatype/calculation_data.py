@@ -1,5 +1,5 @@
 """Dataclasses describing calculation configuration for a full ffits run."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 import os
 import logging
 import tomllib
@@ -18,6 +18,32 @@ def load_toml(path: str) -> dict:
     """
     with open(path, "rb") as f:
         return tomllib.load(f)
+
+
+def _apply_section(obj, section: dict, skip: tuple = ()) -> None:
+    """Overwrites obj's dataclass fields from a TOML section dict, in place.
+
+    Every field of ``obj`` not listed in ``skip`` is read from ``section``:
+    a key present in ``section`` overwrites the field's current value, a key
+    absent from ``section`` leaves it untouched. Because this walks
+    ``obj``'s actual dataclass fields instead of a hand-maintained name
+    list, any key written under the matching TOML table -- present or
+    added later -- is picked up automatically, with no separate wiring
+    step required. This is the single piece of boilerplate behind the
+    section-by-section overwriting done throughout
+    :meth:`CalculationData.from_config`.
+
+    Args:
+        obj: Dataclass instance whose fields are updated.
+        section (dict): TOML section dict to read values from.
+        skip (tuple[str, ...], optional): Field names to leave untouched
+            even if present in ``section`` -- for fields that are
+            deliberately not sourced from the config file.
+    """
+    for f in fields(obj):
+        if f.name in skip:
+            continue
+        setattr(obj, f.name, section.get(f.name, getattr(obj, f.name)))
 
 
 @dataclass
@@ -212,16 +238,7 @@ class CalculationData:
         # System
         # =======================
         sys_data = data.get("system", {})
-        cd.system.charge = sys_data.get("charge", cd.system.charge)
-        cd.system.multiplicity = sys_data.get("multiplicity", cd.system.multiplicity)
-        cd.system.use_gxtb = sys_data.get("use_gxtb", cd.system.use_gxtb)
-        cd.system.xtb_path = sys_data.get("xtb_path", cd.system.xtb_path)
-        cd.system.xtb_input_name = sys_data.get(
-            "xtb_input_name", cd.system.xtb_input_name
-        )
-        cd.system.xtb_alpb_solvent = sys_data.get(
-            "xtb_alpb_solvent", cd.system.xtb_alpb_solvent
-        )
+        _apply_section(cd.system, sys_data)
 
         # =======================
         # Reactant
@@ -231,59 +248,11 @@ class CalculationData:
         # Reactant path
         react_path = reactant.get("path", {})
         cd.reactant_path.xyz_filename = ""  # will be set from commandline
-        cd.reactant_path.wbo_filename = react_path.get(
-            "wbo_filename", cd.reactant_path.wbo_filename
-        )
-        cd.reactant_path.hessian_filename = react_path.get(
-            "hessian_filename", cd.reactant_path.hessian_filename
-        )
-        cd.reactant_path.ff_filename = react_path.get(
-            "ff_filename", cd.reactant_path.ff_filename
-        )
+        _apply_section(cd.reactant_path, react_path, skip=("xyz_filename",))
 
         # Reactant calculation
         react_calc = reactant.get("calculation", {})
-        cd.reactant_calc.geometry_optimization = react_calc.get(
-            "geometry_optimization", cd.reactant_calc.geometry_optimization
-        )
-        cd.reactant_calc.wbo_calc = react_calc.get(
-            "wbo_calc", cd.reactant_calc.wbo_calc
-        )
-        cd.reactant_calc.hessian_calc = react_calc.get(
-            "hessian_calc", cd.reactant_calc.hessian_calc
-        )
-        cd.reactant_calc.only_proper_dihedrals = react_calc.get(
-            "only_proper_dihedrals", cd.reactant_calc.only_proper_dihedrals
-        )
-        cd.reactant_calc.ff_parameterization = react_calc.get(
-            "ff_parameterization", cd.reactant_calc.ff_parameterization
-        )
-        cd.reactant_calc.test_parameterization = react_calc.get(
-            "test_parameterization", cd.reactant_calc.test_parameterization
-        )
-        cd.reactant_calc.ff_parameterization_maxiteration = react_calc.get(
-            "ff_parameterization_maxiteration",
-            cd.reactant_calc.ff_parameterization_maxiteration,
-        )
-        cd.reactant_calc.ff_parameter_repulsion = react_calc.get(
-            "ff_parameter_repulsion", cd.reactant_calc.ff_parameter_repulsion
-        )
-        cd.reactant_calc.ff_parameterization_stepsize = react_calc.get(
-            "ff_parameterization_stepsize",
-            cd.reactant_calc.ff_parameterization_stepsize,
-        )
-        cd.reactant_calc.ff_parameterization_threshold = react_calc.get(
-            "ff_parameterization_threshold",
-            cd.reactant_calc.ff_parameterization_threshold,
-        )
-        cd.reactant_calc.ff_parameterization_constant_repulsion = react_calc.get(
-            "ff_parameterization_constant_repulsion",
-            cd.reactant_calc.ff_parameterization_constant_repulsion,
-        )
-        cd.reactant_calc.bo_treshold = react_calc.get(
-            "bo_treshold",
-            cd.reactant_calc.bo_treshold,
-        )
+        _apply_section(cd.reactant_calc, react_calc)
 
         # =======================
         # Product
@@ -293,56 +262,11 @@ class CalculationData:
         # Product path
         prod_path = product.get("path", {})
         cd.product_path.xyz_filename = ""  # will be set from commandline
-        cd.product_path.wbo_filename = prod_path.get(
-            "wbo_filename", cd.product_path.wbo_filename
-        )
-        cd.product_path.hessian_filename = prod_path.get(
-            "hessian_filename", cd.product_path.hessian_filename
-        )
-        cd.product_path.ff_filename = prod_path.get(
-            "ff_filename", cd.product_path.ff_filename
-        )
+        _apply_section(cd.product_path, prod_path, skip=("xyz_filename",))
 
         # Product calculation
         prod_calc = product.get("calculation", {})
-        cd.product_calc.geometry_optimization = prod_calc.get(
-            "geometry_optimization", cd.product_calc.geometry_optimization
-        )
-        cd.product_calc.wbo_calc = prod_calc.get("wbo_calc", cd.product_calc.wbo_calc)
-        cd.product_calc.hessian_calc = prod_calc.get(
-            "hessian_calc", cd.product_calc.hessian_calc
-        )
-        cd.product_calc.only_proper_dihedrals = prod_calc.get(
-            "only_proper_dihedrals", cd.product_calc.only_proper_dihedrals
-        )
-        cd.product_calc.ff_parameterization = prod_calc.get(
-            "ff_parameterization", cd.product_calc.ff_parameterization
-        )
-        cd.product_calc.test_parameterization = prod_calc.get(
-            "test_parameterization", cd.product_calc.test_parameterization
-        )
-        cd.product_calc.ff_parameterization_maxiteration = prod_calc.get(
-            "ff_parameterization_maxiteration",
-            cd.product_calc.ff_parameterization_maxiteration,
-        )
-        cd.product_calc.ff_parameter_repulsion = prod_calc.get(
-            "ff_parameter_repulsion", cd.product_calc.ff_parameter_repulsion
-        )
-        cd.product_calc.ff_parameterization_stepsize = prod_calc.get(
-            "ff_parameterization_stepsize", cd.product_calc.ff_parameterization_stepsize
-        )
-        cd.product_calc.ff_parameterization_threshold = prod_calc.get(
-            "ff_parameterization_threshold",
-            cd.product_calc.ff_parameterization_threshold,
-        )
-        cd.product_calc.ff_parameterization_constant_repulsion = prod_calc.get(
-            "ff_parameterization_constant_repulsion",
-            cd.product_calc.ff_parameterization_constant_repulsion,
-        )
-        cd.product_calc.bo_treshold = prod_calc.get(
-            "bo_treshold",
-            cd.product_calc.bo_treshold,
-        )
+        _apply_section(cd.product_calc, prod_calc)
 
         # =======================
         # TS Guess calculation
@@ -351,51 +275,17 @@ class CalculationData:
 
         # TS path
         ts_path = ts_guess.get("path", {})
-        cd.ts_path.ff_filename = ts_path.get("ff_filename", cd.ts_path.ff_filename)
-        cd.ts_path.hessian_filename = ts_path.get(
-            "hessian_filename", cd.ts_path.hessian_filename
-        )
+        _apply_section(cd.ts_path, ts_path)
 
         # TS calculation
         ts_calc = ts_guess.get("calculation", {})
-        cd.ts_calc.factor_reactant = ts_calc.get(
-            "factor_reactant", cd.ts_calc.factor_reactant
-        )
-        cd.ts_calc.factor_product = ts_calc.get(
-            "factor_product", cd.ts_calc.factor_product
-        )
-        cd.ts_calc.optimizer = ts_calc.get("optimizer", cd.ts_calc.optimizer)
-        cd.ts_calc.energy_threshold_two_optimizations = ts_calc.get(
-            "energy_threshold_two_optimizations",
-            cd.ts_calc.energy_threshold_two_optimizations,
-        )
-        cd.ts_calc.average_with_hess_weight = ts_calc.get(
-            "average_with_hess_weight", cd.ts_calc.average_with_hess_weight
-        )
-        cd.ts_calc.hess_weight_sharpness = ts_calc.get(
-            "hess_weight_sharpness", cd.ts_calc.hess_weight_sharpness
-        )
-        cd.ts_calc.perform_two_optimizations = ts_calc.get(
-            "perform_two_optimizations", cd.ts_calc.perform_two_optimizations
-        )
-        cd.ts_calc.molbar_optimizer_e_tol = ts_calc.get(
-            "molbar_optimizer_e_tol", cd.ts_calc.molbar_optimizer_e_tol
-        )
-        cd.ts_calc.molbar_optimizer_x_tol = ts_calc.get(
-            "molbar_optimizer_x_tol", cd.ts_calc.molbar_optimizer_x_tol
-        )
-        cd.ts_calc.molbar_optimizer_max_micro_steps = ts_calc.get(
-            "molbar_optimizer_max_micro_steps",
-            cd.ts_calc.molbar_optimizer_max_micro_steps,
-        )
+        _apply_section(cd.ts_calc, ts_calc)
 
         # =======================
         # Postprocessing
         # =======================
         post = data.get("postprocessing", {})
-        cd.postprocessing.relaxation = post.get(
-            "relaxation", cd.postprocessing.relaxation
-        )
+        _apply_section(cd.postprocessing, post)
 
         # for testing purposes, return the CalculationData object without performing sanity checks, to allow testing of error handling in those checks
         if test:
