@@ -12,6 +12,28 @@ import sys
 import ctypes
 import shutil
 
+import pytest
+
+
+@pytest.fixture
+def tmp_workdir(tmp_path):
+    """Chdir into a fresh, pytest-managed temporary directory for the
+    duration of a test, then restore the original cwd.
+
+    A lot of the integration/unit tests need ffits to run inside a scratch
+    directory (it writes reac.xyz/prod.xyz/ff*.csv/etc. relative to cwd).
+    Before this fixture existed, each test hand-rolled
+    ``tempfile.TemporaryDirectory()`` + ``os.chdir()`` + ``try/finally``
+    to get that; this fixture is that boilerplate written once. Depend on
+    it and use the yielded Path directly instead of repeating the pattern.
+    """
+    original_cwd = os.getcwd()
+    os.chdir(tmp_path)
+    try:
+        yield tmp_path
+    finally:
+        os.chdir(original_cwd)
+
 
 def pytest_configure(config):
     """
