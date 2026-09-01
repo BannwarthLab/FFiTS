@@ -57,36 +57,11 @@ test:
   needs:
     - build-containers
   tags:
-    - shell
+    - cpu
   script:
-    - export CONTAINER_NAME="${OS}-${COMPILER}-${PYTHON}"
-    # build-containers already built/cached this container on the runner
-    # host (build_container.sh's cache lives under /tmp/apptainer-cache,
-    # outside the per-job workspace, so it isn't passed as a GitLab
-    # artifact). Re-run the same generate+build here to resolve the
-    # cached .sif path on THIS job's runner: on a cache hit this is fast
-    # and does not rebuild, it just reports where the .sif already is.
-    - python3 .gitlab/generate_recipe.py ${CONTAINER_NAME}
-    - BUILD_OUTPUT=$(/gitlab-runner/build_container.sh ${CONTAINER_NAME}.def 2>&1)
-    - echo "$BUILD_OUTPUT"
-    - SIF_PATH=$(echo "$BUILD_OUTPUT" | grep -oE '/[^[:space:]]+\.sif' | tail -n1)
-    - |
-      if [ -z "$SIF_PATH" ]; then
-        echo "Could not determine .sif path from build_container.sh output" >&2
-        exit 1
-      fi
-    - 'echo "Using container: $SIF_PATH"'
-    - apptainer exec "$SIF_PATH" bash -c "
-        python -m venv venv &&
-        source venv/bin/activate &&
-        make install-dev &&
-        pytest tests/"
-  # artifacts:
-  #   when: on_failure
-  #   paths:
-  #     - tests/_failure
-  #   expire_in: 1 week
-
+    - make install-dev
+    - pytest tests/
+    
 # ---------------------------------------------------------------------------
 # Docs stage: build with Sphinx, deploy to GitLab Pages on default branch
 # ---------------------------------------------------------------------------
