@@ -1,3 +1,4 @@
+"""MolBar-based helpers: combined atom priorities and the ANC/scipy optimizers."""
 import numpy as np
 import os
 import logging
@@ -19,7 +20,7 @@ def _define_bonds_for_molbar(
     struc2: StructuralInformation,
     bo_threshold: float = 0.5,
 ) -> None:
-    """Fills mol object with connectivity information based on the combined bond order matrices of struc1 and struc2. Bonds are defined where the combined bond order exceeds the specified threshold.
+    """Fills mol with connectivity from the combined bond order matrices of struc1 and struc2.
 
     Args:
         mol (Molecule): MolBar Molecule object to be filled with connectivity information.
@@ -52,7 +53,7 @@ def get_combinded_priorities(
     struc2: StructuralInformation,
     bo_threshold: float = 0.5,
 ) -> dict:
-    """Calculates combined priorities for each atom based on the connectivity of both structures. This is done by creating a MolBar Molecule object, defining bonds based on the combined bond order matrices of struc1 and struc2, and then calculating priorities using MolBar's internal functions.
+    """Calculates combined MolBar priorities for each atom from the connectivity of both structures.
 
     Args:
         struc1 (StructuralInformation): Structural information of reactant structure.
@@ -106,7 +107,7 @@ def anc_optimizer(
         Exception: Energy, gradient and hessian calculators need to be defined in the ForceField object when using the ANC optimization.
 
     Returns:
-        _type_: _description_
+        tuple: ``(converged, energy, final_geom, steps, time, message)``.
     """
     if ff.energy_calculator == None:
         raise Exception(

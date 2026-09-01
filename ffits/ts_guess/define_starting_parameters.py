@@ -1,3 +1,4 @@
+"""Derives initial force field terms (bonds, angles, dihedrals, repulsion, H-bonds) from structural data."""
 import numpy as np
 import pandas as pd
 from ffits.datatype.forcefield_data import ForceField
@@ -224,12 +225,14 @@ def fill_ff(
 
     # ---- Atom generation ----
     def get_bond_atoms(A):
+        """List all bonded atom pairs from the adjacency matrix."""
         i, j = np.where(np.triu(A, 1))
         bonds = np.stack([i, j], axis=1)
         bonds = bonds[np.lexsort((bonds[:, 1], bonds[:, 0]))]
         return [tuple(int(x) for x in pair) for pair in bonds]
 
     def get_angle_atoms(A):
+        """List all (i, j, k) angle triplets from the adjacency matrix."""
         angles = []
         for j in range(n):
             neighbors = np.where(A[j])[0]
@@ -244,6 +247,7 @@ def fill_ff(
         return [tuple(int(x) for x in triplet) for triplet in angles]
 
     def get_dihedral_atoms(A):
+        """List all canonical (i, j, l, m) dihedral quadruplets from the adjacency matrix."""
         dihedrals = []
         for j in range(n):
             for l in np.where(A[j])[0]:
@@ -258,6 +262,7 @@ def fill_ff(
         return [tuple(int(x) for x in d) for d in dihedrals]
 
     def get_repulsive_atoms(A):
+        """List all non-bonded atom pairs from the adjacency matrix."""
         all_i, all_j = np.triu_indices(n, 1)
         mask = A[all_i, all_j] == 0
         pairs = np.stack([all_i[mask], all_j[mask]], axis=1)
@@ -266,18 +271,22 @@ def fill_ff(
 
     # ---- Reference calculations ----
     def ref_bond(atoms):
+        """Reference bond length for a bonded atom pair."""
         i, j = atoms
         return round(bondlength(info.fortran_xyz, i, j), 8)
 
     def ref_angle(atoms):
+        """Reference angle for an atom triplet."""
         i, j, k = atoms
         return round(angle(info.fortran_xyz, i, j, k), 8)
 
     def ref_dihedral(atoms):
+        """Reference dihedral angle for an atom quadruplet."""
         i, j, k, l = atoms
         return round(dihedral_angle(info.fortran_xyz, i, j, k, l), 8)
 
     def ref_repulsive(atoms):
+        """Reference van der Waals distance for a non-bonded atom pair."""
         i, j = atoms
         return round(
             info.vander_matrix[i, j], 8
@@ -285,6 +294,7 @@ def fill_ff(
 
     # ---- Parameter calculations ----
     def param_bond(atoms):
+        """Bond force constant, derived from bond order over bond length."""
         i, j = atoms
         bl = bondlength(info.fortran_xyz, i, j)
         bo = info.bo_matrix[i, j]
@@ -293,6 +303,7 @@ def fill_ff(
         return round(bo / bl, 8)
 
     def param_angle(atoms):
+        """Angle force constant, derived from the two adjacent bond orders and lengths."""
         i, j, k = atoms
         bl1 = bondlength(info.fortran_xyz, i, j)
         bl2 = bondlength(info.fortran_xyz, j, k)
@@ -302,6 +313,7 @@ def fill_ff(
         return round((prod / (bl1 * bl2)) ** 0.5, 8)
 
     def param_dihedral(atoms):
+        """Dihedral force constant, derived from the three chain bond orders and lengths (0.5 fallback for improper dihedral bonds)."""
         temp_bo = info.bo_matrix.copy()
         i, j, k, l = atoms
         bl1 = bondlength(info.fortran_xyz, i, j)
@@ -320,6 +332,7 @@ def fill_ff(
         return round((prod / (bl1 * bl2 * bl3)) ** (1 / 3), 8)
 
     def param_repulsive(_atoms):
+        """Starting repulsive parameter (same value for every non-bonded pair)."""
         return repulsive_start
 
     # ============================================================

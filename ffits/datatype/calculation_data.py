@@ -1,3 +1,4 @@
+"""Dataclasses describing calculation configuration for a full ffits run."""
 from dataclasses import dataclass, field
 import os
 import logging
@@ -11,6 +12,9 @@ def load_toml(path: str) -> dict:
 
     Args:
         path (str): The file path to the TOML file.
+
+    Returns:
+        dict: The parsed contents of the TOML file.
     """
     with open(path, "rb") as f:
         return tomllib.load(f)
@@ -21,7 +25,7 @@ class System:
     """
     General information, which are relevant during the whole calculation.
 
-    Variables:
+    Attributes:
         charge (int): Total charge of the system.
         multiplicity (int): Spin multiplicity of the system.
         xtb_path (str): Path to the xtb executable.
@@ -42,7 +46,7 @@ class PathData:
     """
     Information about the paths to the different files for one structure.
 
-    Variables:
+    Attributes:
         xyz_filename (str): Path to the XYZ file containing the structure's coordinates.
         wbo_filename (str): Path to the file containing Wiberg bond orders for the structure.
         hessian_filename (str): Path to the file containing the Hessian matrix for the structure.
@@ -60,7 +64,7 @@ class CalculationOptions:
     """
     Information for changing different parameters during the preliminary calculations and FF parameterization of energy minima.
 
-    Variables:
+    Attributes:
         geometry_optimization (bool): Whether to perform a geometry optimization before calculating WBOs and Hessian.
         wbo_calc (bool): Whether to calculate WBOs with xtb or read them from file.
         hessian_calc (bool): Whether to calculate the Hessian with xtb or read it from file.
@@ -95,6 +99,18 @@ class CalculationOptions:
 class TSCalculationOptions:
     """
     Information for changing different parameters during the TS guess generation and optimization with the TSFF.
+
+    Attributes:
+        factor_reactant (float): Reactant weight when mixing into the TS force field.
+        factor_product (float): Product weight when mixing into the TS force field.
+        optimizer (str): Optimizer to use ("molbar-optimizer" or "scipy-optimizer").
+        average_with_hess_weight (bool): Weight reactant/product averaging by Hessian similarity.
+        hess_weight_sharpness (float): Sharpness of the Hessian-similarity weighting.
+        perform_two_optimizations (bool): Whether to run a second TS optimization pass.
+        molbar_optimizer_e_tol (float): Energy convergence tolerance for the molbar optimizer.
+        molbar_optimizer_x_tol (float): Coordinate convergence tolerance for the molbar optimizer.
+        molbar_optimizer_max_micro_steps (int): Max micro-steps per molbar optimizer iteration.
+        energy_threshold_two_optimizations (float): Threshold deciding if a second optimization runs. Not checked currently.
     """
 
     factor_reactant: float = 0.5
@@ -112,7 +128,11 @@ class TSCalculationOptions:
 @dataclass
 class Postprocessing:
     """
-    Information for Postprocessing, eg somehow changing the generated TS guess.
+    Information for Postprocessing, eg somehow changing the generated TS guess. Not used currently.
+
+    Attributes:
+        relaxation (str): Postprocessing relaxation method to apply to the
+            TS guess ("None", "gfn2-xtb", or "pbeh-3c").
     """
 
     relaxation: str = "None"
@@ -122,6 +142,16 @@ class Postprocessing:
 class CalculationData:
     """
     Summary class for all calculation information.
+
+    Attributes:
+        system (System): General system information (charge, multiplicity, xtb settings).
+        reactant_path (PathData): File paths for the reactant structure.
+        product_path (PathData): File paths for the product structure.
+        reactant_calc (CalculationOptions): Calculation options for the reactant.
+        product_calc (CalculationOptions): Calculation options for the product.
+        ts_calc (TSCalculationOptions): Calculation options for the TS guess generation/optimization.
+        ts_path (PathData): File paths for the TS guess.
+        postprocessing (Postprocessing): Postprocessing options applied to the TS guess.
     """
 
     system: System = field(default_factory=System)
@@ -156,20 +186,19 @@ class CalculationData:
 
     @staticmethod
     def from_config(path_to_config: str, test: bool = False) -> "CalculationData":
-        """_summary_
+        """Builds a CalculationData object from a TOML config file, layered over the defaults.
+
+        Starts from :meth:`from_default` and overwrites values found in the
+        TOML file. Unless ``test`` is True, also runs sanity checks on the
+        result (required files exist, options are consistent and valid).
 
         Args:
-            path_to_config (str): _description_
-            test (bool, optional): _description_. Defaults to False.
+            path_to_config (str): Path to the TOML config file.
+            test (bool, optional): If True, skip the sanity checks. Defaults to False. Only for testing.
 
         Raises:
-            FileNotFoundError: _description_
-            FileNotFoundError: _description_
-            FileNotFoundError: _description_
-            ValueError: _description_
-            ValueError: _description_
-            ValueError: _description_
-            ValueError: _description_
+            FileNotFoundError: If the config file or a required Hessian file is missing.
+            ValueError: If a setting fails validation (see the sanity checks below).
 
         Returns:
             CalculationData: CalculationData object initialized with values from the config file.

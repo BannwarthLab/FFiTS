@@ -1,3 +1,4 @@
+"""Command-line argument parsing for the ffits program."""
 import argparse
 import os
 import sys
@@ -10,8 +11,8 @@ def _get_version():
     """
     Get version from pyproject.toml.
 
-    Returns
-        version (str): Version string from pyproject.toml, or "unknown" if not found.
+    Returns:
+        str: Version string from pyproject.toml, or "unknown" if not found.
     """
     try:
         import tomllib
@@ -38,8 +39,15 @@ def _get_version():
 
 
 def parse_args():
-    """
-    Parse command-line arguments and return them as a dictionary.
+    """Parse and validate command-line arguments for ffits.
+
+    Handles ``--version``, validates that the right number of structure
+    files is given for the selected mode, and checks that structure/config
+    files exist.
+
+    Returns:
+        dict: Parsed arguments (structures, config_file, charge,
+        multiplicity, parameterize, reaction_path, optff, debug).
     """
     parser = argparse.ArgumentParser(
         description="FFiTS TS calculation workflow. Provide structures and input file."

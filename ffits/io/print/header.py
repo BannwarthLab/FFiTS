@@ -1,3 +1,4 @@
+"""Prints the FFiTS program header (logo, version, build date, citation)."""
 import datetime
 import textwrap
 import subprocess
@@ -12,8 +13,8 @@ def _get_build_date():
     """
     Get the build/installation date from the ffits package directory.
 
-    Returns
-        (str): Build date as "YYYY-MM-DD HH:MM" based on package modification time.
+    Returns:
+        str: Build date as "YYYY-MM-DD HH:MM" based on package modification time.
     """
     try:
         # Get the ffits package directory
@@ -30,10 +31,8 @@ def _get_last_commit_date():
     """
     Get the date of the last commit from git.
 
-    Returns
-    -------
-    str or None
-        Last commit date as "YYYY-MM-DD HH:MM" or None if git is unavailable.
+    Returns:
+        str or None: Last commit date as "YYYY-MM-DD HH:MM", or None if git is unavailable.
     """
     try:
         result = subprocess.run(
@@ -55,10 +54,8 @@ def _load_pyproject_metadata():
     """
     Load metadata from installed package.
 
-    Returns
-    -------
-    dict
-        Dictionary with 'license', 'authors', and 'version' keys.
+    Returns:
+        dict: Dictionary with 'license', 'authors', and 'version' keys.
     """
     metadata_dict = {"license": "MIT", "authors": "Daria Babushkina", "version": "-"}
 
@@ -76,10 +73,9 @@ def print_program_header(version: str = None):
     """
     Prints a formatted header for the FFiTS program.
 
-    Parameters
-    ----------
-    version : str, optional
-        Program version string. If None, will be loaded from pyproject.toml.
+    Args:
+        version (str, optional): Program version string. If None, loaded
+            from installed package metadata.
     """
 
     metadata = _load_pyproject_metadata()
