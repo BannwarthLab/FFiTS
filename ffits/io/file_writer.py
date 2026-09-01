@@ -21,10 +21,19 @@ def generate_xtb_fix_input(atoms_to_fix: set) -> str:
     return f"$fix\n" f"   atoms: {string[:-2]}\n" f"end\n"
 
 
-def write_all_molecules_to_file(seperate_molecule_list, new_filename_prefix):
-    """Write each molecule graph in ``seperate_molecule_list`` to its own numbered xyz file."""
+def write_all_molecules_to_file(seperate_molecule_list, xyz, new_filename_prefix):
+    """Write each molecule graph in ``seperate_molecule_list`` to its own numbered xyz file.
 
-    def subgraph_to_xyz(xyz, graph, new_filename: str) -> None:
+    Args:
+        seperate_molecule_list: List of networkx graphs, one per molecule, whose
+            nodes are 0-based atom indices into ``xyz``.
+        xyz: Mapping from 1-based atom index to a pre-formatted xyz coordinate
+            line (as produced by the xyz reader), e.g. ``{1: "C 0.0 0.0 0.0\\n"}``.
+        new_filename_prefix: Prefix used to build each output filename, as
+            ``f"{new_filename_prefix}{i}.xyz"``.
+    """
+
+    def subgraph_to_xyz(graph, new_filename: str) -> None:
         """Write the atoms of one molecule subgraph to an xyz file."""
 
         def relate_index(ind_G: int) -> int:
