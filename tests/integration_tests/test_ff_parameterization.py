@@ -1,10 +1,7 @@
-import os
 import copy
 import pandas as pd
 import pytest
 import shutil
-from tempfile import TemporaryDirectory
-from pathlib import Path
 from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.structure_data import (
     StructuralInformation,
@@ -22,271 +19,201 @@ from ffits.ts_guess.parameterize_ff import (
 from ffits.io.reader import read_xtb_hessian
 from ffits.forcefield.python_interface.ff_energy import complete_hessian
 from ffits.ts_guess.define_starting_parameters import fill_ff
-from tests.test_utils import NAT, WBO, XYZ, ATOM_TYPES
+from tests.test_utils import NAT, WBO, XYZ, ATOM_TYPES, SMALL_MOLECULE_DIR
 
 
-def test_fit_ff_to_hessian():
+def test_fit_ff_to_hessian(tmp_workdir):
     """
     tests whether the update_bond function changes only the ff parameter
     """
-    examples_dir = Path(os.getcwd()) / "tests" / "examples" / "small_single_molecule"
+    examples_dir = SMALL_MOLECULE_DIR
+    shutil.copy2(examples_dir / "ff1.csv", tmp_workdir / "ff1.csv")
+    shutil.copy2(examples_dir / "struc1.hess", tmp_workdir / "struc1.hess")
 
-    with TemporaryDirectory() as tmpdir:
-        temp_path = Path(tmpdir)
-        shutil.copy2(examples_dir / "ff1.csv", temp_path / "ff1.csv")
-        shutil.copy2(examples_dir / "struc1.hess", temp_path / "struc1.hess")
+    path = "ff1.csv"
+    path2hess = "struc1.hess"
+    hessian = read_xtb_hessian(path2hess)
 
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(tmpdir)
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
+    ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
+    fill_ff(ff, info)
 
-            path = "ff1.csv"
-            path2hess = "struc1.hess"
-            hessian = read_xtb_hessian(path2hess)
-
-            info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
-            ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
-            fill_ff(ff, info)
-
-            result = fit_ff_to_hessian(
-                Structure(StructurePath("d", "d", "d", "d"), ff, info),
-                stepsize=0.05,
-                threshold=0.001,
-            )
-            print(ff.bonds)
-            print(ff.angles)
-            print(ff.dihedrals)
-            assert result["final_rmsd"] <= 0.1
-            assert result["iterations"] <= 700
-        finally:
-            os.chdir(original_cwd)
+    result = fit_ff_to_hessian(
+        Structure(StructurePath("d", "d", "d", "d"), ff, info),
+        stepsize=0.05,
+        threshold=0.001,
+    )
+    print(ff.bonds)
+    print(ff.angles)
+    print(ff.dihedrals)
+    assert result["final_rmsd"] <= 0.1
+    assert result["iterations"] <= 700
 
 
-def test_fit_ff_to_hessian_with_repulsion():
+def test_fit_ff_to_hessian_with_repulsion(tmp_workdir):
     """
     tests whether the update_bond function changes only the ff parameter
     """
-    examples_dir = Path(os.getcwd()) / "tests" / "examples" / "small_single_molecule"
+    examples_dir = SMALL_MOLECULE_DIR
+    shutil.copy2(examples_dir / "ff1.csv", tmp_workdir / "ff1.csv")
+    shutil.copy2(examples_dir / "struc1.hess", tmp_workdir / "struc1.hess")
 
-    with TemporaryDirectory() as tmpdir:
-        # Copy necessary files to temp directory
-        temp_path = Path(tmpdir)
-        shutil.copy2(examples_dir / "ff1.csv", temp_path / "ff1.csv")
-        shutil.copy2(examples_dir / "struc1.hess", temp_path / "struc1.hess")
+    path = "ff1.csv"
+    path2hess = "struc1.hess"
+    hessian = read_xtb_hessian(path2hess)
 
-        # Work in temporary directory
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(tmpdir)
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
+    ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
+    fill_ff(ff, info)
 
-            path = "ff1.csv"
-            path2hess = "struc1.hess"
-            hessian = read_xtb_hessian(path2hess)
-
-            info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
-            ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
-            fill_ff(ff, info)
-
-            result = fit_ff_to_hessian(
-                Structure(StructurePath("d", "d", "d", "d"), ff, info),
-                constant_repulsion=False,
-                stepsize=0.05,
-                threshold=0.001,
-            )
-            print(ff.bonds)
-            print(ff.angles)
-            print(ff.dihedrals)
-            print(ff.repulsive)
-            # repulsive terms are all fitted to the same value but that could be due to only little repulsive forces in this molecule?
-            assert result["final_rmsd"] <= 0.1
-            assert result["iterations"] <= 700
-        finally:
-            os.chdir(original_cwd)
+    result = fit_ff_to_hessian(
+        Structure(StructurePath("d", "d", "d", "d"), ff, info),
+        constant_repulsion=False,
+        stepsize=0.05,
+        threshold=0.001,
+    )
+    print(ff.bonds)
+    print(ff.angles)
+    print(ff.dihedrals)
+    print(ff.repulsive)
+    # repulsive terms are all fitted to the same value but that could be due to only little repulsive forces in this molecule?
+    assert result["final_rmsd"] <= 0.1
+    assert result["iterations"] <= 700
 
 
-def test_update_bond():
+def test_update_bond(tmp_workdir):
     """
     tests whether the update_bond function changes only the ff parameter
     """
-    examples_dir = Path(os.getcwd()) / "tests" / "examples" / "small_single_molecule"
+    examples_dir = SMALL_MOLECULE_DIR
+    shutil.copy2(examples_dir / "ff1.csv", tmp_workdir / "ff1.csv")
+    shutil.copy2(examples_dir / "struc1.hess", tmp_workdir / "struc1.hess")
 
-    with TemporaryDirectory() as tmpdir:
-        # Copy necessary files to temp directory
-        temp_path = Path(tmpdir)
-        shutil.copy2(examples_dir / "ff1.csv", temp_path / "ff1.csv")
-        shutil.copy2(examples_dir / "struc1.hess", temp_path / "struc1.hess")
+    path = "ff1.csv"
+    path2hess = "struc1.hess"
+    hessian = read_xtb_hessian(path2hess)
 
-        # Work in temporary directory
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(tmpdir)
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
+    ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
+    fill_ff(ff, info)
+    hessian_ff = ff.get_hessian(info.fortran_xyz)
 
-            path = "ff1.csv"
-            path2hess = "struc1.hess"
-            hessian = read_xtb_hessian(path2hess)
+    old_bonds = copy.deepcopy(ff.bonds)
+    new_values = []
+    for row in ff.bonds.itertuples():
+        new_param = update_bond(row, info, hessian_ff, 1)
+        new_values.append((row.Index, new_param))
+    for idx, val in new_values:
+        ff.bonds.at[idx, "parameter"] = val
 
-            info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
-            ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
-            fill_ff(ff, info)
-            hessian_ff = ff.get_hessian(info.fortran_xyz)
-
-            old_bonds = copy.deepcopy(ff.bonds)
-            new_values = []
-            for row in ff.bonds.itertuples():
-                new_param = update_bond(row, info, hessian_ff, 1)
-                new_values.append((row.Index, new_param))
-            for idx, val in new_values:
-                ff.bonds.at[idx, "parameter"] = val
-
-            with pytest.raises(AssertionError):
-                pd.testing.assert_series_equal(
-                    ff.bonds["parameter"], old_bonds["parameter"]
-                )
-            pd.testing.assert_series_equal(
-                ff.bonds["reference_value"], old_bonds["reference_value"]
-            )
-            pd.testing.assert_series_equal(ff.bonds["atoms"], old_bonds["atoms"])
-        finally:
-            os.chdir(original_cwd)
+    with pytest.raises(AssertionError):
+        pd.testing.assert_series_equal(ff.bonds["parameter"], old_bonds["parameter"])
+    pd.testing.assert_series_equal(
+        ff.bonds["reference_value"], old_bonds["reference_value"]
+    )
+    pd.testing.assert_series_equal(ff.bonds["atoms"], old_bonds["atoms"])
 
 
-def test_update_angle():
+def test_update_angle(tmp_workdir):
     """
     tests whether the update_angle function changes only the ff parameter
     """
-    examples_dir = Path(os.getcwd()) / "tests" / "examples" / "small_single_molecule"
+    examples_dir = SMALL_MOLECULE_DIR
+    shutil.copy2(examples_dir / "ff1.csv", tmp_workdir / "ff1.csv")
+    shutil.copy2(examples_dir / "struc1.hess", tmp_workdir / "struc1.hess")
 
-    with TemporaryDirectory() as tmpdir:
-        # Copy necessary files to temp directory
-        temp_path = Path(tmpdir)
-        shutil.copy2(examples_dir / "ff1.csv", temp_path / "ff1.csv")
-        shutil.copy2(examples_dir / "struc1.hess", temp_path / "struc1.hess")
+    path = "ff1.csv"
+    path2hess = "struc1.hess"
+    hessian = read_xtb_hessian(path2hess)
 
-        # Work in temporary directory
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(tmpdir)
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
+    ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
+    fill_ff(ff, info)
+    hessian_ff = ff.get_hessian(info.fortran_xyz)
 
-            path = "ff1.csv"
-            path2hess = "struc1.hess"
-            hessian = read_xtb_hessian(path2hess)
+    old_angles = copy.deepcopy(ff.angles)
+    new_values = []
+    for row in ff.angles.itertuples():
+        new_param = update_angle(row, info, hessian_ff, 1)
+        new_values.append((row.Index, new_param))
+    for idx, val in new_values:
+        ff.angles.at[idx, "parameter"] = val
 
-            info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
-            ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
-            fill_ff(ff, info)
-            hessian_ff = ff.get_hessian(info.fortran_xyz)
-
-            old_angles = copy.deepcopy(ff.angles)
-            new_values = []
-            for row in ff.angles.itertuples():
-                new_param = update_angle(row, info, hessian_ff, 1)
-                new_values.append((row.Index, new_param))
-            for idx, val in new_values:
-                ff.angles.at[idx, "parameter"] = val
-
-            with pytest.raises(AssertionError):
-                pd.testing.assert_series_equal(
-                    ff.angles["parameter"], old_angles["parameter"]
-                )
-            pd.testing.assert_series_equal(
-                ff.angles["reference_value"], old_angles["reference_value"]
-            )
-            pd.testing.assert_series_equal(ff.angles["atoms"], old_angles["atoms"])
-        finally:
-            os.chdir(original_cwd)
+    with pytest.raises(AssertionError):
+        pd.testing.assert_series_equal(
+            ff.angles["parameter"], old_angles["parameter"]
+        )
+    pd.testing.assert_series_equal(
+        ff.angles["reference_value"], old_angles["reference_value"]
+    )
+    pd.testing.assert_series_equal(ff.angles["atoms"], old_angles["atoms"])
 
 
-def test_update_dihedral():
+def test_update_dihedral(tmp_workdir):
     """
     tests whether the update_dihedral function changes only the ff parameter
     """
-    examples_dir = Path(os.getcwd()) / "tests" / "examples" / "small_single_molecule"
+    examples_dir = SMALL_MOLECULE_DIR
+    shutil.copy2(examples_dir / "ff1.csv", tmp_workdir / "ff1.csv")
+    shutil.copy2(examples_dir / "struc1.hess", tmp_workdir / "struc1.hess")
 
-    with TemporaryDirectory() as tmpdir:
-        # Copy necessary files to temp directory
-        temp_path = Path(tmpdir)
-        shutil.copy2(examples_dir / "ff1.csv", temp_path / "ff1.csv")
-        shutil.copy2(examples_dir / "struc1.hess", temp_path / "struc1.hess")
+    path = "ff1.csv"
+    path2hess = "struc1.hess"
+    hessian = read_xtb_hessian(path2hess)
 
-        # Work in temporary directory
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(tmpdir)
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
+    ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
+    fill_ff(ff, info)
+    hessian_ff = ff.get_hessian(info.fortran_xyz)
 
-            path = "ff1.csv"
-            path2hess = "struc1.hess"
-            hessian = read_xtb_hessian(path2hess)
+    old_dihedrals = copy.deepcopy(ff.dihedrals)
+    new_values = []
+    for row in ff.dihedrals.itertuples():
+        new_param = update_dihedral(row, info, hessian_ff, 1)
+        new_values.append((row.Index, new_param))
+    for idx, val in new_values:
+        ff.dihedrals.at[idx, "parameter"] = val
 
-            info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
-            ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
-            fill_ff(ff, info)
-            hessian_ff = ff.get_hessian(info.fortran_xyz)
-
-            old_dihedrals = copy.deepcopy(ff.dihedrals)
-            new_values = []
-            for row in ff.dihedrals.itertuples():
-                new_param = update_dihedral(row, info, hessian_ff, 1)
-                new_values.append((row.Index, new_param))
-            for idx, val in new_values:
-                ff.dihedrals.at[idx, "parameter"] = val
-
-            with pytest.raises(AssertionError):
-                pd.testing.assert_series_equal(
-                    ff.dihedrals["parameter"], old_dihedrals["parameter"]
-                )
-            pd.testing.assert_series_equal(
-                ff.dihedrals["reference_value"], old_dihedrals["reference_value"]
-            )
-            pd.testing.assert_series_equal(
-                ff.dihedrals["atoms"], old_dihedrals["atoms"]
-            )
-        finally:
-            os.chdir(original_cwd)
+    with pytest.raises(AssertionError):
+        pd.testing.assert_series_equal(
+            ff.dihedrals["parameter"], old_dihedrals["parameter"]
+        )
+    pd.testing.assert_series_equal(
+        ff.dihedrals["reference_value"], old_dihedrals["reference_value"]
+    )
+    pd.testing.assert_series_equal(ff.dihedrals["atoms"], old_dihedrals["atoms"])
 
 
-def test_update_repulsive():
+def test_update_repulsive(tmp_workdir):
     """
     tests whether the update_repulsive function changes only the ff parameter
     """
-    examples_dir = Path(os.getcwd()) / "tests" / "examples" / "small_single_molecule"
+    examples_dir = SMALL_MOLECULE_DIR
+    shutil.copy2(examples_dir / "ff1.csv", tmp_workdir / "ff1.csv")
+    shutil.copy2(examples_dir / "struc1.hess", tmp_workdir / "struc1.hess")
 
-    with TemporaryDirectory() as tmpdir:
-        # Copy necessary files to temp directory
-        temp_path = Path(tmpdir)
-        shutil.copy2(examples_dir / "ff1.csv", temp_path / "ff1.csv")
-        shutil.copy2(examples_dir / "struc1.hess", temp_path / "struc1.hess")
+    path = "ff1.csv"
+    path2hess = "struc1.hess"
+    hessian = read_xtb_hessian(path2hess)
 
-        # Work in temporary directory
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(tmpdir)
+    info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
+    ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
+    fill_ff(ff, info)
+    hessian_ff = ff.get_hessian(info.fortran_xyz)
 
-            path = "ff1.csv"
-            path2hess = "struc1.hess"
-            hessian = read_xtb_hessian(path2hess)
+    old_repulsive = copy.deepcopy(ff.repulsive)
+    new_values = []
+    for row in ff.repulsive.itertuples():
+        new_param = update_repulsive(row, info, hessian_ff, 1)
+        new_values.append((row.Index, new_param))
+    for idx, val in new_values:
+        ff.repulsive.at[idx, "parameter"] = val
 
-            info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES, hessian=hessian)
-            ff = ForceField(7, path, readff=False, hessian_calculator=complete_hessian)
-            fill_ff(ff, info)
-            hessian_ff = ff.get_hessian(info.fortran_xyz)
-
-            old_repulsive = copy.deepcopy(ff.repulsive)
-            new_values = []
-            for row in ff.repulsive.itertuples():
-                new_param = update_repulsive(row, info, hessian_ff, 1)
-                new_values.append((row.Index, new_param))
-            for idx, val in new_values:
-                ff.repulsive.at[idx, "parameter"] = val
-
-            with pytest.raises(AssertionError):
-                pd.testing.assert_series_equal(
-                    ff.repulsive["parameter"], old_repulsive["parameter"]
-                )
-            pd.testing.assert_series_equal(
-                ff.repulsive["reference_value"], old_repulsive["reference_value"]
-            )
-            pd.testing.assert_series_equal(
-                ff.repulsive["atoms"], old_repulsive["atoms"]
-            )
-        finally:
-            os.chdir(original_cwd)
+    with pytest.raises(AssertionError):
+        pd.testing.assert_series_equal(
+            ff.repulsive["parameter"], old_repulsive["parameter"]
+        )
+    pd.testing.assert_series_equal(
+        ff.repulsive["reference_value"], old_repulsive["reference_value"]
+    )
+    pd.testing.assert_series_equal(ff.repulsive["atoms"], old_repulsive["atoms"])
