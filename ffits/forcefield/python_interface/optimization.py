@@ -104,7 +104,7 @@ def optimize_with_forcefield_from_file(
     calcoptions: TSCalculationOptions = None,
     trajectory_filename: str = "trajectory.xyz",
     final_geometry_filename: str = "optimized.xyz",
-    opt_stdout_filename: str = "ts_optimization.out",
+    opt_stdout_filename: str = "optimization.out",
 ):
     """Wrapper for optimize_with_forcefield, so that it is applyable directly starting at an xyz.
 
@@ -115,7 +115,7 @@ def optimize_with_forcefield_from_file(
         calcoptions (TSCalculationOptions, optional): The calculation options for the optimization. Defaults to None.
         trajectory_filename (str, optional): Filename of the trajectory file. Defaults to "trajectory.xyz".
         final_geometry_filename (str, optional): Filename of the final geometry file. Defaults to "optimized.xyz".
-        opt_stdout_filename (str, optional): Filename of the optimization stdout file. Defaults to "ts_optimization.out".
+        opt_stdout_filename (str, optional): Filename of the optimization stdout file. Defaults to "optimization.out".
 
     Returns:
         converged (bool): Whether the optimization converged or not

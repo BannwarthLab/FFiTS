@@ -9,7 +9,7 @@ from tests.test_utils import (
 
 def test_ffits_with_multiplicity_and_charge(tmp_workdir):
     """
-    Test that ffits creates optimized.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
+    Test that ffits creates ts_guess.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
     """
     examples_dir = SMALL_MOLECULE_DIR
     temp_path = tmp_workdir
@@ -25,13 +25,13 @@ def test_ffits_with_multiplicity_and_charge(tmp_workdir):
         returncode == 0
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
-    optimized_file = temp_path / "optimized.xyz"
+    ts_guess_file = temp_path / "ts_guess.xyz"
     assert (
-        optimized_file.exists()
-    ), f"optimized.xyz was not created in {temp_path}"
+        ts_guess_file.exists()
+    ), f"ts_guess.xyz was not created in {temp_path}"
     assert (
         "xTB will be run with uhf = 1, chrg = 1" in stdout
-    ), "Defined charge and multiplicity were not correctly passed to xTB as indicated in optimized.xyz"
+    ), "Defined charge and multiplicity were not correctly passed to xTB as indicated in ts_guess.xyz"
     ff_csv_file = temp_path / "tsff.csv"
     assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
     ff_csv_file = temp_path / "ff1.csv"

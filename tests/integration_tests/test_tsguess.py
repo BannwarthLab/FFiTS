@@ -8,7 +8,7 @@ from tests.test_utils import run_ffits_as_subprocess, SMALL_MOLECULE_DIR
 
 def test_ffits_standard_tsguess_run(tmp_workdir):
     """
-    Test that ffits creates optimized.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
+    Test that ffits creates ts_guess.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
     """
     examples_dir = SMALL_MOLECULE_DIR
     temp_path = tmp_workdir
@@ -24,10 +24,10 @@ def test_ffits_standard_tsguess_run(tmp_workdir):
         returncode == 0
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
-    optimized_file = temp_path / "optimized.xyz"
+    ts_guess_file = temp_path / "ts_guess.xyz"
     assert (
-        optimized_file.exists()
-    ), f"optimized.xyz was not created in {temp_path}"
+        ts_guess_file.exists()
+    ), f"ts_guess.xyz was not created in {temp_path}"
 
     ff_csv_file = temp_path / "tsff.csv"
     assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
@@ -71,9 +71,9 @@ hessian_calc = false
     assert (
         returncode == 0
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
-    _, _, optimized_xyz, _ = readin_xyz(temp_path / "optimized.xyz")
+    _, _, optimized_xyz, _ = readin_xyz(temp_path / "ts_guess.xyz")
 
-    os.remove(temp_path / "optimized.xyz")
+    os.remove(temp_path / "ts_guess.xyz")
 
     # list every file in temp_path
     for file in temp_path.iterdir():
@@ -85,7 +85,7 @@ hessian_calc = false
     )
     print("STDOUT:", stdout)
     print("STDERR:", stderr)
-    _, _, optimized_xyz_withreadin, _ = readin_xyz(temp_path / "optimized.xyz")
+    _, _, optimized_xyz_withreadin, _ = readin_xyz(temp_path / "ts_guess.xyz")
 
     # compare both ts guess through rmsd
     assert (
@@ -119,10 +119,10 @@ only_proper_dihedrals = false
         returncode == 0
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
-    optimized_file = temp_path / "optimized.xyz"
+    ts_guess_file = temp_path / "ts_guess.xyz"
     assert (
-        optimized_file.exists()
-    ), f"optimized.xyz was not created in {temp_path}"
+        ts_guess_file.exists()
+    ), f"ts_guess.xyz was not created in {temp_path}"
 
     ff_csv_file = temp_path / "tsff.csv"
     assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
@@ -164,10 +164,10 @@ average_with_hess_weight = false
         returncode == 0
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
-    optimized_file = temp_path / "optimized.xyz"
+    ts_guess_file = temp_path / "ts_guess.xyz"
     assert (
-        optimized_file.exists()
-    ), f"optimized.xyz was not created in {temp_path}"
+        ts_guess_file.exists()
+    ), f"ts_guess.xyz was not created in {temp_path}"
 
     ff_csv_file = temp_path / "tsff.csv"
     assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
@@ -211,9 +211,9 @@ wbo_calc = false
     assert (
         returncode == 0
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
-    _, _, optimized_xyz, _ = readin_xyz(temp_path / "optimized.xyz")
+    _, _, optimized_xyz, _ = readin_xyz(temp_path / "ts_guess.xyz")
 
-    os.remove(temp_path / "optimized.xyz")
+    os.remove(temp_path / "ts_guess.xyz")
 
     # list every file in temp_path
     for file in temp_path.iterdir():
@@ -225,7 +225,7 @@ wbo_calc = false
     )
     print("STDOUT:", stdout)
     print("STDERR:", stderr)
-    _, _, optimized_xyz_withreadin, _ = readin_xyz(temp_path / "optimized.xyz")
+    _, _, optimized_xyz_withreadin, _ = readin_xyz(temp_path / "ts_guess.xyz")
 
     # compare both ts guess through rmsd
     assert (
@@ -259,9 +259,9 @@ ff_parameterization = false
     assert (
         returncode == 0
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
-    _, _, optimized_xyz, _ = readin_xyz(temp_path / "optimized.xyz")
+    _, _, optimized_xyz, _ = readin_xyz(temp_path / "ts_guess.xyz")
 
-    os.remove(temp_path / "optimized.xyz")
+    os.remove(temp_path / "ts_guess.xyz")
 
     # list every file in temp_path
     for file in temp_path.iterdir():
@@ -273,7 +273,7 @@ ff_parameterization = false
     )
     print("STDOUT:", stdout)
     print("STDERR:", stderr)
-    _, _, optimized_xyz_withreadin, _ = readin_xyz(temp_path / "optimized.xyz")
+    _, _, optimized_xyz_withreadin, _ = readin_xyz(temp_path / "ts_guess.xyz")
 
     # compare both ts guess through rmsd
     assert (
@@ -283,7 +283,7 @@ ff_parameterization = false
 
 def test_ffits_with_filename_change_config(tmp_workdir):
     """
-    Test that ffits creates optimized.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with custom toml input
+    Test that ffits creates ts_guess.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with custom toml input
     """
     examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
     temp_path = tmp_workdir
@@ -313,10 +313,10 @@ ff_filename = "ff2test.csv"
         returncode == 0
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
-    optimized_file = temp_path / "optimized.xyz"
+    ts_guess_file = temp_path / "ts_guess.xyz"
     assert (
-        optimized_file.exists()
-    ), f"optimized.xyz was not created in {temp_path}"
+        ts_guess_file.exists()
+    ), f"ts_guess.xyz was not created in {temp_path}"
 
     ff_csv_file = temp_path / "tsff.csv"
     assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"

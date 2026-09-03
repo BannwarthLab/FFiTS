@@ -46,8 +46,8 @@ def get_one_image(cd: CalculationData, trajectory: list, step: int) -> list:
     tsff, converged, energy, final_geom = get_ts_guess_from_xyz(
         cd.reactant_path.xyz_filename, cd.product_path.xyz_filename, cd
     )
-    _, _, xyz, atom_types = readin_xyz("optimized.xyz")
-    os.rename("optimized.xyz", f"optimized_{step}.xyz")
+    _, _, xyz, atom_types = readin_xyz("ts_guess.xyz")
+    os.rename("ts_guess.xyz", f"ts_guess_{step}.xyz")
     os.rename("tsff.csv", f"tsff_{step}.csv")
     trajectory.append({"nat": nat, "atom_types": atom_types, "xyz": xyz})
     return trajectory, converged
@@ -109,10 +109,10 @@ def create_path(
         calcdata.ts_calc.factor_product = fact2
 
         trajectory, converged = get_one_image(calcdata, trajectory, step)
-        energy = xtb.singlepoint(f"optimized_{step}.xyz", f"{step}")
+        energy = xtb.singlepoint(f"ts_guess_{step}.xyz", f"{step}")
         if not converged:
             logger.warning(
-                f"Optimization for step {step} did not converge. The last valid structure of the optimization trajectory is written to optimized_{step}.xyz."
+                f"Optimization for step {step} did not converge. The last valid structure of the optimization trajectory is written to ts_guess_{step}.xyz."
             )
         # add energy to trajectory
         trajectory[-1]["energy"] = energy
@@ -134,5 +134,5 @@ def create_path(
 
     write_trajectory_to_xyz(trajectory, "path_trj.xyz")
     if highest_energy_frame is not None:
-        _write_structure_to_xyz(highest_energy_frame, "optimized.xyz")
+        _write_structure_to_xyz(highest_energy_frame, "ts_guess.xyz")
     return trajectory, highest_energy_frame

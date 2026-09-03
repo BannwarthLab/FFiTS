@@ -3,7 +3,7 @@ import shutil
 
 def test_standard_parameterize_run(tmp_workdir):
     """
-    Test that ffits creates optimized.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
+    Test that ffits creates ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
     """
     examples_dir = SMALL_MOLECULE_DIR
     temp_path = tmp_workdir

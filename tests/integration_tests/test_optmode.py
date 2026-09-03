@@ -25,7 +25,8 @@ def test_ffits_optmode(tmp_workdir):
     _, _, prod_xyz, _ = readin_xyz(temp_path / "prod.xyz")
     _, _, reac_xyz, _ = readin_xyz(temp_path / "reac.xyz")
 
-    os.remove(temp_path / "optimized.xyz")
+    if os.path.exists(temp_path / "optimized.xyz"):
+        os.remove(temp_path / "optimized.xyz") 
 
     # list every file in temp_path
     for file in temp_path.iterdir():
