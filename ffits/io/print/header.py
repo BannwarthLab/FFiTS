@@ -6,8 +6,6 @@ import os
 from pathlib import Path
 from importlib import metadata
 
-import tomllib
-
 
 def _get_build_date():
     """
@@ -99,7 +97,7 @@ def print_program_header(version: str = None):
     # --- Print header ---
     print(logo)
     print("=" * 70)
-    print(f" Program:     FFiTS  —  Force Field-interpolated Transition States")
+    print(" Program:     FFiTS  —  Force Field-interpolated Transition States")
     print(f" Version:     {version}")
     print(f" Build Date:  {build_date}")
     if last_commit_date:

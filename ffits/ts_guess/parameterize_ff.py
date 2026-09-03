@@ -124,12 +124,9 @@ def fit_ff_to_hessian(
         new_values = []
         for row in ff.bonds.itertuples():
             new_param = update_bond(row, info, hessian_ff, stepsize)
-            # print(row)
-            # print(new_param, row.Index)
             new_values.append((row.Index, new_param))
         for idx, val in new_values:
             ff.bonds.at[idx, "parameter"] = val
-            # print(idx, val)
 
         # update angles
         new_values = []
@@ -483,7 +480,6 @@ def get_sum_first_c_deriv(
     sl_i = _atom_slice(atom1)
     sl_j = _atom_slice(atom2)
     block_diff = hess_ff[sl_i, sl_j] - hess_ref[sl_i, sl_j]
-    # print(block_diff)
     block_single = hess_ff_single[sl_i, sl_j]
     # element-wise sum
     acc += np.sum((block_diff * 4.0 * block_single) / c)
@@ -502,7 +498,6 @@ def get_sum_second_c_deriv(
     """
     acc += (2*hess_ff_single/c**2) * (2*hess_ff_single + hess_ff - hess_ref)
     """
-    # print(hess_ff_single)
     sl_i = _atom_slice(atom1)
     sl_j = _atom_slice(atom2)
     A = hess_ff_single[sl_i, sl_j]

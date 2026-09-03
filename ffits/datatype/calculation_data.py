@@ -132,6 +132,7 @@ class TSCalculationOptions:
         optimizer (str): Optimizer to use ("molbar-optimizer" or "scipy-optimizer").
         average_with_hess_weight (bool): Weight reactant/product averaging by Hessian similarity.
         hess_weight_sharpness (float): Sharpness of the Hessian-similarity weighting.
+        hess_weight_angles_dihedrals (bool): Also apply Hessian-similarity weighting to angle and dihedral terms, not just bonds.
         perform_two_optimizations (bool): Whether to run a second TS optimization pass.
         molbar_optimizer_e_tol (float): Energy convergence tolerance for the molbar optimizer.
         molbar_optimizer_x_tol (float): Coordinate convergence tolerance for the molbar optimizer.
@@ -144,6 +145,7 @@ class TSCalculationOptions:
     optimizer: str = "molbar-optimizer"
     average_with_hess_weight: bool = True
     hess_weight_sharpness: float = 0.8
+    hess_weight_angles_dihedrals: bool = False
     perform_two_optimizations: bool = False
     molbar_optimizer_e_tol: float = 1e-4
     molbar_optimizer_x_tol: float = 1e-2
@@ -324,9 +326,6 @@ class CalculationData:
             logger.warning(
                 "FF parameterization is not enabled for either the reactant or product structure. This means that the TS FF will be created using the default FF parameters and no comparison of reactant and product structures will be performed. Thus the option only_proper_dihedrals will be ignored if it is in the config file."
             )
-
-        # if cd.system.charge > 3 or cd.system.charge < -3:
-        #     print(f'[WARNING] Charge of {cd.system.charge} may be a bit much. Are you certain this is correct?')
 
         # Ensure factors sum to 1.0
         if abs(cd.ts_calc.factor_reactant + cd.ts_calc.factor_product - 1.0) > 1e-8:

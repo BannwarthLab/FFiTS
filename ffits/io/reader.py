@@ -41,7 +41,7 @@ def readin_xyz(xyz_path: str) -> Tuple[int, str, np.ndarray, List[str]]:
         nat = int(lines[0])
     except ValueError:
         raise ValueError(
-            f"First line of XYZ file must be an integer (number of atoms)."
+            "First line of XYZ file must be an integer (number of atoms)."
         )
     comment = lines[1]
     atom_lines = lines[2:]

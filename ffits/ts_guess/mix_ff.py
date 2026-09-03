@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 import pandas as pd
-from ffits.utils.geometry import bondlength, angle, dihedral_angle
+from ffits.utils.geometry import angle, dihedral_angle
 from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.structure_data import StructuralInformation
 from ffits.datatype.calculation_data import CalculationData
@@ -16,7 +16,7 @@ def create_tsff(
     info1: StructuralInformation,
     ff2: ForceField,
     info2: StructuralInformation,
-    calcdata: CalculationData = CalculationData.from_default(),
+    calcdata: CalculationData | None = None,
 ) -> dict[ForceField, dict]:
     """Creates TS force field (TS FF) from two given structures.
 
@@ -29,13 +29,16 @@ def create_tsff(
         info1 (StructuralInformation): Structural information of the reactant structure.
         ff2 (ForceField): Force field of the product structure.
         info2 (StructuralInformation): Structural information of the product structure.
-        calcdata (CalculationData): Calculation data for the TS FF creation.
+        calcdata (CalculationData, optional): Calculation data for the TS
+            FF creation. Defaults to a fresh ``CalculationData.from_default()``.
 
     Returns:
         dict[ForceField, dict]: ``{"tsff": ForceField, "params_mix": dict}``,
         where ``params_mix`` maps atom tuples to their reactant mixing
         factor (empty unless Hessian weighting was used).
     """
+    if calcdata is None:
+        calcdata = CalculationData.from_default()
     fact1 = calcdata.ts_calc.factor_reactant
     fact2 = calcdata.ts_calc.factor_product
     if calcdata.ts_calc.average_with_hess_weight and fact1 != 0.5:
@@ -47,7 +50,6 @@ def create_tsff(
     tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
     tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
     tsff.dihedrals = combine_dihedrals(ff1, info1, ff2, info2)
-    # tsff.dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals, term_type="dihedral")
     tsff.repulsive = remove_bonds_from_repulsive(
         combine_ff_atoms(ff1.repulsive, ff2.repulsive),
         combine_ff_atoms(ff1.bonds, ff2.bonds),
@@ -60,7 +62,13 @@ def create_tsff(
             f"Calculating mixing factors based on Hessian analysis with sharpness {sharpness}"
         )
         params_mix = hessian_weighting_mix_list(
-            info1, info2, tsff.bonds, tsff.angles, tsff.dihedrals, sharpness=sharpness
+            info1,
+            info2,
+            tsff.bonds,
+            tsff.angles,
+            tsff.dihedrals,
+            sharpness=sharpness,
+            include_angles_dihedrals=calcdata.ts_calc.hess_weight_angles_dihedrals,
         )
         # get average reac parameter for bond terms (so tupels with only two entries)
         if params_mix:
@@ -105,7 +113,7 @@ def create_tsff(
             for term, factor in params_mix.items():
                 f.write(f"{term}\t{factor:.4f}\n")
 
-    logger.info(f"TS FF generation finished.")
+    logger.info("TS FF generation finished.")
     tsff.write()
     return {"tsff": tsff, "params_mix": params_mix}
 
@@ -337,7 +345,7 @@ def hessian_mix_list(
     ratio = h1_avg_sum / h2_avg_sum if h2_avg_sum != 0 else 1
     param_reac = (ratio ** (1 - sharpness)) / (
         (ratio ** (1 - sharpness)) + 1
-    )  # 1 - sharpness damit das Wort sharpness Sinn ergibt
+    )  # use (1 - sharpness) so that a larger "sharpness" gives a sharper transition
 
     logger.debug(
         f"Atoms: {atoms}, H1 avg sum: {h1_avg_sum:.4f}, H2 avg sum: {h2_avg_sum:.4f}, Ratio: {ratio:.4f}, Param reac: {param_reac:.4f}"
@@ -354,11 +362,9 @@ def hessian_weighting_mix_list(
     dihedrals_df: pd.DataFrame,
     sharpness: float = 0.2,
     threshold: float = 0.1,
+    include_angles_dihedrals: bool = False,
 ) -> dict:
     """Build a dict of reactant mixing factors for terms touching a changing bond.
-
-    Note: only bonds are currently processed; the angle/dihedral loops are
-    commented out below.
 
     Args:
         info1 (StructuralInformation): Structural information for the reactant.
@@ -368,6 +374,9 @@ def hessian_weighting_mix_list(
         dihedrals_df (pd.DataFrame): Dihedrals already combined from both force fields.
         sharpness (float, optional): Controls how sharply the factor changes with the Hessian ratio. Defaults to 0.2.
         threshold (float, optional): Minimum WBO change to consider a bond as changing. Defaults to 0.1.
+        include_angles_dihedrals (bool, optional): Also compute Hessian-based
+            mixing factors for angle and dihedral terms, not just bonds.
+            Defaults to False.
 
     Returns:
         dict: Atom tuples mapped to their reactant mixing factor.
@@ -390,19 +399,22 @@ def hessian_weighting_mix_list(
         if param_reac is not None:
             param_dict[atoms] = param_reac
 
-    # # Process angles
-    # for idx, row in angles_df.iterrows():
-    #     atoms = row['atoms']
-    #     factor = hessian_mix_list(info1, info2, atoms, 0.8, changing_bonds)
-    #     if factor is not None:
-    #         param_dict[atoms] = factor
+    if include_angles_dihedrals:
+        # Process angles
+        for idx, row in angles_df.iterrows():
+            atoms = row["atoms"]
+            factor = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
+            logger.debug(f"Angle {atoms}: Mixing factor {factor}")
+            if factor is not None:
+                param_dict[atoms] = factor
 
-    # # Process dihedrals
-    # for idx, row in dihedrals_df.iterrows():
-    #     atoms = row['atoms']
-    #     factor = hessian_mix_list(info1, info2, atoms, 0.8, changing_bonds)
-    #     if factor is not None:
-    #         param_dict[atoms] = factor
+        # Process dihedrals
+        for idx, row in dihedrals_df.iterrows():
+            atoms = row["atoms"]
+            factor = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
+            logger.debug(f"Dihedral {atoms}: Mixing factor {factor}")
+            if factor is not None:
+                param_dict[atoms] = factor
 
     return param_dict
 

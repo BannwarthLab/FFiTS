@@ -22,11 +22,11 @@ dependencies = [
 ]
 
 readme = "README.md"
-license = { text = "MIT" }
+license = { text = "BSD-3-Clause" }
 keywords = ["force-field", "transition-state", "chemistry"]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
+  "License :: OSI Approved :: BSD-3-Clause",
   "Operating System :: OS Independent"
 ]
 

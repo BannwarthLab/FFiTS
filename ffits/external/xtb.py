@@ -8,7 +8,7 @@ from ffits.io.reader import read_wbo_file, read_xtb_hessian, readin_xyz
 import tempfile
 import shutil
 from pathlib import Path
-from typing import Tuple, List, Dict, Optional
+from typing import Tuple, List, Dict
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ class Xtb:
     def _check_xtb_loaded(self):
         """Check if xTB executable is available."""
         try:
-            result = subprocess.run(
+            subprocess.run(
                 [self.xtb_path, "--help"],
                 capture_output=True,
                 text=True,
@@ -358,12 +358,12 @@ class Xtb:
                 )
 
         if new_bonds:
-            logger.warning(f"New bonds formed during geometry optimization:")
+            logger.warning("New bonds formed during geometry optimization:")
             for bond in new_bonds:
                 logger.warning(f"  {bond}")
 
         if disappeared_bonds:
-            logger.warning(f"Bonds disappeared during geometry optimization:")
+            logger.warning("Bonds disappeared during geometry optimization:")
             for bond in disappeared_bonds:
                 logger.warning(f"  {bond}")
         os.rename(wbo_after_file, wbo_output_basename)

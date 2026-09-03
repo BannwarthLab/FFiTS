@@ -81,13 +81,11 @@ def optimize_with_forcefield(
             write_last_valid_xyz()
 
     elif optimizer == scipy_optimizer:
+        sys.stdout = orig_stdout
+        f.close()
         raise Exception(
             "Scipy optimizer is currently not supported in the optimization interface. Please use the anc_optimizer from MolBar."
         )
-        result = scipy_optimizer(info.xyz, ff, info)
-        sys.stdout = orig_stdout
-        f.close()
-        return result
 
     else:
         sys.stdout = orig_stdout
@@ -97,15 +95,6 @@ def optimize_with_forcefield(
     print_optimization_end(converged, energy, final_geom, steps, time, message)
 
     return converged, energy, final_geom
-    # final_hessian = tsff.get_hessian(final_geom)
-    # geom_with_masses = []
-    # for i in range(tsff.nat):
-    #     element = struc1.info.atom_types[i]
-    #     mass = element_to_weight(element)
-    #     x, y, z = final_geom[i]
-    #     geom_with_masses.append(f"{element} {mass} {x} {y} {z}")
-
-    # write_hessian_to_orcahessfile(tsff.nat, final_hessian, geom_with_masses, "ts.hess")
 
 
 def optimize_with_forcefield_from_file(

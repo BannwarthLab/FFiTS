@@ -6,7 +6,6 @@ from ffits.io.reader import read_xyz_2dict, readin_xyz
 from ffits.io.file_writer import write_trajectory_to_xyz
 import os
 import logging
-import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +92,7 @@ def create_path(
 
     # Add starting structure
     struc1 = read_xyz_2dict(calcdata.reactant_path.xyz_filename)
-    energy = xtb.singlepoint(f"{calcdata.reactant_path.xyz_filename}", f"out_r.txt")
+    energy = xtb.singlepoint(f"{calcdata.reactant_path.xyz_filename}", "out_r.txt")
     trajectory.append(struc1)
     trajectory[-1]["energy"] = energy
     highest_energy_frame = trajectory[-1].copy()
@@ -125,7 +124,7 @@ def create_path(
 
     # Add ending structure
     struc2 = read_xyz_2dict(calcdata.product_path.xyz_filename)
-    energy = xtb.singlepoint(f"{calcdata.product_path.xyz_filename}", f"out_p.txt")
+    energy = xtb.singlepoint(f"{calcdata.product_path.xyz_filename}", "out_p.txt")
     trajectory.append(struc2)
     trajectory[-1]["energy"] = energy
     if highest_energy_value is None or energy > highest_energy_value:
