@@ -84,7 +84,6 @@ def dihedral_angle(geometry: np.array, atom1: int, atom2: int, atom3: int, atom4
     # normal vectors
     normal1 = np.cross(v12, v23)
     normal2 = np.cross(v23, v34)
-
     length1 = np.linalg.norm(normal1)
     length2 = np.linalg.norm(normal2)
     length3 = np.linalg.norm(v23)

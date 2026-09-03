@@ -141,11 +141,11 @@ def parse_args():
 
     if args.config is not None and args.multiplicity is not None:
         logger.warning(
-            f"Multiplicity given in the input file differs from command line multiplicity."
+            "Multiplicity given in the input file differs from command line multiplicity."
         )
     if args.config is not None and args.charge is not None:
         logger.warning(
-            f"Charge given in the input file differs from command line charge."
+            "Charge given in the input file differs from command line charge."
         )
 
     return {

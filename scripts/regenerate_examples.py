@@ -63,6 +63,7 @@ def discover_examples() -> list[Path]:
 
 
 def check_prerequisites() -> None:
+    """Exit with an error message if ffits, xtb, or molbar are not available."""
     missing = []
     if shutil.which("ffits") is None:
         missing.append(
@@ -128,6 +129,7 @@ def regenerate_one(example_dir: Path) -> None:
 
 
 def main() -> int:
+    """Parse CLI args and regenerate the requested (or all) example fixtures."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "examples",

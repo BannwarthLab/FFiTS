@@ -162,7 +162,6 @@ class StructuralInformation:
                 for idx, node in enumerate(graph.nodes(), start=1)
             }
             nx.set_node_attributes(graph, nodes)
-            # print(graph.nodes(data=True))
         logger.debug(
             f"Structure split into {len(S)} subgraph(s) based on connectivity."
         )

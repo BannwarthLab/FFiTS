@@ -25,5 +25,5 @@ def overwrite_from_commandline(
             logger.info(f"Product XYZ file set to: {structures[1]}")
         if len(structures) > 2:
             logger.warning(
-                f"More than 2 structure files provided. Only the first two will be used."
+                "More than 2 structure files provided. Only the first two will be used."
             )

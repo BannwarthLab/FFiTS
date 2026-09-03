@@ -103,7 +103,6 @@ def bond_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray) -> None
         ff (ForceField): Force field object containing parameters and lists for energy calculation
         gradient (np.ndarray): FF gradient array to which the calculated gradient will be added in place (shape: [nat*3])
     """
-    counter = 0
     for _, row in ff.bonds.iterrows():
         atoms = row["atoms"]
         param = row["reference_value"]

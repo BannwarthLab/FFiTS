@@ -9,15 +9,14 @@ from ffits.datatype.calculation_data import CalculationData
 from ffits.io.toml_parser import overwrite_from_commandline
 from ffits.io.commandline_parser import parse_args
 from ffits.ts_guess.parameterize_ff import parameterize_ff
-from ffits.ts_guess.guess import get_ts_guess, get_ts_guess_from_xyz
-from ffits.io.print.config import print_calculation_data, print_header_setup
+from ffits.ts_guess.guess import get_ts_guess_from_xyz
 from ffits.io.print.header import print_program_header
 from ffits.io.print.summary import print_run_summary
 from ffits.ts_guess.rct_path import create_path
 from ffits.forcefield.python_interface.optimization import (
     optimize_with_forcefield_from_file,
 )
-from ffits.external.molbar import anc_optimizer, get_combinded_priorities
+from ffits.external.molbar import anc_optimizer
 import sys
 
 logger = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ def run_optimizer_mode(
     structure_filename: str,
     ff_filename: str,
     optimizer: Callable = anc_optimizer,
-    calcdata: CalculationData = CalculationData.from_default(),
+    calcdata: CalculationData | None = None,
 ):
     """Run in optimizer mode: optimize a single structure with a force field.
 
@@ -38,10 +37,13 @@ def run_optimizer_mode(
         ff_filename (str): Force field file used for the optimization.
         optimizer (Callable, optional): Optimizer function to use.
         calcdata (CalculationData, optional): Calculation options to use.
+            Defaults to a fresh ``CalculationData.from_default()``.
 
     Returns:
         tuple: ``(converged, energy, final_geom)``.
     """
+    if calcdata is None:
+        calcdata = CalculationData.from_default()
     converged, energy, final_geom = optimize_with_forcefield_from_file(
         structure_filename,
         ff_filename,
@@ -50,22 +52,21 @@ def run_optimizer_mode(
     )
 
     return converged, energy, final_geom
-    # read in FF and define energy terms
-    # run optimizer as with calculation of TS guess through TS FF
-    # return structure
 
 
 def run_parameterization_mode(
     structure_filename: str,
-    calcdata: CalculationData = CalculationData.from_default(),
+    calcdata: CalculationData | None = None,
 ):
     """
     Important: If you want to use custom stucture information by inputting it through calcdata, please be aware, that calcdata.reactant_* is used to save information about the structure.
 
     Args:
         structure_filename (str): filename of structure, which is used for the FF parameterization
-        calcdata (CalculationData, optional): calculation data containing configuration options. Only system and reactant information is used. Defaults to CalculationData.from_default().
+        calcdata (CalculationData, optional): calculation data containing configuration options. Only system and reactant information is used. Defaults to a fresh ``CalculationData.from_default()``.
     """
+    if calcdata is None:
+        calcdata = CalculationData.from_default()
     logger.warning(
         "In parameterization mode the dihedral values may be different then when the parameterization is performed in a full TS guess calculation as no comparison of reactant and product structures is available."
     )
@@ -88,7 +89,7 @@ def run_reaction_path_mode(
     reactant_filename: str,
     product_filename: str,
     steps: int = 10,
-    calcdata: CalculationData = CalculationData.from_default(),
+    calcdata: CalculationData | None = None,
 ):
     """Run in reaction path mode: interpolate frames between two structures.
 
@@ -100,10 +101,13 @@ def run_reaction_path_mode(
         steps (int, optional): Total number of frames, including reactant
             and product. Defaults to 10.
         calcdata (CalculationData, optional): Calculation options to use.
+            Defaults to a fresh ``CalculationData.from_default()``.
 
     Returns:
         The generated reaction-path trajectory.
     """
+    if calcdata is None:
+        calcdata = CalculationData.from_default()
     calcdata.reactant_path.xyz_filename = reactant_filename
     calcdata.product_path.xyz_filename = product_filename
     trajectory = create_path(
@@ -116,7 +120,7 @@ def run_reaction_path_mode(
 def run_tsguess_mode(
     reactant_filename: str,
     product_filename: str,
-    calcdata: CalculationData = CalculationData.from_default(),
+    calcdata: CalculationData | None = None,
 ):
     """Run in default (TS guess) mode: generate a transition-state guess.
 
@@ -124,10 +128,13 @@ def run_tsguess_mode(
         reactant_filename (str): Reactant structure file (xyz).
         product_filename (str): Product structure file (xyz).
         calcdata (CalculationData, optional): Calculation options to use.
+            Defaults to a fresh ``CalculationData.from_default()``.
 
     Returns:
         tuple: ``(tsff, converged, energy, final_geom)``.
     """
+    if calcdata is None:
+        calcdata = CalculationData.from_default()
     calcdata.reactant_path.xyz_filename = reactant_filename
     calcdata.product_path.xyz_filename = product_filename
     tsff, converged, energy, final_geom = get_ts_guess_from_xyz(

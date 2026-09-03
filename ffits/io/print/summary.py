@@ -39,7 +39,7 @@ def print_run_summary(
 
     print(" " * 70)
     print("=" * 70)
-    print(f" Run Summary")
+    print(" Run Summary")
     print("=" * 70)
     print(f" Status:       {status}")
     print(f" Start Time:   {start_str}")
