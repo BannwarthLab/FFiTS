@@ -39,8 +39,8 @@ The goal of this program is to generate a transition state (TS) guess from a rea
 All Python dependencies (numpy, networkx, pandas, scipy, ...) are installed automatically by `make install-dev`, see [Installation](#installation).
 
 **Tested configurations** (see CI, `.gitlab/.gitlab-ci.yml`):
-- OS: Rocky Linux 10
-- Compiler: GNU (gfortran)
+- OS: Rocky Linux 10, macOS Sonoma (V14.5)
+- Compiler: GNU (gfortran) (V15.2.0)
 - Python: 3.12, 3.13, 3.14
 - xtb: 6.7.1
 
