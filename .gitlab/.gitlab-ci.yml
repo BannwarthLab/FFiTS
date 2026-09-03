@@ -11,7 +11,7 @@ stages:
   parallel:
     matrix:
       - OS:
-          # - "rl9"
+          # - "rl9" 
           - "rl10"
         COMPILER:
           - "gnu"
