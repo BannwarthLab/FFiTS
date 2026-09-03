@@ -75,9 +75,14 @@ def get_tested_python_versions(ci_config_path: Path) -> list[str]:
 
 
 def shield(label: str, message: str, color: str) -> str:
-    """Build a shields.io badge markdown image for the given label/message/color."""
-    label_enc = quote(label, safe="")
-    message_enc = quote(message, safe="")
+    """Build a shields.io badge markdown image for the given label/message/color.
+
+    Literal hyphens in the label/message must be doubled per shields.io's
+    static-badge URL convention, or they get misread as segment separators
+    (e.g. "BSD-3-Clause" would otherwise split the message apart).
+    """
+    label_enc = quote(label.replace("-", "--"), safe="")
+    message_enc = quote(message.replace("-", "--"), safe="")
     return f"![{label}](https://img.shields.io/badge/{label_enc}-{message_enc}-{color})"
 
 

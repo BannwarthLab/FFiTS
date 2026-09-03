@@ -20,7 +20,7 @@ Produced by actually running the default ffits TS-guess pipeline
 - `struc1.hess`, `struc2.hess` -- xtb Hessians
 - `ff1.csv`, `ff2.csv` -- parameterized force fields for reactant/product
 - `tsff.csv`, `tsff.mixing_factors.txt` -- the mixed transition-state force field
-- `ts_guess.xyz`, `ts_guess_trajectory.xyz`, `ts_optimization.out` -- the TS-guess optimization output
+- `ts_guess.xyz`, `trj_ts_guess.xyz`, `ts_optimization.out` -- the TS-guess optimization output
 - `pyout` -- a captured stdout log from the run, kept for human reference only (no test reads it)
 
 Tests use these files as fixture *inputs* (starting geometries, force

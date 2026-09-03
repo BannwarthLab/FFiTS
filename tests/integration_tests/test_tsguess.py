@@ -31,6 +31,8 @@ def test_ffits_standard_tsguess_run(tmp_workdir):
 
     ff_csv_file = temp_path / "tsff.csv"
     assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
+    ff_csv_file = temp_path / "trj_ts_guess.xyz"
+    assert ff_csv_file.exists(), f"trj_ts_guess.xyz was not created in {temp_path}"
     ff_csv_file = temp_path / "ff1.csv"
     assert ff_csv_file.exists(), f"ff1.csv was not created in {temp_path}"
     ff_csv_file = temp_path / "ff2.csv"

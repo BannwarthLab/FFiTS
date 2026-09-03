@@ -29,7 +29,7 @@ def test_print_program_header_uses_given_version(capsys):
 def test_load_pyproject_metadata_has_expected_keys():
     metadata = _load_pyproject_metadata()
     assert set(metadata) == {"license", "authors", "version"}
-    assert metadata["license"] == "MIT"
+    assert metadata["license"] == "BSD-3-Clause"
     assert metadata["authors"] == "Daria Babushkina"
 
 

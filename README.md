@@ -7,14 +7,14 @@
 # FFiTS
 
 <!-- BADGES-START -->
-![License](https://img.shields.io/badge/License-MIT-blue) ![python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue) ![coverage](https://img.shields.io/badge/coverage-85.5%25-green)
+![License](https://img.shields.io/badge/License-BSD--3--Clause-blue) ![python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue) ![coverage](https://img.shields.io/badge/coverage-85.5%25-green)
 <!-- BADGES-END -->
 
 ***Force Field-interpolated Transition States***
 
 **Author:** *Daria Babushkina*  
-**Version:** 0.3.1-alpha  
-**License:** MIT  
+**Version:** 0.9.0
+**License:** BSD-3-Clause  
 **Status:** Development  
 **Python:** 3.12, 3.13, 3.14 (tested)
 
@@ -86,7 +86,7 @@ Command line keywords are:
 - `--charge`
 - `--debug` for printout of more information
 
-For using the configuration options, see chapter [Configuration File](#configuration-file). In TS guess mode the final structure is `ts_guess.xyz` with the corresponding trajectory in `ts_guess_trajectory.xyz`; in optimization mode (which works independently of TS guess generation) the final structure is `optimized.xyz` with the corresponding trajectory in `trajectory.xyz`. The TS guess mode will additionally generate (if it was not read-in) the FF, WBO and Hessian files of reactant and product, as well as the TS FF file. If a specific change is needed in the TS guess, the TS FF file can be modified and used in the optimization mode. 
+For using the configuration options, see chapter [Configuration File](#configuration-file). In TS guess mode the final structure is `ts_guess.xyz` with the corresponding trajectory in `trj_ts_guess.xyz`; in optimization mode (which works independently of TS guess generation) the final structure is `optimized.xyz` with the corresponding trajectory in `trajectory.xyz`. The TS guess mode will additionally generate (if it was not read-in) the FF, WBO and Hessian files of reactant and product, as well as the TS FF file. If a specific change is needed in the TS guess, the TS FF file can be modified and used in the optimization mode. 
 
 # Python API
 To call the main mode, you can simply execute following code:

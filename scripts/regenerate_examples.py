@@ -5,7 +5,7 @@ Each example directory contains two *raw* inputs (struc1.xyz, struc2.xyz --
 real molecular geometries, e.g. from a benchmark reaction set) and a set of
 *derived* files that are produced by actually running the ffits pipeline on
 those two geometries: wbo1/wbo2, struc1.hess/struc2.hess, ff1.csv/ff2.csv,
-tsff.csv, tsff.mixing_factors.txt, ts_guess.xyz, ts_guess_trajectory.xyz,
+tsff.csv, tsff.mixing_factors.txt, ts_guess.xyz, trj_ts_guess.xyz,
 ts_optimization.out, and a captured stdout log (pyout).
 
 Tests use the derived files as fixture *inputs*, not as exact expected

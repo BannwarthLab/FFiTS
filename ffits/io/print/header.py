@@ -55,7 +55,7 @@ def _load_pyproject_metadata():
     Returns:
         dict: Dictionary with 'license', 'authors', and 'version' keys.
     """
-    metadata_dict = {"license": "MIT", "authors": "Daria Babushkina", "version": "-"}
+    metadata_dict = {"license": "BSD-3-Clause", "authors": "Daria Babushkina", "version": "-"}
 
     try:
         # Get version from installed package metadata (fast, reliable on clusters)
