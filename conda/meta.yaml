@@ -28,6 +28,8 @@ requirements:
     - numpy
     - networkx
     - pandas
+    - scipy
+    - molbar
 
 test:
   imports:
