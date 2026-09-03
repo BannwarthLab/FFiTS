@@ -86,7 +86,7 @@ Command line keywords are:
 - `--charge`
 - `--debug` for printout of more information
 
-For using the configuration options, see chapter [Configuration File](#configuration-file). In both modes the final structure is `optimized.xyz` with the corresponding trajectory in `trajectory.xyz`. The TS guess mode will additionally generate (if it was not read-in) the FF, WBO and Hessian files of reactant and product, as well as the TS FF file. If a specific change is needed in the TS guess, the TS FF file can be modified and used in the optimization mode. 
+For using the configuration options, see chapter [Configuration File](#configuration-file). In TS guess mode the final structure is `ts_guess.xyz` with the corresponding trajectory in `ts_guess_trajectory.xyz`; in optimization mode (which works independently of TS guess generation) the final structure is `optimized.xyz` with the corresponding trajectory in `trajectory.xyz`. The TS guess mode will additionally generate (if it was not read-in) the FF, WBO and Hessian files of reactant and product, as well as the TS FF file. If a specific change is needed in the TS guess, the TS FF file can be modified and used in the optimization mode. 
 
 # Python API
 To call the main mode, you can simply execute following code:

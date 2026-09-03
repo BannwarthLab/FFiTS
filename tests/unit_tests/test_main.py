@@ -15,7 +15,7 @@ def test_main_tsguess_mode_without_defining_calcopt(tmp_workdir):
         f"reac.xyz",
         f"prod.xyz",
     )
-    assert (temp_path / "optimized.xyz").exists(), "optimized.xyz was not created."
+    assert (temp_path / "ts_guess.xyz").exists(), "ts_guess.xyz was not created."
     assert (temp_path / "tsff.csv").exists(), "tsff.csv was not created."
     assert (temp_path / "ff1.csv").exists(), "ff1.csv was not created."
     assert (temp_path / "ff2.csv").exists(), "ff2.csv was not created."

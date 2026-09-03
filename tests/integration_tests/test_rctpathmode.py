@@ -6,7 +6,7 @@ import os
 
 # def test_standard_rctpath_run():
 #     """
-#     Test that ffits creates optimized.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
+#     Test that ffits creates ts_guess.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
 #     """
 #     examples_dir = SMALL_MOLECULE_DIR
 #     with tempfile.TemporaryDirectory() as temp_dir:
@@ -30,8 +30,8 @@ import os
 #             output = temp_path / "path_trj.xyz"
 #             assert output.exists(), f"path_trj.xyz was not created in {temp_path}"
 
-#             optimized_output = temp_path / "optimized.xyz"
-#             assert optimized_output.exists(), f"optimized.xyz was not created in {temp_path}"
+#             ts_guess_output = temp_path / "ts_guess.xyz"
+#             assert ts_guess_output.exists(), f"ts_guess.xyz was not created in {temp_path}"
 
 #             with open(temp_path / "path_trj.xyz", "r", encoding="utf-8") as f:
 #                 trajectory_lines = [line.strip() for line in f.readlines() if line.strip()]
@@ -51,7 +51,7 @@ import os
 #                 idx += nat + 2
 
 #             highest_energy_frame = max(frames, key=lambda frame: frame[0])
-#             with open(optimized_output, "r", encoding="utf-8") as f:
+#             with open(ts_guess_output, "r", encoding="utf-8") as f:
 #                 optimized_lines = [line.strip() for line in f.readlines() if line.strip()]
 
 #             optimized_nat = int(optimized_lines[0])

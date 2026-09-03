@@ -41,8 +41,8 @@ def get_ts_guess(
     if calcdata is None:
         calcdata = CalculationData.from_default()
 
-    trajectory_filename: str = "trajectory.xyz"
-    final_geometry_filename: str = "optimized.xyz"
+    trajectory_filename: str = "ts_guess_trajectory.xyz"
+    final_geometry_filename: str = "ts_guess.xyz"
     print_ts_optimization_start()
 
     #### ------- Create TS Force Field by mixing reactant and product FFs ------- ####
@@ -78,6 +78,7 @@ def get_ts_guess(
         calcdata.ts_calc,
         trajectory_filename,
         final_geometry_filename,
+        opt_stdout_filename="ts_optimization.out"
     )
     # TODO add time and also return it
 
