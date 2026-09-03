@@ -41,7 +41,7 @@ def get_ts_guess(
     if calcdata is None:
         calcdata = CalculationData.from_default()
 
-    trajectory_filename: str = "ts_guess_trajectory.xyz"
+    trajectory_filename: str = "trj_ts_guess.xyz"
     final_geometry_filename: str = "ts_guess.xyz"
     print_ts_optimization_start()
 
