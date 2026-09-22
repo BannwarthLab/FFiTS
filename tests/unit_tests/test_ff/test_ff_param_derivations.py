@@ -6,6 +6,11 @@ from ffits.datatype.structure_data import (
 
 from ffits.datatype.forcefield_data import ForceField
 from ffits.ts_guess.parameterize_ff import (
+    _fitted_term_groups,
+    _offdiagonal_block_mask,
+    _read_parameters,
+    build_unit_hessians,
+    objective_derivatives,
     derivative_c_first_atomwise,
     derivative_c_second_atomwise,
     ff_fit_objective_function,
@@ -269,6 +274,16 @@ def analy_second_derivative(ff: ForceField, info: StructuralInformation):
     return hessian
 
 
+def analy_full_second_derivative(ff: ForceField, info: StructuralInformation):
+    """Analytic gradient and full (diagonal + off-diagonal) Hessian of the objective
+    w.r.t. all FF parameters, from the matrix form used in the Newton update."""
+    groups = _fitted_term_groups(ff, constant_repulsion=False)
+    mask = _offdiagonal_block_mask(3 * info.nat)
+    unit_hessians = build_unit_hessians(info.fortran_xyz, info.nat, groups, mask)
+    residual = complete_hessian(info.fortran_xyz, ff)[mask] - info.hessian[mask]
+    return objective_derivatives(_read_parameters(groups), unit_hessians, residual)
+
+
 def num_second_derivative(
     ff: ForceField, info: StructuralInformation, delta: float = 1e-4
 ):
@@ -416,31 +431,23 @@ def test_objfun_second_derivatives():
     hess_ana = analy_second_derivative(ff, info)
     hess_num = num_second_derivative(ff, info)
 
-    # Extract diagonal elements for comparison
+    # Diagonal from the old atomwise functions
     diag_ana = np.diag(hess_ana)
     diag_num = np.diag(hess_num)
 
-    # Check if only diagonal are correct
     div = np.divide(diag_ana, diag_num)
     ones = np.ones((len(div)))
     np.testing.assert_allclose(div, ones, rtol=5e-4)
-    # FOR NOW only diagonal testing
-    # Check full Hessian
-    # np.testing.assert_allclose(hess_ana, hess_num, rtol=5e-4)
-    # for i in range(hess_ana.shape[0]):
-    #     for j in range(hess_ana.shape[1]):
-    #         # if i != j:
-    #         # if abs(hess_ana[i,j]) < 1e-8 and abs(hess_num[i,j]) < 1e-12:
-    #         #     continue
-    #         # ratio = hess_ana[i,j] / hess_num[i,j]
-    #         print(i, j, hess_ana[i,j] , hess_num[i,j])
-    # print("\nAnalytical Hessian (diagonal):")
-    # print(diag_ana)
-    # print("\nNumerical Hessian (diagonal):")
-    # print(diag_num)
 
-    # print("\nNumerical Hessian (full matrix):")
-    # print(hess_num)
-    # print("\nAnalytical Hessian (full matrix - currently diagonal only):")
-    # print(hess_ana)
-    # assert False
+    # Full Hessian (diagonal + off-diagonal) from the matrix form vs finite differences.
+    # The off-diagonal entries are sum_m J_pm J_qm (no residual term for p != q).
+    gradient_ana, hess_ana_full = analy_full_second_derivative(ff, info)
+    np.testing.assert_allclose(hess_ana_full, hess_num, rtol=5e-4, atol=1e-6)
+
+    # the matrix form reproduces the old diagonal and is symmetric
+    np.testing.assert_allclose(np.diag(hess_ana_full), diag_ana, rtol=1e-10)
+    np.testing.assert_allclose(hess_ana_full, hess_ana_full.T, rtol=1e-12)
+
+    # the off-diagonal part must actually be tested: some entries are clearly non-zero
+    offdiag = ~np.eye(len(diag_num), dtype=bool)
+    assert np.count_nonzero(np.abs(hess_num[offdiag]) > 1e-3) > 0
