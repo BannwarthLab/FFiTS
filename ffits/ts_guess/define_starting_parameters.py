@@ -191,28 +191,44 @@ def _remove_duplicate_proper_dihedrals(dihedrals: list) -> list:
 
 
 def _is_at_linear_angle(
-    atoms: tuple, info: StructuralInformation, tolerance_deg: float
+    atoms: tuple, is_proper: bool, info: StructuralInformation, tolerance_deg: float
 ) -> bool:
-    """True if a dihedral (i, j, k, l) is built on a (near-)linear bond angle.
+    """True if a dihedral is built on a (near-)linear angle, where it is undefined.
 
-    A dihedral is the angle between two planes: the plane through (i, j, k) and
-    the plane through (j, k, l). Each plane is only defined if its own bond angle
-    (i-j-k, respectively j-k-l) is not itself a straight line. This checks both.
+    Proper and improper dihedrals store their four atoms differently, so each
+    needs its own check:
+
+    - Proper ``(i, j, k, l)``: a bonded chain i-j-k-l. The dihedral is the angle
+      between the plane through (i, j, k) and the plane through (j, k, l), so it
+      is undefined if either of those two bond angles is itself a straight line.
+    - Improper ``(central, t1, t2, t3)``: three substituents t1, t2, t3 all bonded
+      to ``central`` (not to each other). It is undefined if any two of the three
+      substituents are on (near-)opposite sides of the central atom.
 
     Args:
-        atoms: the four 0-based atom indices (i, j, k, l) of the dihedral.
+        atoms: the four 0-based atom indices of the dihedral, laid out as above.
+        is_proper: whether ``atoms`` is a proper (True) or improper (False) dihedral.
         info: structural information providing the geometry.
-        tolerance_deg: the angle is considered linear within this many degrees of
+        tolerance_deg: an angle is considered linear within this many degrees of
             0 or 180.
     """
-    i, j, k, l = atoms
     tolerance_rad = np.radians(tolerance_deg)
-    for a, b, c in ((i, j, k), (j, k, l)):
-        bond_angle = angle(info.fortran_xyz, a, b, c)
+
+    def is_straight(a, vertex, b) -> bool:
+        bond_angle = angle(info.fortran_xyz, a, vertex, b)
         distance_from_straight = min(bond_angle, np.pi - bond_angle)
-        if distance_from_straight < tolerance_rad:
-            return True
-    return False
+        return distance_from_straight < tolerance_rad
+
+    if is_proper:
+        i, j, k, l = atoms
+        return is_straight(i, j, k) or is_straight(j, k, l)
+    else:
+        central, t1, t2, t3 = atoms
+        return (
+            is_straight(t1, central, t2)
+            or is_straight(t1, central, t3)
+            or is_straight(t2, central, t3)
+        )
 
 
 def fill_ff(
@@ -399,8 +415,11 @@ def fill_ff(
     # undefined and the analytic Hessian of the dihedral diverges (its derivative
     # has a 1/sin(angle) factor). This showed up as a >1e8 unit-Hessian norm for a
     # trans-axial N-Cr-N ligand in a metal complex.
-    is_linear = ff.dihedrals["atoms"].apply(
-        lambda atoms: _is_at_linear_angle(atoms, info, linear_angle_tolerance_deg)
+    is_linear = ff.dihedrals.apply(
+        lambda row: _is_at_linear_angle(
+            row["atoms"], row["proper_dihedral"], info, linear_angle_tolerance_deg
+        ),
+        axis=1,
     )
     if is_linear.any():
         logger.warning(
