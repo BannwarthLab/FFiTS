@@ -190,14 +190,40 @@ def _remove_duplicate_proper_dihedrals(dihedrals: list) -> list:
     return deduplicated
 
 
+def _is_at_linear_angle(
+    atoms: tuple, info: StructuralInformation, tolerance_deg: float
+) -> bool:
+    """True if a dihedral (i, j, k, l) is built on a (near-)linear bond angle.
+
+    A dihedral is the angle between two planes: the plane through (i, j, k) and
+    the plane through (j, k, l). Each plane is only defined if its own bond angle
+    (i-j-k, respectively j-k-l) is not itself a straight line. This checks both.
+
+    Args:
+        atoms: the four 0-based atom indices (i, j, k, l) of the dihedral.
+        info: structural information providing the geometry.
+        tolerance_deg: the angle is considered linear within this many degrees of
+            0 or 180.
+    """
+    i, j, k, l = atoms
+    tolerance_rad = np.radians(tolerance_deg)
+    for a, b, c in ((i, j, k), (j, k, l)):
+        bond_angle = angle(info.fortran_xyz, a, b, c)
+        distance_from_straight = min(bond_angle, np.pi - bond_angle)
+        if distance_from_straight < tolerance_rad:
+            return True
+    return False
+
+
 def fill_ff(
     ff: ForceField,
     info: StructuralInformation,
     priorities: dict = None,
     repulsive_start: float = 0.01,
     bo_threshold: float = 0.0,
+    linear_angle_tolerance_deg: float = 5.0,
 ) -> None:
-    """Fills the ForceField object with bonds, angles, dihedrals, and repulsive terms based on the structural information. The function defines the connectivity using a bond order threshold and calculates reference values and parameters for each term. If priorities are provided, it filters dihedrals to keep one proper dihedral per central atom pair and creates improper dihedrals for remaining atoms around each central atom.
+    """Fills the ForceField object with bonds, angles, dihedrals, and repulsive terms based on the structural information. The function defines the connectivity using a bond order threshold and calculates reference values and parameters for each term. If priorities are provided, it filters dihedrals to keep one proper dihedral per central atom pair and creates improper dihedrals for remaining atoms around each central atom. Dihedrals built on a (near-)linear bond angle are dropped afterwards, since the torsion and its Hessian are undefined there.
 
     Args:
         ff (ForceField): ForceField object to be filled with parameters.
@@ -205,6 +231,7 @@ def fill_ff(
         priorities (dict, optional): Dictionary mapping atom indices to their priorities. Defaults to None.
         repulsive_start (float, optional): Initial value for the FF parameter of the repulsive terms. Defaults to 0.01.
         bo_threshold (float, optional): Threshold for defining bonds based on bond order. Defaults to 0.0.
+        linear_angle_tolerance_deg (float, optional): A dihedral is dropped if the bond angle at either of its inner two atoms is within this many degrees of 0 or 180. Defaults to 5.0.
 
     Raises:
         ZeroDivisionError: When the bond order or bond length is zero for a bond or angle, which would lead to division by zero in parameter calculations.
@@ -365,6 +392,23 @@ def fill_ff(
 
     ff.dihedrals["reference_value"] = ff.dihedrals["atoms"].apply(ref_dihedral)
     ff.dihedrals["parameter"] = ff.dihedrals["atoms"].apply(param_dihedral)
+
+    # Drop dihedrals built on a (near-)linear bond angle: a dihedral is the angle
+    # between two planes, and both planes are defined using the bond angle at its
+    # inner two atoms. As that angle approaches 0 or 180 degrees, the plane becomes
+    # undefined and the analytic Hessian of the dihedral diverges (its derivative
+    # has a 1/sin(angle) factor). This showed up as a >1e8 unit-Hessian norm for a
+    # trans-axial N-Cr-N ligand in a metal complex.
+    is_linear = ff.dihedrals["atoms"].apply(
+        lambda atoms: _is_at_linear_angle(atoms, info, linear_angle_tolerance_deg)
+    )
+    if is_linear.any():
+        logger.warning(
+            f"Dropping {int(is_linear.sum())} dihedral(s) built on a bond angle within "
+            f"{linear_angle_tolerance_deg} degrees of 0/180 (undefined torsion): "
+            f"{ff.dihedrals.loc[is_linear, 'atoms'].tolist()}"
+        )
+    ff.dihedrals = ff.dihedrals[~is_linear].reset_index(drop=True)
 
     ff.repulsive = pd.DataFrame({"type": "repulsive", "atoms": get_repulsive_atoms(A)})
     ff.repulsive["reference_value"] = ff.repulsive["atoms"].apply(ref_repulsive)
