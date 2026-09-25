@@ -273,7 +273,7 @@ class TestStructuralInformation:
             atom_types=np.array(["C", "C", "C"]),
         )
         graph = info.complete_graph
-        assert graph.number_of_edges() == 2
+        assert graph.number_of_edges() == 1
 
 
 class TestStructure:

@@ -1,6 +1,7 @@
 """Derives initial force field terms (bonds, angles, dihedrals, repulsion, H-bonds) from structural data."""
 import numpy as np
 import pandas as pd
+from ffits.utils.bond_threshold import get_bo_threshold_matrix
 from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.structure_data import StructuralInformation
 from ffits.utils.geometry import angle, bondlength, dihedral_angle
@@ -246,7 +247,7 @@ def fill_ff(
         info (StructuralInformation): Structural information for the molecule.
         priorities (dict, optional): Dictionary mapping atom indices to their priorities. Defaults to None.
         repulsive_start (float, optional): Initial value for the FF parameter of the repulsive terms. Defaults to 0.01.
-        bo_threshold (float, optional): Threshold for defining bonds based on bond order. Defaults to 0.0.
+        bo_threshold (float, optional): Threshold for defining bonds based on bond order, used for all atom pairs with at least one atom from the third period or higher. Pairs of two atoms from the first or second period always use a threshold of 0.8. Defaults to 0.0.
         linear_angle_tolerance_deg (float, optional): A dihedral is dropped if the bond angle at either of its inner two atoms is within this many degrees of 0 or 180. Defaults to 5.0.
 
     Raises:
@@ -259,7 +260,8 @@ def fill_ff(
     wbo = info.bo_matrix
 
     # --- Step 1: adjacency matrix ---
-    A = (wbo > bo_threshold).astype(int)
+    thresholds = get_bo_threshold_matrix(info.atom_types, bo_threshold)
+    A = (wbo > thresholds).astype(int)
     np.fill_diagonal(A, 0)
 
     # ============================================================

@@ -14,6 +14,7 @@ import networkx as nx
 import numpy as np
 import os
 from collections.abc import Callable
+from ffits.utils.bond_threshold import get_bo_threshold_matrix
 from ffits.datatype.calculation_data import (
     CalculationData,
     CalculationOptions,
@@ -69,7 +70,7 @@ class StructuralInformation:
             wbo_dict (dict): Dictionary (atom1, atom2: wbo_value) with 0-based atom indices
             atom_types (np.ndarray): array of element symbols for each atom
             hessian (np.ndarray, optional): Hessian of structure. Defaults to None.
-            bo_threshold (float, optional): Threshold for bond order to consider a bond as existing. Defaults to 0.0.
+            bo_threshold (float, optional): Threshold for bond order to consider a bond as existing. Applies to atom pairs with at least one atom from the third period or higher; pairs of two first/second period atoms always use 0.8. Defaults to 0.0.
 
         Attributes:
             bo_matrix (np.ndarray): bond order matrix derived from wbo_dict
@@ -137,9 +138,10 @@ class StructuralInformation:
         creates networkx Graph object with atoms as nodes and bond order values larger then 0 as edges.
         """
         G = nx.Graph()
+        thresholds = get_bo_threshold_matrix(self.atom_types, self.bo_threshold)
         for node1, node2 in self.wbo:
             bo = self.wbo[(node1, node2)]
-            if bo < self.bo_threshold:
+            if bo < thresholds[node1, node2]:
                 continue
             G.add_node(node1)
             G.add_node(node2)

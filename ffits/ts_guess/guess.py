@@ -130,7 +130,14 @@ def get_ts_guess_from_xyz(
         logger.info(
             "The option only_proper_dihedrals is set to False for either the reactant or product structure. This means that improper dihedrals will be included in the TS FF creation and optimization."
         )
-        priorities = get_combinded_priorities(struc1.info, struc2.info)
+        priorities = get_combinded_priorities(
+            struc1.info,
+            struc2.info,
+            bo_threshold=min(
+                calcdata.reactant_calc.bo_treshold,
+                calcdata.product_calc.bo_treshold,
+            ),
+        )
 
     if calcdata.reactant_calc.ff_parameterization:
         parameterize_ff(struc1, calcdata.reactant_calc, priorities)
