@@ -109,10 +109,10 @@ class CalculationOptions:
     wbo_calc: bool = True
     hessian_calc: bool = True
     bo_treshold: float = 0.0
-    only_proper_dihedrals: bool = True
+    only_proper_dihedrals: bool = False
     ff_parameterization: bool = True
     test_parameterization: bool = False
-    ff_parameter_repulsion: float = 0.01
+    ff_parameter_repulsion: float = 0.001
     ff_parameterization_maxiteration: int = 1000
     ff_parameterization_stepsize: float = 0.15
     ff_parameterization_threshold: float = 0.0005
@@ -148,7 +148,7 @@ class TSCalculationOptions:
     hess_weight_angles_dihedrals: bool = False
     perform_two_optimizations: bool = False
     molbar_optimizer_e_tol: float = 1e-4
-    molbar_optimizer_x_tol: float = 1e-2
+    molbar_optimizer_x_tol: float = 1e-1
     molbar_optimizer_max_micro_steps: int = 1
     energy_threshold_two_optimizations: float = 0.15
 
