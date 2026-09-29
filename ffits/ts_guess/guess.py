@@ -1,4 +1,5 @@
 """TS guess generation: builds a TS force field from reactant/product FFs and optimizes on it."""
+
 import logging
 import numpy as np
 from collections.abc import Callable
@@ -78,7 +79,7 @@ def get_ts_guess(
         calcdata.ts_calc,
         trajectory_filename,
         final_geometry_filename,
-        opt_stdout_filename="ts_optimization.out"
+        opt_stdout_filename="ts_optimization.out",
     )
     # TODO add time and also return it
 

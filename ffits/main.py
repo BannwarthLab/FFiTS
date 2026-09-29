@@ -1,5 +1,6 @@
 #!/bin/python
 """Entry point and top-level run modes for the ffits command-line program."""
+
 from collections.abc import Callable
 import logging
 import time

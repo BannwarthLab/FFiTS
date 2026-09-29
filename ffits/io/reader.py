@@ -1,4 +1,5 @@
 """Readers for xyz, WBO, and Hessian files produced by xtb."""
+
 from __future__ import annotations
 import os
 import numpy as np
@@ -40,9 +41,7 @@ def readin_xyz(xyz_path: str) -> Tuple[int, str, np.ndarray, List[str]]:
     try:
         nat = int(lines[0])
     except ValueError:
-        raise ValueError(
-            "First line of XYZ file must be an integer (number of atoms)."
-        )
+        raise ValueError("First line of XYZ file must be an integer (number of atoms).")
     comment = lines[1]
     atom_lines = lines[2:]
     if len(atom_lines) != nat:

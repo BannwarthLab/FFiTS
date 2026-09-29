@@ -1,4 +1,5 @@
 """Mixes reactant and product force fields into a TS force field."""
+
 import logging
 import numpy as np
 import pandas as pd

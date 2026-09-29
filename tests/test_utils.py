@@ -25,7 +25,9 @@ SMALL_MOLECULE_DIR = Path(__file__).parent / "examples" / "small_single_molecule
 # constants stale, since nothing re-derived them. Reading the fixture files
 # directly here means there is exactly one source of truth, and these
 # constants automatically track the fixtures whenever they're regenerated.
-NAT, _reactant_comment, XYZ, ATOM_TYPES = readin_xyz(str(SMALL_MOLECULE_DIR / "struc1.xyz"))
+NAT, _reactant_comment, XYZ, ATOM_TYPES = readin_xyz(
+    str(SMALL_MOLECULE_DIR / "struc1.xyz")
+)
 WBO = read_wbo_file(str(SMALL_MOLECULE_DIR / "wbo1"))
 
 

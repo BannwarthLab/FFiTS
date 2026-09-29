@@ -1,4 +1,5 @@
 """Reaction path generation by interpolating the TS force field mixing factors."""
+
 from ffits.external.xtb import Xtb
 from ffits.ts_guess.guess import get_ts_guess_from_xyz
 from ffits.datatype.calculation_data import CalculationData

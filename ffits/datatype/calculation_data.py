@@ -1,4 +1,5 @@
 """Dataclasses describing calculation configuration for a full ffits run."""
+
 from dataclasses import dataclass, field, fields
 import os
 import logging

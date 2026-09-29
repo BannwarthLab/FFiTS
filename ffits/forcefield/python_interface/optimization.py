@@ -1,4 +1,5 @@
 """Runs geometry optimization on a ForceField potential, from in-memory data or from files."""
+
 import logging
 from collections.abc import Callable
 from ffits.datatype.forcefield_data import ForceField
@@ -78,7 +79,7 @@ def optimize_with_forcefield(
             logger.warning(
                 f"The last valid structure of the optimization trajectory is written to {final_geometry_filename}."
             )
-            write_last_valid_xyz(trajectory_filename,final_geometry_filename)
+            write_last_valid_xyz(trajectory_filename, final_geometry_filename)
 
     elif optimizer == scipy_optimizer:
         sys.stdout = orig_stdout

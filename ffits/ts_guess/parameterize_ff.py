@@ -1,4 +1,5 @@
 """Fits force field parameters to a reference Hessian via Newton-style updates."""
+
 import logging
 from ffits.ts_guess.define_starting_parameters import fill_ff
 from ffits.datatype.calculation_data import CalculationOptions

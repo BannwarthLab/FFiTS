@@ -1,4 +1,5 @@
 """Derives initial force field terms (bonds, angles, dihedrals, repulsion, H-bonds) from structural data."""
+
 import numpy as np
 import pandas as pd
 from ffits.datatype.forcefield_data import ForceField

@@ -1,4 +1,5 @@
 """Applies command-line overrides on top of a loaded CalculationData object."""
+
 import logging
 from ffits.datatype.calculation_data import CalculationData
 

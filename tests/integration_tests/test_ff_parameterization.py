@@ -140,9 +140,7 @@ def test_update_angle(tmp_workdir):
         ff.angles.at[idx, "parameter"] = val
 
     with pytest.raises(AssertionError):
-        pd.testing.assert_series_equal(
-            ff.angles["parameter"], old_angles["parameter"]
-        )
+        pd.testing.assert_series_equal(ff.angles["parameter"], old_angles["parameter"])
     pd.testing.assert_series_equal(
         ff.angles["reference_value"], old_angles["reference_value"]
     )

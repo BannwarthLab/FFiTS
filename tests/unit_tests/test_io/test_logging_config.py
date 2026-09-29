@@ -1,4 +1,5 @@
 """Tests for ffits.io.logging_config.setup_logger."""
+
 import logging
 
 import pytest
