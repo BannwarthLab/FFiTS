@@ -117,6 +117,12 @@ def parse_args():
         default=False,
         help="Enable debug mode with detailed logging output and DEBUG directory creation.",
     )
+    parser.add_argument(
+        "--timing",
+        action="store_true",
+        default=False,
+        help="Enable TIMING logging output and write a timing report for TS guess mode.",
+    )
 
     args = parser.parse_args()
 
@@ -157,4 +163,5 @@ def parse_args():
         "reaction_path": args.reaction_path,
         "optff": args.opt,
         "debug": args.debug,
+        "timing": args.timing,
     }

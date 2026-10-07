@@ -109,10 +109,10 @@ class CalculationOptions:
     wbo_calc: bool = True
     hessian_calc: bool = True
     bo_treshold: float = 0.0
-    only_proper_dihedrals: bool = True
+    only_proper_dihedrals: bool = False
     ff_parameterization: bool = True
     test_parameterization: bool = False
-    ff_parameter_repulsion: float = 0.01
+    ff_parameter_repulsion: float = 0.001
     ff_parameterization_maxiteration: int = 1000
     ff_parameterization_stepsize: float = 0.15
     ff_parameterization_threshold: float = 0.0005

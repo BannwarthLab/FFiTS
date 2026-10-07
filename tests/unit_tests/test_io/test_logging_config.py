@@ -5,7 +5,29 @@ import pytest
 
 from ffits.io.logging_config import setup_logger
 
+from ffits.io.logging_config import TIMING_LEVEL, setup_logger
 
+
+def test_setup_logger_supports_timing_level(caplog):
+    logger = setup_logger("TIMING")
+
+    assert logger.level == TIMING_LEVEL
+    assert hasattr(logger, "timing")
+
+    with caplog.at_level(TIMING_LEVEL, logger="ffits"):
+        logger.timing("timing message")
+
+    assert any(
+        record.levelname == "TIMING" and record.message == "timing message"
+        for record in caplog.records
+    )
+
+
+def test_setup_logger_defaults_to_info_when_level_is_missing():
+    logger = setup_logger(None)
+
+    assert logger.level == 20
+    
 @pytest.fixture(autouse=True)
 def _reset_ffits_logger():
     """setup_logger mutates the shared 'ffits' logger; reset it around each
