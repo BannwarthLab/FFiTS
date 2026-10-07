@@ -11,7 +11,7 @@ import numpy as np
 from ffits.data.elements import atom_symbol_to_number
 
 LIGHT_ATOM_MAX_Z = 10  # Ne, last element of the second period
-LIGHT_ATOM_BO_THRESHOLD = 0.8
+LIGHT_ATOM_BO_THRESHOLD = 0.3  # was 0.8, which cut real O-H bonds (WBO ~0.79)
 
 
 def get_bo_threshold_matrix(
@@ -26,7 +26,7 @@ def get_bo_threshold_matrix(
         default_threshold (float, optional): Threshold for pairs where at least one atom
             is from the third period or higher (normally the config value). Defaults to 0.0.
         light_threshold (float, optional): Threshold for pairs where both atoms are from
-            the first or second period. Defaults to 0.8.
+            the first or second period. Defaults to 0.5.
 
     Returns:
         np.ndarray: Symmetric matrix of thresholds, shape (nat, nat).
