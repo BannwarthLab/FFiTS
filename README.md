@@ -13,7 +13,7 @@
 ***Force Field-interpolated Transition States***
 
 **Author:** *Daria Babushkina*  
-**Version:** 0.9.0  
+**Version:** 0.9.1  
 **Status:** Development   
 **Python:** 3.12, 3.13, 3.14 (tested)     
 **License:** BSD-3-Clause   
