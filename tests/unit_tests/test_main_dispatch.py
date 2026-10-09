@@ -7,6 +7,7 @@ exercise only the dispatch/try-except logic in main(), not the underlying
 tmp_workdir-based integration tests in tests/unit_tests/test_main.py and
 tests/integration_tests/.
 """
+
 import pytest
 
 import ffits.main as main_mod
@@ -33,9 +34,7 @@ def _quiet_setup(monkeypatch):
     and builds a CalculationData -- none of that is under test here, so no-op it."""
     monkeypatch.setattr(main_mod, "print_program_header", lambda *a, **k: None)
     monkeypatch.setattr(main_mod, "setup_logger", lambda *a, **k: None)
-    monkeypatch.setattr(
-        main_mod, "overwrite_from_commandline", lambda *a, **k: None
-    )
+    monkeypatch.setattr(main_mod, "overwrite_from_commandline", lambda *a, **k: None)
     monkeypatch.setattr(
         main_mod.CalculationData, "from_default", staticmethod(lambda: object())
     )
@@ -51,7 +50,9 @@ def _track(monkeypatch, name):
 
 def test_dispatches_to_optimizer_mode(monkeypatch):
     monkeypatch.setattr(
-        main_mod, "parse_args", lambda: _base_args(optff="ff.csv", structures=["reac.xyz"])
+        main_mod,
+        "parse_args",
+        lambda: _base_args(optff="ff.csv", structures=["reac.xyz"]),
     )
     opt_calls = _track(monkeypatch, "run_optimizer_mode")
     param_calls = _track(monkeypatch, "run_parameterization_mode")
@@ -70,7 +71,9 @@ def test_dispatches_to_optimizer_mode(monkeypatch):
 
 def test_dispatches_to_parameterization_mode(monkeypatch):
     monkeypatch.setattr(
-        main_mod, "parse_args", lambda: _base_args(parameterize=True, structures=["reac.xyz"])
+        main_mod,
+        "parse_args",
+        lambda: _base_args(parameterize=True, structures=["reac.xyz"]),
     )
     opt_calls = _track(monkeypatch, "run_optimizer_mode")
     param_calls = _track(monkeypatch, "run_parameterization_mode")
@@ -88,9 +91,7 @@ def test_dispatches_to_parameterization_mode(monkeypatch):
 
 
 def test_dispatches_to_reaction_path_mode(monkeypatch):
-    monkeypatch.setattr(
-        main_mod, "parse_args", lambda: _base_args(reaction_path=5)
-    )
+    monkeypatch.setattr(main_mod, "parse_args", lambda: _base_args(reaction_path=5))
     opt_calls = _track(monkeypatch, "run_optimizer_mode")
     param_calls = _track(monkeypatch, "run_parameterization_mode")
     rct_calls = _track(monkeypatch, "run_reaction_path_mode")
@@ -171,9 +172,7 @@ def test_debug_flag_sets_debug_log_level(monkeypatch):
     monkeypatch.setattr(main_mod, "run_tsguess_mode", lambda *a, **k: None)
     monkeypatch.setattr(main_mod, "print_run_summary", lambda *a, **k: None)
     levels = []
-    monkeypatch.setattr(
-        main_mod, "setup_logger", lambda level: levels.append(level)
-    )
+    monkeypatch.setattr(main_mod, "setup_logger", lambda level: levels.append(level))
 
     main_mod.main()
 
@@ -185,9 +184,7 @@ def test_no_debug_flag_sets_info_log_level(monkeypatch):
     monkeypatch.setattr(main_mod, "run_tsguess_mode", lambda *a, **k: None)
     monkeypatch.setattr(main_mod, "print_run_summary", lambda *a, **k: None)
     levels = []
-    monkeypatch.setattr(
-        main_mod, "setup_logger", lambda level: levels.append(level)
-    )
+    monkeypatch.setattr(main_mod, "setup_logger", lambda level: levels.append(level))
 
     main_mod.main()
 

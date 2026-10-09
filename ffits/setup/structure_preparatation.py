@@ -1,4 +1,5 @@
 """Structure preparation helpers (currently just coordinate randomization)."""
+
 import logging
 
 

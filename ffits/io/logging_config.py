@@ -46,7 +46,6 @@ def _write_timing_report(
     output_path.write_text("\n".join(report_lines))
 
 
-
 def _register_timing_level() -> None:
     """Register the custom TIMING log level once."""
     logging.addLevelName(TIMING_LEVEL, "TIMING")

@@ -1,4 +1,5 @@
 """RMSD calculation helpers, including Kabsch-aligned RMSD."""
+
 import numpy as np
 
 

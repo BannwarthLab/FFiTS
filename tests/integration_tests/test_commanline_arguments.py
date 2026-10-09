@@ -26,9 +26,7 @@ def test_ffits_with_multiplicity_and_charge(tmp_workdir):
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
     ts_guess_file = temp_path / "ts_guess.xyz"
-    assert (
-        ts_guess_file.exists()
-    ), f"ts_guess.xyz was not created in {temp_path}"
+    assert ts_guess_file.exists(), f"ts_guess.xyz was not created in {temp_path}"
     assert (
         "xTB will be run with uhf = 1, chrg = 1" in stdout
     ), "Defined charge and multiplicity were not correctly passed to xTB as indicated in ts_guess.xyz"

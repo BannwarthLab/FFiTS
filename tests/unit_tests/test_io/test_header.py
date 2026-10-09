@@ -1,4 +1,5 @@
 """Tests for ffits.io.print.header (program banner printed at startup)."""
+
 import subprocess
 
 from ffits.io.print import header as header_mod
@@ -65,9 +66,7 @@ def test_get_last_commit_date_returns_none_on_nonzero_returncode(monkeypatch):
         returncode = 128
         stdout = ""
 
-    monkeypatch.setattr(
-        header_mod.subprocess, "run", lambda *a, **k: FakeResult()
-    )
+    monkeypatch.setattr(header_mod.subprocess, "run", lambda *a, **k: FakeResult())
     assert _get_last_commit_date() is None
 
 
@@ -76,9 +75,7 @@ def test_get_last_commit_date_parses_git_output(monkeypatch):
         returncode = 0
         stdout = "2024-02-09 10:30:45 +0100\n"
 
-    monkeypatch.setattr(
-        header_mod.subprocess, "run", lambda *a, **k: FakeResult()
-    )
+    monkeypatch.setattr(header_mod.subprocess, "run", lambda *a, **k: FakeResult())
     assert _get_last_commit_date() == "2024-02-09 10:30"
 
 
@@ -89,9 +86,7 @@ def test_print_program_header_omits_last_commit_when_unavailable(monkeypatch, ca
     assert "Last Commit:" not in out
 
 
-def test_print_program_header_includes_last_commit_when_available(
-    monkeypatch, capsys
-):
+def test_print_program_header_includes_last_commit_when_available(monkeypatch, capsys):
     monkeypatch.setattr(header_mod, "_get_last_commit_date", lambda: "2024-02-09 10:30")
     print_program_header()
     out = capsys.readouterr().out

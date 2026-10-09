@@ -1,6 +1,7 @@
 from tests.test_utils import run_ffits_as_subprocess, SMALL_MOLECULE_DIR
 import shutil
 
+
 def test_standard_parameterize_run(tmp_workdir):
     """
     Test that ffits creates ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration

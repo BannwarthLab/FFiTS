@@ -1,4 +1,5 @@
 """Tests for ffits.io.print.summary.print_run_summary."""
+
 import re
 
 from ffits.io.print.summary import print_run_summary

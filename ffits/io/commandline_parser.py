@@ -1,4 +1,5 @@
 """Command-line argument parsing for the ffits program."""
+
 import argparse
 import os
 import sys

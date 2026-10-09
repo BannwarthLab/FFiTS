@@ -89,11 +89,17 @@ def test_get_ts_guess_from_xyz_records_x_tb_and_parameterization(monkeypatch):
         return SimpleNamespace(start_from_reactant=True), True, 0.0, np.zeros((1, 3))
 
     monkeypatch.setattr("ffits.ts_guess.guess._record_timing", record_timing)
-    monkeypatch.setattr("ffits.ts_guess.guess.Structure.from_config", fake_structure_from_config)
+    monkeypatch.setattr(
+        "ffits.ts_guess.guess.Structure.from_config", fake_structure_from_config
+    )
     monkeypatch.setattr("ffits.ts_guess.guess.parameterize_ff", fake_parameterize_ff)
     monkeypatch.setattr("ffits.ts_guess.guess.get_ts_guess", fake_get_ts_guess)
-    monkeypatch.setattr("ffits.ts_guess.guess.print_calculation_data", lambda *args, **kwargs: None)
-    monkeypatch.setattr("ffits.ts_guess.guess.print_header_setup", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "ffits.ts_guess.guess.print_calculation_data", lambda *args, **kwargs: None
+    )
+    monkeypatch.setattr(
+        "ffits.ts_guess.guess.print_header_setup", lambda *args, **kwargs: None
+    )
 
     calcdata = SimpleNamespace(
         reactant_path=SimpleNamespace(xyz_filename=""),

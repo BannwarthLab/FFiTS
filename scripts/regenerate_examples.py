@@ -36,6 +36,7 @@ rerun `pytest tests/` to make sure nothing that *does* assert on specific
 fixture-derived values (there is very little of this by design -- see
 tests/examples/README.md) needs a matching update.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -98,9 +99,7 @@ def regenerate_one(example_dir: Path) -> None:
 
         command = ["ffits", "struc1.xyz", "struc2.xyz"]
         print(f"  running: {' '.join(command)}  (cwd={tmp_path})")
-        result = subprocess.run(
-            command, cwd=tmp_path, capture_output=True, text=True
-        )
+        result = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
         (tmp_path / "pyout").write_text(result.stdout)
 
         if result.returncode != 0:
@@ -112,9 +111,7 @@ def regenerate_one(example_dir: Path) -> None:
             )
 
         produced = [
-            p
-            for p in tmp_path.iterdir()
-            if p.is_file() and p.name not in RAW_FILES
+            p for p in tmp_path.iterdir() if p.is_file() and p.name not in RAW_FILES
         ]
         if not produced:
             raise RuntimeError(

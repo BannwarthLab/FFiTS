@@ -20,7 +20,6 @@ from ffits.ts_guess.define_starting_parameters import fill_ff
 import copy
 
 
-
 def num_first_derivative(
     ff: ForceField, info: StructuralInformation, delta: float = 1e-5
 ):
@@ -78,7 +77,6 @@ def num_first_derivative(
 
         derivatives.append((res_p - res_m) / (delta * 2))
     return derivatives
-
 
 
 def analy_full_second_derivative(ff: ForceField, info: StructuralInformation):
@@ -217,4 +215,3 @@ def num_second_derivative(
                 hessian[j, i] = mixed_deriv  # Symmetric matrix
 
     return hessian
-

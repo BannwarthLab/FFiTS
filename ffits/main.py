@@ -1,5 +1,6 @@
 #!/bin/python
 """Entry point and top-level run modes for the ffits command-line program."""
+
 from collections.abc import Callable
 import logging
 import time
@@ -165,11 +166,7 @@ def main():
     timing_mode_start = None
 
     # Initialize logging - TIMING level if --timing flag, DEBUG if --debug, otherwise INFO
-    log_level = (
-        "TIMING"
-        if timing_enabled
-        else "DEBUG" if args.get("debug") else "INFO"
-    )
+    log_level = "TIMING" if timing_enabled else "DEBUG" if args.get("debug") else "INFO"
     timing_logger = setup_logger(log_level)
 
     if args.get("timing", False) and not is_tsguess_mode:

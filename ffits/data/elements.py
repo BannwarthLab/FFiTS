@@ -7,7 +7,6 @@ element symbols, atomic weights and atomic numbers.
 # from https://gist.github.com/lukasrichters14/c862644d4cbcf2d67252a484b7c6049c
 """
 
-
 ELEMENTS_MASSES = {
     "H": 1.008,
     "HE": 4.003,

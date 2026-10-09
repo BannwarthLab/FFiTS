@@ -1,4 +1,5 @@
 """Dataclasses describing calculation configuration for a full ffits run."""
+
 from dataclasses import dataclass, field, fields
 import os
 import logging
@@ -193,7 +194,7 @@ class CalculationData:
 
     @staticmethod
     def from_default():
-        """Creates a CalculationData object with default values. This can be useful for testing the TS guess generation process with a standard set of parameters when no specific calculation data is provided.
+        """Creates a CalculationData object with default values.
 
         Returns:
             CalculationData: A CalculationData object initialized with default values.

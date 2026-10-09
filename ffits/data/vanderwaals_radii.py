@@ -4,6 +4,7 @@ Holds the ``VANDER_VALUES`` reference table (elements 1-86) and
 :func:`get_vander_matrix`, which expands it into a per-atom-pair matrix
 for a given structure.
 """
+
 import numpy as np
 from ffits.data.elements import atom_symbol_to_number
 from ffits.utils.geometry import angstrom2bohr

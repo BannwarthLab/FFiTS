@@ -1,4 +1,5 @@
 """Mixes reactant and product force fields into a TS force field."""
+
 import logging
 import numpy as np
 import pandas as pd
@@ -173,10 +174,6 @@ def combine_dihedrals(
     info2: StructuralInformation,
 ) -> pd.DataFrame:
     """Combines dihedrals from both force fields.
-
-    Note: ``has_significant_bond`` currently returns True unconditionally
-    (the WBO-based improper-dihedral filtering below it is unreachable), so
-    all combined dihedrals are kept as-is.
 
     Args:
         ff1 (ForceField): Force field of the reactant structure.

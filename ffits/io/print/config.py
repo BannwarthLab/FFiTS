@@ -1,4 +1,5 @@
 """Console printouts summarizing calculation configuration."""
+
 from ffits.datatype.calculation_data import (
     CalculationData,
     PathData,
@@ -51,7 +52,7 @@ def print_calculation_data(calc_data: CalculationData):
     ts = calc_data.ts_calc
     print(f"  Optimizer:                        {ts.optimizer}")
     print(f"  Factor (Reactant):                {ts.factor_reactant:.2f}")
-    print(f"  Factor (Product):                 {ts.factor_product:.2f}")    
+    print(f"  Factor (Product):                 {ts.factor_product:.2f}")
     print(f"  Perform two optimizations:        {ts.perform_two_optimizations}")
     print(f"  Molbar optimizer E tolerance:     {ts.molbar_optimizer_e_tol}")
     print(f"  Molbar optimizer X tolerance:     {ts.molbar_optimizer_x_tol}")
