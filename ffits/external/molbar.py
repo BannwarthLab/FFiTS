@@ -4,6 +4,7 @@ import os
 import logging
 from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.structure_data import StructuralInformation
+from ffits.utils.bond_threshold import get_bo_threshold_matrix
 from molbar.utils.optimizer import optimize_geometry
 
 from scipy.optimize import minimize
@@ -26,7 +27,7 @@ def _define_bonds_for_molbar(
         mol (Molecule): MolBar Molecule object to be filled with connectivity information.
         struc1 (StructuralInformation): Structural information of reactant structure.
         struc2 (StructuralInformation): Structural information of product structure.
-        bo_threshold (float, optional): Threshold for defining bonds. Defaults to 0.5.
+        bo_threshold (float, optional): Threshold for defining bonds between atom pairs with at least one atom from the third period or higher. Pairs of two first/second period atoms always use 0.8. Defaults to 0.5.
 
     Raises:
         ValueError: If either struc1 or struc2 is missing bond order matrices.
@@ -40,9 +41,10 @@ def _define_bonds_for_molbar(
     mixed_bo_matrix = struc1.bo_matrix + struc2.bo_matrix
     mol.cn_matrix = np.zeros(mixed_bo_matrix.shape, dtype=int)
 
+    thresholds = get_bo_threshold_matrix(struc1.atom_types, bo_threshold)
     for i in range(mixed_bo_matrix.shape[0]):
         for j in range(i + 1, mixed_bo_matrix.shape[1]):
-            if mixed_bo_matrix[i, j] > bo_threshold:
+            if mixed_bo_matrix[i, j] > thresholds[i, j]:
                 mol.cn_matrix[i, j] = 1
                 mol.cn_matrix[j, i] = 1
     mol.cn = np.sum(mol.cn_matrix, axis=1)
@@ -58,7 +60,7 @@ def get_combinded_priorities(
     Args:
         struc1 (StructuralInformation): Structural information of reactant structure.
         struc2 (StructuralInformation): Structural information of product structure.
-        bo_threshold (float, optional): Threshold for defining bonds. Defaults to 0.0.
+        bo_threshold (float, optional): Threshold for defining bonds between atom pairs with at least one atom from the third period or higher (e.g. the config value). Pairs of two first/second period atoms always use 0.8. Defaults to 0.5.
 
     Returns:
         dict: Dictionary mapping atom indices to their combined priorities based on the connectivity of both structures.

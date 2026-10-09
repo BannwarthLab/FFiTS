@@ -391,29 +391,26 @@ def hessian_weighting_mix_list(
         )
         return param_dict  # Return empty dict, which will lead to default 0.5 mixing in mix_parameters
 
-    # Process bonds
     for idx, row in bonds_df.iterrows():
         atoms = row["atoms"]
         param_reac = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
-        logger.debug(f"Bond {atoms}: Mixing factor {param_reac}")
         if param_reac is not None:
+            logger.debug(f"Bond {atoms}: Mixing factor {param_reac}")
             param_dict[atoms] = param_reac
 
     if include_angles_dihedrals:
-        # Process angles
         for idx, row in angles_df.iterrows():
             atoms = row["atoms"]
             factor = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
-            logger.debug(f"Angle {atoms}: Mixing factor {factor}")
             if factor is not None:
+                logger.debug(f"Angle {atoms}: Mixing factor {factor}")
                 param_dict[atoms] = factor
 
-        # Process dihedrals
         for idx, row in dihedrals_df.iterrows():
             atoms = row["atoms"]
             factor = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
-            logger.debug(f"Dihedral {atoms}: Mixing factor {factor}")
             if factor is not None:
+                logger.debug(f"Dihedral {atoms}: Mixing factor {factor}")
                 param_dict[atoms] = factor
 
     return param_dict

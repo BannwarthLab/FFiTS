@@ -3,8 +3,9 @@
 from collections.abc import Callable
 import logging
 import time
+from time import perf_counter
 from ffits.datatype.structure_data import Structure
-from ffits.io.logging_config import setup_logger
+from ffits.io.logging_config import setup_logger, _write_timing_report
 from ffits.datatype.calculation_data import CalculationData
 from ffits.io.toml_parser import overwrite_from_commandline
 from ffits.io.commandline_parser import parse_args
@@ -121,6 +122,8 @@ def run_tsguess_mode(
     reactant_filename: str,
     product_filename: str,
     calcdata: CalculationData | None = None,
+    timing_logger: logging.Logger | None = None,
+    timing_entries: list[str] | None = None,
 ):
     """Run in default (TS guess) mode: generate a transition-state guess.
 
@@ -141,6 +144,8 @@ def run_tsguess_mode(
         reactant_filename=reactant_filename,
         product_filename=product_filename,
         calcdata=calcdata,
+        timing_logger=timing_logger,
+        timing_entries=timing_entries,
     )
     return tsff, converged, energy, final_geom
 
@@ -152,23 +157,37 @@ def main():
     start_time = time.time()
 
     args = parse_args()
-
-    # Initialize logging - DEBUG level if --debug flag, otherwise INFO
-    log_level = "DEBUG" if args.get("debug") else "INFO"
-    setup_logger(log_level)
-    calcdata = (
-        CalculationData.from_config(args.get("config_file"))
-        if args.get("config_file")
-        else CalculationData.from_default()
+    is_tsguess_mode = (
+        args["optff"] is None and not args["parameterize"] and not args["reaction_path"]
     )
-    overwrite_from_commandline(
-        calcdata,
-        multiplicity=args["multiplicity"],
-        charge=args["charge"],
-        structures=args["structures"],
-    )
+    timing_enabled = args.get("timing", False) and is_tsguess_mode
+    timing_entries: list[str] = []
+    timing_mode_start = None
 
+    # Initialize logging - TIMING level if --timing flag, DEBUG if --debug, otherwise INFO
+    log_level = (
+        "TIMING"
+        if timing_enabled
+        else "DEBUG" if args.get("debug") else "INFO"
+    )
+    timing_logger = setup_logger(log_level)
+
+    if args.get("timing", False) and not is_tsguess_mode:
+        timing_logger.warning("--timing is currently supported only for TS guess mode.")
+
+    success = False
     try:
+        calcdata = (
+            CalculationData.from_config(args.get("config_file"))
+            if args.get("config_file")
+            else CalculationData.from_default()
+        )
+        overwrite_from_commandline(
+            calcdata,
+            multiplicity=args["multiplicity"],
+            charge=args["charge"],
+            structures=args["structures"],
+        )
         if args["optff"] is not None:
             run_optimizer_mode(
                 args.get("structures")[0], args.get("optff"), calcdata=calcdata
@@ -183,11 +202,16 @@ def main():
                 calcdata=calcdata,
             )
         else:
+            if timing_enabled:
+                timing_mode_start = perf_counter()
             run_tsguess_mode(
                 reactant_filename=args.get("structures")[0],
                 product_filename=args.get("structures")[1],
                 calcdata=calcdata,
+                timing_logger=timing_logger if timing_enabled else None,
+                timing_entries=timing_entries if timing_enabled else None,
             )
+        success = True
 
         end_time = time.time()
         print_run_summary(start_time, end_time, success=True)
@@ -196,6 +220,13 @@ def main():
         end_time = time.time()
         print_run_summary(start_time, end_time, success=False, message=str(e))
         raise e
+    finally:
+        if timing_enabled and timing_mode_start is not None:
+            _write_timing_report(
+                timing_entries=timing_entries,
+                total_elapsed=perf_counter() - timing_mode_start,
+                success=success,
+            )
 
 
 if __name__ == "__main__":

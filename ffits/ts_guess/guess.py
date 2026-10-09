@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 from collections.abc import Callable
+from time import perf_counter
 from ffits.io.print.config import print_calculation_data, print_header_setup
 from ffits.ts_guess.mix_ff import create_tsff
 from ffits.datatype.structure_data import Structure
@@ -17,6 +18,7 @@ from ffits.io.print.details import print_ts_optimization_start
 from ffits.forcefield.python_interface.optimization import optimize_with_forcefield
 
 from ffits.ts_guess.parameterize_ff import parameterize_ff
+from ffits.io.logging_config import _record_timing
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,8 @@ def get_ts_guess(
     struc2: Structure,
     calcdata: CalculationData | None = None,
     optimizer: Callable = anc_optimizer,
+    timing_logger: logging.Logger | None = None,
+    timing_entries: list[str] | None = None,
 ) -> tuple[ForceField, bool, float, np.ndarray]:
     """Generates a TS guess from reactant and product structures by first constructing the TS FF and the using it as the potential for the geometry optimization or either reactant or product structure.
 
@@ -44,9 +48,11 @@ def get_ts_guess(
     trajectory_filename: str = "trj_ts_guess.xyz"
     final_geometry_filename: str = "ts_guess.xyz"
     print_ts_optimization_start()
+    timing_enabled = timing_logger is not None and timing_entries is not None
 
     #### ------- Create TS Force Field by mixing reactant and product FFs ------- ####
     # factor reactant and product will be overwritten if weight bonds with hessian is set to True
+    tsff_start = perf_counter() if timing_enabled else None
     res = create_tsff(
         ff1=struc1.ff,
         info1=struc1.info,
@@ -54,6 +60,14 @@ def get_ts_guess(
         info2=struc2.info,
         calcdata=calcdata,
     )
+    if timing_enabled and tsff_start is not None:
+        _record_timing(
+            timing_entries,
+            timing_logger,
+            "TSFF construction",
+            tsff_start,
+            perf_counter(),
+        )
     tsff: ForceField = res["tsff"]
     tsff.energy_calculator = energy_ff
     tsff.gradient_calculator = complete_gradient
@@ -71,6 +85,7 @@ def get_ts_guess(
         )
         initial_struc = struc2.info
 
+    optimization_start = perf_counter() if timing_enabled else None
     converged, energy, final_geom = optimize_with_forcefield(
         initial_struc,
         tsff,
@@ -80,7 +95,14 @@ def get_ts_guess(
         final_geometry_filename,
         opt_stdout_filename="ts_optimization.out"
     )
-    # TODO add time and also return it
+    if timing_enabled and optimization_start is not None:
+        _record_timing(
+            timing_entries,
+            timing_logger,
+            "Optimization",
+            optimization_start,
+            perf_counter(),
+        )
 
     return tsff, converged, energy, final_geom
 
@@ -90,6 +112,8 @@ def get_ts_guess_from_xyz(
     product_filename: str,
     calcdata: CalculationData | None = None,
     optimizer: Callable = anc_optimizer,
+    timing_logger: logging.Logger | None = None,
+    timing_entries: list[str] | None = None,
 ) -> tuple[ForceField, bool, float, np.ndarray]:
     """Wrapper for get_ts_guess, so that it is applyable directly starting at xyz files.
 
@@ -106,11 +130,13 @@ def get_ts_guess_from_xyz(
         calcdata = CalculationData.from_default()
     calcdata.reactant_path.xyz_filename = reactant_filename
     calcdata.product_path.xyz_filename = product_filename
+    timing_enabled = timing_logger is not None and timing_entries is not None
 
     print_calculation_data(calcdata)
 
     print_header_setup()
 
+    xtb_start = perf_counter() if timing_enabled else None
     struc1 = Structure.from_config(
         cd=calcdata,
         calcopt=calcdata.reactant_calc,
@@ -121,7 +147,17 @@ def get_ts_guess_from_xyz(
         calcopt=calcdata.product_calc,
         pathdata=calcdata.product_path,
     )
+    if timing_enabled and xtb_start is not None:
+        _record_timing(
+            timing_entries,
+            timing_logger,
+            "xTB calculations",
+            xtb_start,
+            perf_counter(),
+        )
 
+
+    parameterization_start = perf_counter() if timing_enabled else None
     priorities = None
     if (
         not calcdata.reactant_calc.only_proper_dihedrals
@@ -130,16 +166,36 @@ def get_ts_guess_from_xyz(
         logger.info(
             "The option only_proper_dihedrals is set to False for either the reactant or product structure. This means that improper dihedrals will be included in the TS FF creation and optimization."
         )
-        priorities = get_combinded_priorities(struc1.info, struc2.info)
+        priorities = get_combinded_priorities(
+            struc1.info,
+            struc2.info,
+            bo_threshold=min(
+                calcdata.reactant_calc.bo_treshold,
+                calcdata.product_calc.bo_treshold,
+            ),
+        )
 
     if calcdata.reactant_calc.ff_parameterization:
         parameterize_ff(struc1, calcdata.reactant_calc, priorities)
 
     if calcdata.product_calc.ff_parameterization:
         parameterize_ff(struc2, calcdata.product_calc, priorities)
+    if timing_enabled and parameterization_start is not None:
+        _record_timing(
+            timing_entries,
+            timing_logger,
+            "FF parameterization",
+            parameterization_start,
+            perf_counter(),
+        )
 
     tsff, converged, energy, final_geom = get_ts_guess(
-        struc1, struc2, calcdata=calcdata
+        struc1,
+        struc2,
+        calcdata=calcdata,
+        optimizer=optimizer,
+        timing_logger=timing_logger,
+        timing_entries=timing_entries,
     )
 
     return tsff, converged, energy, final_geom
