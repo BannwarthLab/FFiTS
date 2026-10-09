@@ -26,7 +26,7 @@ def get_bo_threshold_matrix(
         default_threshold (float, optional): Threshold for pairs where at least one atom
             is from the third period or higher (normally the config value). Defaults to 0.0.
         light_threshold (float, optional): Threshold for pairs where both atoms are from
-            the first or second period. Defaults to 0.5.
+            the first or second period. Defaults to 0.3.
 
     Returns:
         np.ndarray: Symmetric matrix of thresholds, shape (nat, nat).

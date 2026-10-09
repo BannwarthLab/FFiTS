@@ -1,4 +1,5 @@
 """MolBar-based helpers: combined atom priorities and the ANC/scipy optimizers."""
+
 import numpy as np
 import os
 import logging
@@ -27,7 +28,7 @@ def _define_bonds_for_molbar(
         mol (Molecule): MolBar Molecule object to be filled with connectivity information.
         struc1 (StructuralInformation): Structural information of reactant structure.
         struc2 (StructuralInformation): Structural information of product structure.
-        bo_threshold (float, optional): Threshold for defining bonds between atom pairs with at least one atom from the third period or higher. Pairs of two first/second period atoms always use 0.8. Defaults to 0.5.
+        bo_threshold (float, optional): Threshold for defining bonds between atom pairs with at least one atom from the third period or higher. Pairs of two first/second period atoms always use 0.3. Defaults to 0.5.
 
     Raises:
         ValueError: If either struc1 or struc2 is missing bond order matrices.
@@ -60,7 +61,7 @@ def get_combinded_priorities(
     Args:
         struc1 (StructuralInformation): Structural information of reactant structure.
         struc2 (StructuralInformation): Structural information of product structure.
-        bo_threshold (float, optional): Threshold for defining bonds between atom pairs with at least one atom from the third period or higher (e.g. the config value). Pairs of two first/second period atoms always use 0.8. Defaults to 0.5.
+        bo_threshold (float, optional): Threshold for defining bonds between atom pairs with at least one atom from the third period or higher (e.g. the config value). Pairs of two first/second period atoms always use 0.3. Defaults to 0.5.
 
     Returns:
         dict: Dictionary mapping atom indices to their combined priorities based on the connectivity of both structures.

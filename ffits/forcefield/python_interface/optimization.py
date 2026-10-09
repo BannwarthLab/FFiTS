@@ -1,4 +1,5 @@
 """Runs geometry optimization on a ForceField potential, from in-memory data or from files."""
+
 import logging
 from collections.abc import Callable
 from ffits.datatype.forcefield_data import ForceField
@@ -31,7 +32,7 @@ def optimize_with_forcefield(
     final_geometry_filename: str = "optimized.xyz",
     opt_stdout_filename: str = "ts_optimization.out",
 ):
-    """Optimizes a structure using a given force field and optimizer. Currently supports the anc_optimizer from MolBar, but can be extended to other optimizers as needed. If no calculation options are provided, default values will be used.
+    """Optimizes a structure using a given force field and optimizer. Supports the anc_optimizer from MolBar. If no calculation options are provided, default values will be used.
 
     Args:
         info (StructuralInformation): Structural information of the molecule to be optimized, including coordinates, atom types, etc.
@@ -78,7 +79,7 @@ def optimize_with_forcefield(
             logger.warning(
                 f"The last valid structure of the optimization trajectory is written to {final_geometry_filename}."
             )
-            write_last_valid_xyz(trajectory_filename,final_geometry_filename)
+            write_last_valid_xyz(trajectory_filename, final_geometry_filename)
 
     elif optimizer == scipy_optimizer:
         sys.stdout = orig_stdout

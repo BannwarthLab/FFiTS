@@ -15,9 +15,7 @@ def test_ffits_standard_tsguess_run(tmp_workdir):
     shutil.copy2(examples_dir / "struc1.xyz", temp_path / "reac.xyz")
     shutil.copy2(examples_dir / "struc2.xyz", temp_path / "prod.xyz")
 
-    stdout, stderr, returncode = run_ffits_as_subprocess(
-        ["reac.xyz", "prod.xyz"]
-    )
+    stdout, stderr, returncode = run_ffits_as_subprocess(["reac.xyz", "prod.xyz"])
     print("STDOUT:", stdout)
     print("STDERR:", stderr)
     assert (
@@ -25,9 +23,7 @@ def test_ffits_standard_tsguess_run(tmp_workdir):
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
     ts_guess_file = temp_path / "ts_guess.xyz"
-    assert (
-        ts_guess_file.exists()
-    ), f"ts_guess.xyz was not created in {temp_path}"
+    assert ts_guess_file.exists(), f"ts_guess.xyz was not created in {temp_path}"
 
     ff_csv_file = temp_path / "tsff.csv"
     assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
@@ -65,9 +61,7 @@ hessian_calc = false
     with open(temp_path / "custom_config.toml", "w") as f:
         f.write(custom_input)
 
-    stdout, stderr, returncode = run_ffits_as_subprocess(
-        ["reac.xyz", "prod.xyz"]
-    )
+    stdout, stderr, returncode = run_ffits_as_subprocess(["reac.xyz", "prod.xyz"])
     print("STDOUT:", stdout)
     print("STDERR:", stderr)
     assert (
@@ -122,9 +116,7 @@ only_proper_dihedrals = false
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
     ts_guess_file = temp_path / "ts_guess.xyz"
-    assert (
-        ts_guess_file.exists()
-    ), f"ts_guess.xyz was not created in {temp_path}"
+    assert ts_guess_file.exists(), f"ts_guess.xyz was not created in {temp_path}"
 
     ff_csv_file = temp_path / "tsff.csv"
     assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
@@ -167,9 +159,7 @@ average_with_hess_weight = false
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
     ts_guess_file = temp_path / "ts_guess.xyz"
-    assert (
-        ts_guess_file.exists()
-    ), f"ts_guess.xyz was not created in {temp_path}"
+    assert ts_guess_file.exists(), f"ts_guess.xyz was not created in {temp_path}"
 
     ff_csv_file = temp_path / "tsff.csv"
     assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
@@ -205,9 +195,7 @@ wbo_calc = false
     with open(temp_path / "custom_config.toml", "w") as f:
         f.write(custom_input)
 
-    stdout, stderr, returncode = run_ffits_as_subprocess(
-        ["reac.xyz", "prod.xyz"]
-    )
+    stdout, stderr, returncode = run_ffits_as_subprocess(["reac.xyz", "prod.xyz"])
     print("STDOUT:", stdout)
     print("STDERR:", stderr)
     assert (
@@ -253,9 +241,7 @@ ff_parameterization = false
     with open(temp_path / "custom_config.toml", "w") as f:
         f.write(custom_input)
 
-    stdout, stderr, returncode = run_ffits_as_subprocess(
-        ["reac.xyz", "prod.xyz"]
-    )
+    stdout, stderr, returncode = run_ffits_as_subprocess(["reac.xyz", "prod.xyz"])
     print("STDOUT:", stdout)
     print("STDERR:", stderr)
     assert (
@@ -316,9 +302,7 @@ ff_filename = "ff2test.csv"
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
     ts_guess_file = temp_path / "ts_guess.xyz"
-    assert (
-        ts_guess_file.exists()
-    ), f"ts_guess.xyz was not created in {temp_path}"
+    assert ts_guess_file.exists(), f"ts_guess.xyz was not created in {temp_path}"
 
     ff_csv_file = temp_path / "tsff.csv"
     assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
@@ -331,13 +315,9 @@ ff_filename = "ff2test.csv"
     ff_csv_file = temp_path / "wbooo2"
     assert ff_csv_file.exists(), f"wbooo2 was not created in {temp_path}"
     ff_csv_file = temp_path / "struc1test.hess"
-    assert (
-        ff_csv_file.exists()
-    ), f"struc1test.hess was not created in {temp_path}"
+    assert ff_csv_file.exists(), f"struc1test.hess was not created in {temp_path}"
     ff_csv_file = temp_path / "struc2test.hess"
-    assert (
-        ff_csv_file.exists()
-    ), f"struc2test.hess was not created in {temp_path}"
+    assert ff_csv_file.exists(), f"struc2test.hess was not created in {temp_path}"
 
 
 # TODO dieser Test wird fertig gemacht, wenn die temporary directories printbar sind (muss in der config geändert werden)

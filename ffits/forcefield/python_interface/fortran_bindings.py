@@ -1,4 +1,5 @@
 """Thin wrappers converting 0-based Python atom indices to 1-based Fortran calls."""
+
 import ffits.forcefield.fortran.fortran_forcefield as fortran_ff
 import numpy as np
 
@@ -10,7 +11,7 @@ def get_single_bond_gradient(
     c: float,
     gradient: np.ndarray,
 ):
-    """Calculates the gradient for a single bond on a given displaced geometry and adds it to the provided gradient array in place. The bond is defined by the indices of the two atoms involved and the current bond length. The gradient is calculated using the Fortran FF implementation.
+    """Calculates the gradient for a single bond on a given displaced geometry and adds it to the provided gradient array in place. The bond is defined by the indices of the two atoms involved and the current bond length.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -34,7 +35,7 @@ def get_single_angle_gradient(
     c: float,
     gradient: np.ndarray,
 ):
-    """Calculates the gradient for a single angle on a given displaced geometry and adds it to the provided gradient array in place. The angle is defined by the indices of the three atoms involved and the current angle. The gradient is calculated using the Fortran FF implementation.
+    """Calculates the gradient for a single angle on a given displaced geometry and adds it to the provided gradient array in place. The angle is defined by the indices of the three atoms involved and the current angle.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -59,7 +60,7 @@ def get_single_dihedral_gradient(
     c: float,
     gradient: np.ndarray,
 ):
-    """Calculates the gradient for a single dihedral on a given displaced geometry and adds it to the provided gradient array in place. The dihedral is defined by the indices of the four atoms involved and the current dihedral angle. The gradient is calculated using the Fortran FF implementation.
+    """Calculates the gradient for a single dihedral on a given displaced geometry and adds it to the provided gradient array in place. The dihedral is defined by the indices of the four atoms involved and the current dihedral angle.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -85,7 +86,7 @@ def get_single_repulsive_gradient(
     c: float,
     gradient: np.ndarray,
 ):
-    """Calculates the gradient for a single repulsive term on a given displaced geometry and adds it to the provided gradient array in place. The repulsive term is defined by the indices of the two atoms involved and the current distance. The gradient is calculated using the Fortran FF implementation.
+    """Calculates the gradient for a single repulsive term on a given displaced geometry and adds it to the provided gradient array in place. The repulsive term is defined by the indices of the two atoms involved and the current distance.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -109,7 +110,7 @@ def get_single_bond_hessian(
     c: float,
     hessian: np.ndarray,
 ):
-    """Calculates the hessian for a single bond on a given displaced geometry and adds it to the provided hessian array in place. The bond is defined by the indices of the two atoms involved and the current bond length. The hessian is calculated using the Fortran FF implementation.
+    """Calculates the hessian for a single bond on a given displaced geometry and adds it to the provided hessian array in place. The bond is defined by the indices of the two atoms involved and the current bond length.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -134,7 +135,7 @@ def get_single_angle_hessian(
     c: float,
     hessian: np.ndarray,
 ):
-    """Calculates the hessian for a single angle on a given displaced geometry and adds it to the provided hessian array in place. The angle is defined by the indices of the three atoms involved and the current angle. The hessian is calculated using the Fortran FF implementation.
+    """Calculates the hessian for a single angle on a given displaced geometry and adds it to the provided hessian array in place. The angle is defined by the indices of the three atoms involved and the current angle.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -159,7 +160,7 @@ def get_single_dihedral_hessian(
     c: float,
     hessian: np.ndarray,
 ):
-    """Calculates the hessian for a single dihedral on a given displaced geometry and adds it to the provided hessian array in place. The dihedral is defined by the indices of the four atoms involved and the current dihedral angle. The hessian is calculated using the Fortran FF implementation.
+    """Calculates the hessian for a single dihedral on a given displaced geometry and adds it to the provided hessian array in place. The dihedral is defined by the indices of the four atoms involved and the current dihedral angle.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -185,7 +186,7 @@ def get_single_repulsive_hessian(
     c: float,
     hessian: np.ndarray,
 ):
-    """Calculates the hessian for a single repulsive interaction on a given displaced geometry and adds it to the provided hessian array in place. The repulsive interaction is defined by the indices of the two atoms involved and the current distance. The hessian is calculated using the Fortran FF implementation.
+    """Calculates the hessian for a single repulsive interaction on a given displaced geometry and adds it to the provided hessian array in place. The repulsive interaction is defined by the indices of the two atoms involved and the current distance.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])

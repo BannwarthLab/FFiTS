@@ -1,4 +1,5 @@
 """Tests for ffits.io.logging_config.setup_logger."""
+
 import logging
 
 import pytest
@@ -27,7 +28,8 @@ def test_setup_logger_defaults_to_info_when_level_is_missing():
     logger = setup_logger(None)
 
     assert logger.level == 20
-    
+
+
 @pytest.fixture(autouse=True)
 def _reset_ffits_logger():
     """setup_logger mutates the shared 'ffits' logger; reset it around each

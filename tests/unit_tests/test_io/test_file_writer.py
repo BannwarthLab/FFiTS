@@ -1,4 +1,5 @@
 """Tests for ffits.io.file_writer (structure/hessian/trajectory writers)."""
+
 import networkx as nx
 import numpy as np
 import pytest

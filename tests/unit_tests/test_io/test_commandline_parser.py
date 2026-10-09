@@ -1,4 +1,5 @@
 """Tests for ffits.io.commandline_parser (argument parsing/validation)."""
+
 import logging
 
 import pytest
@@ -24,7 +25,8 @@ def test_parse_args_includes_timing_flag(monkeypatch, tmp_path):
     assert args["timing"] is True
     assert args["debug"] is False
     assert args["structures"] == [str(reactant), str(product)]
-    
+
+
 def test_get_version_returns_a_string():
     # Whatever pyproject.toml resolution finds (or "unknown" as a fallback),
     # this should never raise.
@@ -61,9 +63,7 @@ def test_optimizer_mode_requires_exactly_one_structure(monkeypatch, tmp_path):
     prod = tmp_path / "prod.xyz"
     reac.write_text("1\n\nC 0.0 0.0 0.0\n")
     prod.write_text("1\n\nC 0.0 0.0 0.0\n")
-    monkeypatch.setattr(
-        "sys.argv", ["ffits", str(reac), str(prod), "--opt", "ff.csv"]
-    )
+    monkeypatch.setattr("sys.argv", ["ffits", str(reac), str(prod), "--opt", "ff.csv"])
     with pytest.raises(SystemExit):
         parse_args()
 
@@ -175,9 +175,7 @@ def test_config_with_charge_logs_warning(monkeypatch, tmp_path, caplog):
 def test_optimizer_mode_with_one_structure_succeeds(monkeypatch, tmp_path):
     reac = tmp_path / "reac.xyz"
     reac.write_text("1\n\nC 0.0 0.0 0.0\n")
-    monkeypatch.setattr(
-        "sys.argv", ["ffits", str(reac), "--opt", "ff.csv"]
-    )
+    monkeypatch.setattr("sys.argv", ["ffits", str(reac), "--opt", "ff.csv"])
     result = parse_args()
     assert result["structures"] == [str(reac)]
     assert result["optff"] == "ff.csv"

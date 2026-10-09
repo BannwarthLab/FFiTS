@@ -103,7 +103,6 @@ class TestObjectiveFunction:
         assert objfun >= 0.0
 
 
-
 class TestObjectiveFunctionProperties:
     """Tests for objective function mathematical properties."""
 

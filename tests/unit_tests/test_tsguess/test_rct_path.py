@@ -4,6 +4,7 @@ get_one_image() and create_path() are tightly coupled to real xtb/molbar
 calculations and are exercised by the tmp_workdir-based integration tests
 instead; _write_structure_to_xyz() is plain file I/O and is covered here.
 """
+
 import numpy as np
 
 from ffits.ts_guess.rct_path import _write_structure_to_xyz

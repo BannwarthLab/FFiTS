@@ -1,4 +1,5 @@
 """Derives initial force field terms (bonds, angles, dihedrals, repulsion, H-bonds) from structural data."""
+
 import numpy as np
 import pandas as pd
 from ffits.utils.bond_threshold import get_bo_threshold_matrix
@@ -196,22 +197,15 @@ def _is_at_linear_angle(
 ) -> bool:
     """True if a dihedral is built on a (near-)linear angle, where it is undefined.
 
-    Proper and improper dihedrals store their four atoms differently, so each
-    needs its own check:
-
-    - Proper ``(i, j, k, l)``: a bonded chain i-j-k-l. The dihedral is the angle
-      between the plane through (i, j, k) and the plane through (j, k, l), so it
-      is undefined if either of those two bond angles is itself a straight line.
-    - Improper ``(central, t1, t2, t3)``: three substituents t1, t2, t3 all bonded
-      to ``central`` (not to each other). It is undefined if any two of the three
-      substituents are on (near-)opposite sides of the central atom.
+    - Proper ``(i, j, k, l)``: linear if the angle i-j-k or j-k-l is straight.
+    - Improper ``(central, t1, t2, t3)``: linear if any two substituents lie on
+      opposite sides of the central atom.
 
     Args:
-        atoms: the four 0-based atom indices of the dihedral, laid out as above.
+        atoms: the four 0-based atom indices of the dihedral.
         is_proper: whether ``atoms`` is a proper (True) or improper (False) dihedral.
         info: structural information providing the geometry.
-        tolerance_deg: an angle is considered linear within this many degrees of
-            0 or 180.
+        tolerance_deg: an angle within this many degrees of 0 or 180 counts as linear.
     """
     tolerance_rad = np.radians(tolerance_deg)
 
@@ -240,14 +234,14 @@ def fill_ff(
     bo_threshold: float = 0.0,
     linear_angle_tolerance_deg: float = 5.0,
 ) -> None:
-    """Fills the ForceField object with bonds, angles, dihedrals, and repulsive terms based on the structural information. The function defines the connectivity using a bond order threshold and calculates reference values and parameters for each term. If priorities are provided, it filters dihedrals to keep one proper dihedral per central atom pair and creates improper dihedrals for remaining atoms around each central atom. Dihedrals built on a (near-)linear bond angle are dropped afterwards, since the torsion and its Hessian are undefined there.
+    """Fills the ForceField object with bonds, angles, dihedrals, and repulsive terms based on the structural information. With priorities, one proper dihedral is kept per central bond and the rest become impropers. Dihedrals on a (near-)linear bond angle are dropped.
 
     Args:
         ff (ForceField): ForceField object to be filled with parameters.
         info (StructuralInformation): Structural information for the molecule.
         priorities (dict, optional): Dictionary mapping atom indices to their priorities. Defaults to None.
         repulsive_start (float, optional): Initial value for the FF parameter of the repulsive terms. Defaults to 0.01.
-        bo_threshold (float, optional): Threshold for defining bonds based on bond order, used for all atom pairs with at least one atom from the third period or higher. Pairs of two atoms from the first or second period always use a threshold of 0.8. Defaults to 0.0.
+        bo_threshold (float, optional): Threshold for defining bonds based on bond order, used for all atom pairs with at least one atom from the third period or higher. Pairs of two atoms from the first or second period always use a threshold of 0.3. Defaults to 0.0.
         linear_angle_tolerance_deg (float, optional): A dihedral is dropped if the bond angle at either of its inner two atoms is within this many degrees of 0 or 180. Defaults to 5.0.
 
     Raises:
@@ -411,12 +405,7 @@ def fill_ff(
     ff.dihedrals["reference_value"] = ff.dihedrals["atoms"].apply(ref_dihedral)
     ff.dihedrals["parameter"] = ff.dihedrals["atoms"].apply(param_dihedral)
 
-    # Drop dihedrals built on a (near-)linear bond angle: a dihedral is the angle
-    # between two planes, and both planes are defined using the bond angle at its
-    # inner two atoms. As that angle approaches 0 or 180 degrees, the plane becomes
-    # undefined and the analytic Hessian of the dihedral diverges (its derivative
-    # has a 1/sin(angle) factor). This showed up as a >1e8 unit-Hessian norm for a
-    # trans-axial N-Cr-N ligand in a metal complex.
+    # Drop dihedrals built on a (near-)linear bond angle (undefined torsion, diverging Hessian).
     is_linear = ff.dihedrals.apply(
         lambda row: _is_at_linear_angle(
             row["atoms"], row["proper_dihedral"], info, linear_angle_tolerance_deg

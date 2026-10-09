@@ -1,4 +1,5 @@
 """FF energy, gradient and hessian evaluation (per-term and combined) via the Fortran bindings."""
+
 import ffits.forcefield.python_interface.fortran_bindings as fb
 from ffits.datatype.forcefield_data import ForceField
 from ffits.utils.geometry import angle, bondlength, dihedral_angle
@@ -96,7 +97,7 @@ def energy_ff(xyz_displaced: np.ndarray, ff: ForceField) -> float:
 # --- Bond Gradient -------------------------------------------------------
 # -------------------------------------------------------------------------
 def bond_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray) -> None:
-    """Calculates FF bond gradient of given displaced geometry and adds it in place to the given gradient array. The gradient is calculated for all bond terms in the force field using the Fortran bindings.
+    """Calculates FF bond gradient of given displaced geometry and adds it in place to the given gradient array.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -114,7 +115,7 @@ def bond_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray) -> None
 # --- Angle Gradient ------------------------------------------------------
 # -------------------------------------------------------------------------
 def angle_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray) -> None:
-    """Calculates FF angle gradient of given displaced geometry and adds it in place to the given gradient array. The gradient is calculated for all angle terms in the force field using the Fortran bindings.
+    """Calculates FF angle gradient of given displaced geometry and adds it in place to the given gradient array.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -132,7 +133,7 @@ def angle_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray) -> Non
 # --- Dihedral Gradient ---------------------------------------------------
 # -------------------------------------------------------------------------
 def dihedral_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray) -> None:
-    """Calculates FF dihedral gradient of given displaced geometry and adds it in place to the given gradient array. The gradient is calculated for all dihedral terms in the force field using the Fortran bindings.
+    """Calculates FF dihedral gradient of given displaced geometry and adds it in place to the given gradient array.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -151,7 +152,7 @@ def dihedral_gradient(xyz: np.ndarray, ff: ForceField, gradient: np.ndarray) -> 
 # --- Repulsive Gradient --------------------------------------------------
 # -------------------------------------------------------------------------
 def repulsive_gradient(xyz: np.array, ff: ForceField, gradient: np.ndarray) -> None:
-    """Calculates FF repulsive gradient of given displaced geometry and adds it in place to the given gradient array. The gradient is calculated for all repulsive terms in the force field using the Fortran bindings.
+    """Calculates FF repulsive gradient of given displaced geometry and adds it in place to the given gradient array.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -200,7 +201,7 @@ def complete_gradient(xyz_displaced: np.ndarray, ff: ForceField) -> np.ndarray:
 # --- Bond hessian -------------------------------------------------------
 # -------------------------------------------------------------------------
 def bond_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray) -> None:
-    """Calculates FF bond hessian of given displaced geometry and adds it in place to the given hessian array. The hessian is calculated for all bond terms in the force field using the Fortran bindings.
+    """Calculates FF bond hessian of given displaced geometry and adds it in place to the given hessian array.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -219,7 +220,7 @@ def bond_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray) -> None:
 # --- Angle hessian ------------------------------------------------------
 # -------------------------------------------------------------------------
 def angle_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray) -> None:
-    """Calculates FF angle hessian of given displaced geometry and adds it in place to the given hessian array. The hessian is calculated for all angle terms in the force field using the Fortran bindings.
+    """Calculates FF angle hessian of given displaced geometry and adds it in place to the given hessian array.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -237,7 +238,7 @@ def angle_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray) -> None:
 # --- Dihedral hessian ---------------------------------------------------
 # -------------------------------------------------------------------------
 def dihedral_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray) -> None:
-    """Calculates FF dihedral hessian of given displaced geometry and adds it in place to the given hessian array. The hessian is calculated for all dihedral terms in the force field using the Fortran bindings.
+    """Calculates FF dihedral hessian of given displaced geometry and adds it in place to the given hessian array.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])
@@ -256,7 +257,7 @@ def dihedral_hessian(xyz: np.ndarray, ff: ForceField, hessian: np.ndarray) -> No
 # --- Repulsive hessian --------------------------------------------------
 # -------------------------------------------------------------------------
 def repulsive_hessian(xyz: np.array, ff: ForceField, hessian: np.ndarray) -> None:
-    """Calculates FF repulsive hessian of given displaced geometry and adds it in place to the given hessian array. The hessian is calculated for all repulsive terms in the force field using the Fortran bindings.
+    """Calculates FF repulsive hessian of given displaced geometry and adds it in place to the given hessian array.
 
     Args:
         xyz (np.ndarray): displaced geometry in column-major format (shape: [nat, 3])

@@ -1,4 +1,5 @@
 """TS guess generation: builds a TS force field from reactant/product FFs and optimizes on it."""
+
 import logging
 import numpy as np
 from collections.abc import Callable
@@ -31,7 +32,7 @@ def get_ts_guess(
     timing_logger: logging.Logger | None = None,
     timing_entries: list[str] | None = None,
 ) -> tuple[ForceField, bool, float, np.ndarray]:
-    """Generates a TS guess from reactant and product structures by first constructing the TS FF and the using it as the potential for the geometry optimization or either reactant or product structure.
+    """Generates a TS guess from reactant and product structures by by constructing the TS FF and using it to optimize the reactant or product geometry.
 
     Args:
         struc1 (Structure): Structure object containing information about the reactant structure
@@ -93,7 +94,7 @@ def get_ts_guess(
         calcdata.ts_calc,
         trajectory_filename,
         final_geometry_filename,
-        opt_stdout_filename="ts_optimization.out"
+        opt_stdout_filename="ts_optimization.out",
     )
     if timing_enabled and optimization_start is not None:
         _record_timing(
@@ -155,7 +156,6 @@ def get_ts_guess_from_xyz(
             xtb_start,
             perf_counter(),
         )
-
 
     parameterization_start = perf_counter() if timing_enabled else None
     priorities = None
