@@ -8,13 +8,38 @@ from pathlib import Path
 from importlib import metadata
 
 
-def _get_build_date():
+BUILD_INFO_FILE = (
+    Path(__file__).resolve().parents[2] / "forcefield" / "fortran" / "build_info.txt"
+)
+
+
+def _read_build_info(path: Path = BUILD_INFO_FILE) -> dict:
     """
-    Get the build/installation date from the ffits package directory.
+    Read the key=value file written by CMake when the Fortran module is built.
 
     Returns:
-        str: Build date as "YYYY-MM-DD HH:MM" based on package modification time.
+        dict: e.g. {"build_date": ..., "fortran_compiler": ...}; empty if the file is missing.
     """
+    try:
+        with open(path) as f:
+            return dict(
+                line.strip().split("=", 1) for line in f if "=" in line
+            )
+    except OSError:
+        return {}
+
+
+def _get_build_date():
+    """
+    Get the build date of the Fortran module (from build_info.txt), falling
+    back to the modification time of the ffits package directory.
+
+    Returns:
+        str: Build date as "YYYY-MM-DD HH:MM".
+    """
+    build_date = _read_build_info().get("build_date")
+    if build_date:
+        return build_date
     try:
         # Get the ffits package directory
         ffits_dir = Path(__file__).parent.parent
@@ -105,6 +130,8 @@ def print_program_header(version: str = None):
     print(" Program:     FFiTS  —  Force Field-interpolated Transition States")
     print(f" Version:     {version}")
     print(f" Build Date:  {build_date}")
+    fortran_compiler = _read_build_info().get("fortran_compiler", "unknown")
+    print(f" Compiler:    {fortran_compiler}")
     if last_commit_date:
         print(f" Last Commit: {last_commit_date}")
     print(f" Authors:     {metadata['authors']}")

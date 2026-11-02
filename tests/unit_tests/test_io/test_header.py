@@ -46,11 +46,40 @@ def test_get_build_date_falls_back_to_now_on_error(monkeypatch):
     def boom(_path):
         raise OSError("no such package dir")
 
+    monkeypatch.setattr(header_mod, "_read_build_info", lambda: {})
     monkeypatch.setattr(header_mod.os.path, "getmtime", boom)
     # Should not raise even though getmtime fails.
     build_date = _get_build_date()
     assert isinstance(build_date, str)
     assert len(build_date) == 16  # "YYYY-MM-DD HH:MM"
+
+
+def test_read_build_info_parses_file(tmp_path):
+    info = tmp_path / "build_info.txt"
+    info.write_text(
+        "build_date=2026-10-15 12:00\nfortran_compiler=GNU 16.1.0\nfortran_flags=-O3 \n"
+    )
+    assert header_mod._read_build_info(info) == {
+        "build_date": "2026-10-15 12:00",
+        "fortran_compiler": "GNU 16.1.0",
+        "fortran_flags": "-O3",
+    }
+
+
+def test_read_build_info_missing_file(tmp_path):
+    assert header_mod._read_build_info(tmp_path / "nope.txt") == {}
+
+
+def test_header_prints_compiler_from_build_info(monkeypatch, capsys):
+    monkeypatch.setattr(
+        header_mod,
+        "_read_build_info",
+        lambda: {"build_date": "2026-10-15 12:00", "fortran_compiler": "GNU 16.1.0"},
+    )
+    print_program_header()
+    out = capsys.readouterr().out
+    assert "Build Date:  2026-10-15 12:00" in out
+    assert "Compiler:    GNU 16.1.0" in out
 
 
 def test_get_last_commit_date_returns_none_when_git_unavailable(monkeypatch):

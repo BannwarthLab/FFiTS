@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+from ffits.data.elements import HBOND_ACCEPTORS
 from ffits.utils.bond_threshold import get_bo_threshold_matrix
 from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.structure_data import StructuralInformation
@@ -428,9 +429,14 @@ def fill_ff(
     # Add hydrogen bonds to ff.bonds and remove from ff.repulsive
     if hydrogen_bonds:
         hbond_bonds = list(hydrogen_bonds.keys())
+        # stored like get_angle_atoms (outer atoms sorted), so the same angle in the other FF matches
         hbond_angles = [
-            (donor, h, data["bonded_atom"])
-            for (donor, h), data in hydrogen_bonds.items()
+            (
+                min(data["acceptor"], data["bonded_atom"]),
+                data["h_atom"],
+                max(data["acceptor"], data["bonded_atom"]),
+            )
+            for data in hydrogen_bonds.values()
         ]
 
         # Add hydrogen bonds to bonds dataframe
@@ -466,16 +472,23 @@ def fill_ff(
 def _find_hydrogen_bonding(ff: ForceField, info: StructuralInformation) -> dict:
     """Identifies hydrogen bonding among atoms for repulsive interactions by distance, angle and atom type.
 
+    A hydrogen bond D-H...A is a repulsive pair H...A (A = acceptor: O, N or F)
+    shorter than the van der Waals distance, where the angle A...H-D to an atom D
+    bonded to H is within 30 degrees of linear.
+
     Args:
         ff (ForceField): ForceField object containing repulsive terms
         info (StructuralInformation): Structural information with atom types, coordinates, and connectivity
 
     Returns:
-        dict: Dictionary of hydrogen bonds and their properties, keyed by (donor_atom, h_atom) with values containing bond length, angle, and bonded atom information for example {(21, 68): {'bl': 3.6, 'angle': 2.9, 'bonded_atom': 66}, (67, 34): {'bl': 3.8, 'angle': 3.0, 'bonded_atom': 5}}
+        dict: Dictionary of hydrogen bonds and their properties, keyed by the sorted pair (H, A) like all
+        bonds and repulsive terms, with values containing the H...A bond length, the A...H-D angle, the
+        acceptor A, the hydrogen H and the atom D bonded to H, for example
+        {(21, 68): {'bl': 3.6, 'angle': 2.9, 'acceptor': 21, 'h_atom': 68, 'bonded_atom': 66},
+        (34, 67): {'bl': 3.8, 'angle': 3.0, 'acceptor': 67, 'h_atom': 34, 'bonded_atom': 5}}
     """
     import math
 
-    hbond_donors = {"O", "N", "F"}
     angle_threshold_deg = 30.0
     angle_threshold_rad = math.radians(angle_threshold_deg)
     factor = 1.0
@@ -492,49 +505,52 @@ def _find_hydrogen_bonding(ff: ForceField, info: StructuralInformation) -> dict:
         elem_i = info.atom_types[atom_i]
         elem_j = info.atom_types[atom_j]
 
-        is_donor_h = (elem_i in hbond_donors and elem_j == "H") or (
-            elem_j in hbond_donors and elem_i == "H"
+        is_acceptor_h = (elem_i in HBOND_ACCEPTORS and elem_j == "H") or (
+            elem_j in HBOND_ACCEPTORS and elem_i == "H"
         )
 
-        if not is_donor_h:
+        if not is_acceptor_h:
             continue
 
         if elem_j == "H":
             h_atom = atom_j
-            donor_atom = atom_i
+            acceptor = atom_i
         else:
             h_atom = atom_i
-            donor_atom = atom_j
+            acceptor = atom_j
 
-        bl = bondlength(info.fortran_xyz, donor_atom, h_atom)
-        vdw_dist = info.vander_matrix[donor_atom, h_atom]
+        bl = bondlength(info.fortran_xyz, acceptor, h_atom)
+        vdw_dist = info.vander_matrix[acceptor, h_atom]
 
         if bl >= factor * vdw_dist:
             continue
 
         bonded_to_h = []
         for neighbor_idx in range(info.nat):
-            if neighbor_idx != donor_atom and neighbor_idx != h_atom:
+            if neighbor_idx != acceptor and neighbor_idx != h_atom:
                 if info.bo_matrix[h_atom, neighbor_idx] > 0:
                     bonded_to_h.append(neighbor_idx)
         logger.debug(f"Atom {h_atom} is bonded to atoms: {bonded_to_h}")
 
         for bonded_atom in bonded_to_h:
-            ang = angle(info.fortran_xyz, donor_atom, h_atom, bonded_atom)
+            ang = angle(info.fortran_xyz, acceptor, h_atom, bonded_atom)
             logger.debug(
-                f"Calculating angle for pair ({donor_atom}, {h_atom}, {bonded_atom}): {math.degrees(ang):.2f}°"
+                f"Calculating angle for pair ({acceptor}, {h_atom}, {bonded_atom}): {math.degrees(ang):.2f}°"
             )
 
             if abs(ang - math.pi) < angle_threshold_rad:
-                hydrogen_bonds[(donor_atom, h_atom)] = {
+                # sorted key, as the H...A pair is stored in ff.repulsive and as every other bond
+                hydrogen_bonds[(min(acceptor, h_atom), max(acceptor, h_atom))] = {
                     "bl": bl,
                     "angle": ang,
+                    "acceptor": acceptor,
+                    "h_atom": h_atom,
                     "bonded_atom": bonded_atom,
                 }
                 logger.info(
-                    f"Hydrogen bond found: {info.atom_types[donor_atom]}"
-                    f"({donor_atom})-H({h_atom})"
-                    f"...{info.atom_types[bonded_atom]}({bonded_atom}), "
+                    f"Hydrogen bond found: {info.atom_types[bonded_atom]}"
+                    f"({bonded_atom})-H({h_atom})"
+                    f"...{info.atom_types[acceptor]}({acceptor}), "
                     f"angle: {math.degrees(ang):.2f}°, "
                     f"distance: {bl:.4f}"
                 )

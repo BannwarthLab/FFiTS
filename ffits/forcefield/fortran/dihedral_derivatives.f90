@@ -232,10 +232,11 @@ subroutine build_dihedral_hessian(phi0, cosphi0,sinphi0,sinphi, cosphi, dcosdx, 
     real(8) :: h
     integer :: m, i, j
 
-    do m=1, 78
-
-        j = floor((sqrt(8*real(m) - 7) + 1) / 2)
-        i = m - (j-1)*j/2
+    ! packed upper triangle, m = (j-1)*j/2 + i for i <= j (same as gidx)
+    m = 0
+    do j=1, 12
+    do i=1, j
+        m = m + 1
 
         call get_d2Vdihedraldxdy(dcosdx(i), dcosdx(j), d2cosdxdy(m), dsindx(i), dsindx(j), d2sindxdy(m), k_dihedrals, &
                                 cosphi0, sinphi0, cosphi, sinphi, h)
@@ -247,6 +248,7 @@ subroutine build_dihedral_hessian(phi0, cosphi0,sinphi0,sinphi, cosphi, dcosdx, 
             hessian(xhat(j), xhat(i)) = hessian(xhat(j), xhat(i)) + h
 
         endif
+    enddo
     enddo
 
 end subroutine build_dihedral_hessian
@@ -352,10 +354,11 @@ subroutine get_phi_hessian(aijkl, bijk, cjkl, dijkl, dadx, dbdx, dcdx, dddx, &
     real(8) :: cosxy, sinxy
     integer :: m, i, j
    
-    do m=1, 78
-
-        j = floor((sqrt(8*real(m) - 7) + 1) / 2)
-        i = m - (j-1)*j/2
+    ! packed upper triangle, m = (j-1)*j/2 + i for i <= j (same as gidx)
+    m = 0
+    do j=1, 12
+    do i=1, j
+        m = m + 1
 
         call get_d2dxdy(aijkl, bijk, cjkl, dadx(i), dadx(j), d2adxdy(m), dbdx(i), dbdx(j), d2bdxdy(m), &
                          dcdx(i), dcdx(j), d2cdxdy(m), cosxy)
@@ -366,7 +369,8 @@ subroutine get_phi_hessian(aijkl, bijk, cjkl, dijkl, dadx, dbdx, dcdx, dddx, &
         d2cosdxdy(m) = cosxy
 
         d2sindxdy(m) = sinxy
-        
+
+    enddo
     enddo
 
 end subroutine get_phi_hessian

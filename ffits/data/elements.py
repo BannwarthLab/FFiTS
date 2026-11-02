@@ -250,6 +250,9 @@ ELEMENTS_LIST = [
 ]
 
 
+# Elements that act as hydrogen bond acceptors (A in D-H...A)
+HBOND_ACCEPTORS = {"O", "N", "F"}
+
 PERIODIC_TABLE = {
     "H": 1,
     "He": 2,

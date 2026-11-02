@@ -3,13 +3,15 @@
 import logging
 import numpy as np
 import pandas as pd
-from ffits.utils.geometry import angle, dihedral_angle
+from ffits.data.vanderwaals_radii import VANDER_VALUES, ATOMIC_RADII_TRUHLAR
+from ffits.utils.geometry import angle, angstrom2bohr, dihedral_angle
 from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.structure_data import StructuralInformation
 from ffits.datatype.calculation_data import CalculationData
-from ffits.utils.wbo_analysis import compare_wbo_differences
 
 logger = logging.getLogger(__name__)
+
+TERMS = ("bonds", "angles", "dihedrals", "repulsive")
 
 
 def create_tsff(
@@ -18,12 +20,13 @@ def create_tsff(
     ff2: ForceField,
     info2: StructuralInformation,
     calcdata: CalculationData | None = None,
-) -> dict[ForceField, dict]:
+) -> ForceField:
     """Creates TS force field (TS FF) from two given structures.
 
     Mixing factors come from ``calcdata.ts_calc`` (factor_reactant/
-    factor_product), unless ``average_with_hess_weight`` is set, in which
-    case per-term factors are instead derived from Hessian analysis.
+    factor_product). With ``ts_calc.hydrogen_covalent_radius``, forming or
+    breaking covalent H-X bonds use the covalent radius of hydrogen on the side
+    where they are missing (see :func:`_mix_bond_references`).
 
     Args:
         ff1 (ForceField): Force field of the reactant structure.
@@ -34,180 +37,80 @@ def create_tsff(
             FF creation. Defaults to a fresh ``CalculationData.from_default()``.
 
     Returns:
-        dict[ForceField, dict]: ``{"tsff": ForceField, "params_mix": dict}``,
-        where ``params_mix`` maps atom tuples to their reactant mixing
-        factor (empty unless Hessian weighting was used).
+        ForceField: The TS force field.
     """
     if calcdata is None:
         calcdata = CalculationData.from_default()
-    fact1 = calcdata.ts_calc.factor_reactant
-    fact2 = calcdata.ts_calc.factor_product
-    if calcdata.ts_calc.average_with_hess_weight and fact1 != 0.5:
-        logger.warning(
-            "Bonds from FFs are not averaged with chosen factors, since weigh_bonds_with_hessian is set to True. Weighting will be determined through Hessian analysis. "
+    ts_calc = calcdata.ts_calc
+    fact1 = ts_calc.factor_reactant
+    fact2 = ts_calc.factor_product
+
+    tsff = combine_ff_topology(ff1, ff2, calcdata.ts_path.ff_filename)
+
+    for term in TERMS:
+        mix_parameters(
+            getattr(tsff, term),
+            getattr(ff1, term),
+            getattr(ff2, term),
+            fact1,
+            fact2,
         )
-
-    tsff = ForceField(ff1.nat, calcdata.ts_path.ff_filename, readff=False)
-    tsff.bonds = combine_ff_atoms(ff1.bonds, ff2.bonds)
-    tsff.angles = combine_ff_atoms(ff1.angles, ff2.angles)
-    tsff.dihedrals = combine_dihedrals(ff1, info1, ff2, info2)
-    tsff.repulsive = remove_bonds_from_repulsive(
-        combine_ff_atoms(ff1.repulsive, ff2.repulsive),
-        combine_ff_atoms(ff1.bonds, ff2.bonds),
-    )
-
-    params_mix = {}
-    if calcdata.ts_calc.average_with_hess_weight:
-        sharpness = calcdata.ts_calc.hess_weight_sharpness
-        logger.info(
-            f"Calculating mixing factors based on Hessian analysis with sharpness {sharpness}"
-        )
-        params_mix = hessian_weighting_mix_list(
-            info1,
-            info2,
-            tsff.bonds,
-            tsff.angles,
-            tsff.dihedrals,
-            sharpness=sharpness,
-            include_angles_dihedrals=calcdata.ts_calc.hess_weight_angles_dihedrals,
-        )
-        # get average reac parameter for bond terms (so tupels with only two entries)
-        if params_mix:
-            average_bond_param_reac = np.mean(
-                [factor for atoms, factor in params_mix.items() if len(atoms) == 2]
-            )
-        else:
-            average_bond_param_reac = 0.5
-
-        if average_bond_param_reac < 0.5:
-            logger.info(
-                f"The optimization with the TSFF will start from the product geometry, since the average mixing factor for bond terms is {average_bond_param_reac:.4f} (< 0.5)."
-            )
-            tsff.start_from_reactant = False
-        elif average_bond_param_reac >= 0.5:
-            logger.info(
-                f"The optimization with the TSFF will start from the reactant geometry, since the average mixing factor for bond terms is {average_bond_param_reac:.4f} (>= 0.5)."
-            )
-        else:
-            logger.info(
-                f"The optimization with the TSFF will start from the reactant geometry per default, since the average mixing factor for bond terms is {average_bond_param_reac:.4f}."
-            )
-
-    mix_parameters(tsff.bonds, ff1.bonds, ff2.bonds, fact1, fact2, params_mix)
-    mix_parameters(tsff.angles, ff1.angles, ff2.angles, fact1, fact2, params_mix)
-    mix_parameters(
-        tsff.dihedrals, ff1.dihedrals, ff2.dihedrals, fact1, fact2, params_mix
-    )
-    mix_parameters(tsff.repulsive, ff1.repulsive, ff2.repulsive, fact1, fact2)
 
     mix_reference_values(
-        tsff, ff1, ff2, info1, info2, fact1, fact2, dict_param_mix=params_mix
+        tsff,
+        ff1,
+        ff2,
+        info1,
+        info2,
+        fact1,
+        fact2,
+        hydrogen_covalent_radius=ts_calc.hydrogen_covalent_radius,
     )
-
-    # print out the mixing factors to file
-    if logger.level <= logging.DEBUG:
-        logger.debug(
-            f"Mixing factors written to {calcdata.ts_path.ff_filename[:-4]}.mixing_factors.txt"
-        )
-        with open(f"{calcdata.ts_path.ff_filename[:-4]}.mixing_factors.txt", "w") as f:
-            f.write("Bond/Angle/Dihedral\tMixing Factor (Reactant)\n")
-            for term, factor in params_mix.items():
-                f.write(f"{term}\t{factor:.4f}\n")
 
     logger.info("TS FF generation finished.")
     tsff.write()
-    return {"tsff": tsff, "params_mix": params_mix}
+    return tsff
 
 
-def combine_ff_atoms(
-    df1: pd.DataFrame, df2: pd.DataFrame, term_type: str = "bond"
-) -> pd.DataFrame:
-    """Combine two force field term DataFrames without duplicating entries by atom tuple.
+def combine_ff_topology(ff1: ForceField, ff2: ForceField, filename: str) -> ForceField:
+    """Force field holding every term of ff1 and ff2 once, before any mixing.
+
+    Atom pairs that are bonded in either force field are dropped from the
+    repulsive terms.
+
+    Args:
+        ff1 (ForceField): Force field of the reactant structure.
+        ff2 (ForceField): Force field of the product structure.
+        filename (str): File the combined force field is written to.
+
+    Returns:
+        ForceField: Combined force field (parameters and reference values
+        still those of ff1, or ff2 for terms only present there).
+    """
+    tsff = ForceField(ff1.nat, filename, readff=False)
+    for term in TERMS:
+        setattr(tsff, term, combine_ff_atoms(getattr(ff1, term), getattr(ff2, term)))
+    tsff.repulsive = remove_bonds_from_repulsive(tsff.repulsive, tsff.bonds)
+    return tsff
+
+
+def combine_ff_atoms(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    """Combine two force field term DataFrames, keeping each atom tuple once.
+
+    Atom tuples are compared as given (no reordering), so (i, j) and (j, i)
+    are different terms. For duplicates the row of ``df1`` is kept.
 
     Args:
         df1 (pd.DataFrame): Force field term DataFrame with an 'atoms' column.
         df2 (pd.DataFrame): Force field term DataFrame with an 'atoms' column.
-        term_type (str, optional): One of "bond", "angle", "dihedral", "repulsive". Defaults to "bond".
 
     Returns:
-        pd.DataFrame: Combined DataFrame with duplicate atom tuples removed.
+        pd.DataFrame: Combined DataFrame sorted by atom tuple.
     """
-
-    def canonical_tuple(atoms):
-        """This function COULD normalize atom ordering, but decided not do that."""
-        atoms = tuple(atoms)
-        if term_type == "bond":
-            return atoms  # return tuple(sorted(atoms))  # symmetric
-        elif term_type == "angle":
-            return atoms  # directional
-        elif term_type == "dihedral":
-            # dihedral symmetry: (1,2,3,4) equivalent to reversed (4,3,2,1)
-            # reversed_atoms = tuple(reversed(atoms))
-            # return min(atoms, reversed_atoms)
-            return atoms
-        elif term_type == "repulsive":
-            return atoms  # tuple(sorted(atoms))  # symmetric
-        else:
-            raise ValueError(f"Unknown term type '{term_type}'")
-
-    # Make shallow copies and normalize atom tuples
-    df1_ = df1.copy()
-    df2_ = df2.copy()
-    df1_["atoms_norm"] = df1_["atoms"].apply(canonical_tuple)
-    df2_["atoms_norm"] = df2_["atoms"].apply(canonical_tuple)
-
-    # Combine and drop duplicates
-    combined = pd.concat([df1_, df2_], ignore_index=True)
-    combined = combined.drop_duplicates(subset=["atoms_norm"], keep="first")
-
-    # Replace original atom tuples with canonicalized ones
-    combined["atoms"] = combined["atoms_norm"]
-    combined = combined.drop(columns=["atoms_norm"])
-
+    combined = pd.concat([df1, df2], ignore_index=True)
+    combined["atoms"] = combined["atoms"].map(tuple)
+    combined = combined.drop_duplicates(subset=["atoms"], keep="first")
     return combined.sort_values("atoms").reset_index(drop=True)
-
-
-def combine_dihedrals(
-    ff1: ForceField,
-    info1: StructuralInformation,
-    ff2: ForceField,
-    info2: StructuralInformation,
-) -> pd.DataFrame:
-    """Combines dihedrals from both force fields.
-
-    Args:
-        ff1 (ForceField): Force field of the reactant structure.
-        info1 (StructuralInformation): Structural information of the reactant structure.
-        ff2 (ForceField): Force field of the product structure.
-        info2 (StructuralInformation): Structural information of the product structure.
-
-    Returns:
-        pd.DataFrame: Combined, sorted dihedrals DataFrame.
-    """
-
-    bo_threshold = 0.0  # threshold for WBO to consider a bond as present
-
-    def has_significant_bond(row):
-        """Whether to keep this dihedral row (currently always True; see note above)."""
-        atoms = row["atoms"]
-        proper_dihedral = row["proper_dihedral"]
-        if proper_dihedral:
-            return True
-        return True
-
-        return (
-            info1.bo_matrix[atoms[0], atoms[1]] > bo_threshold
-            and info1.bo_matrix[atoms[0], atoms[2]] > bo_threshold
-            and info1.bo_matrix[atoms[0], atoms[3]] > bo_threshold
-            and info2.bo_matrix[atoms[0], atoms[1]] > bo_threshold
-            and info2.bo_matrix[atoms[0], atoms[2]] > bo_threshold
-            and info2.bo_matrix[atoms[0], atoms[3]] > bo_threshold
-        )
-
-    dihedrals = combine_ff_atoms(ff1.dihedrals, ff2.dihedrals, term_type="dihedral")
-
-    dihedrals = dihedrals[dihedrals.apply(has_significant_bond, axis=1)]
-    return dihedrals.sort_values("atoms").reset_index(drop=True)
 
 
 def remove_bonds_from_repulsive(
@@ -224,13 +127,9 @@ def remove_bonds_from_repulsive(
     """
     if "atoms" not in df_source.columns or "atoms" not in df_reference.columns:
         raise ValueError("Both DataFrames must have an 'atoms' column.")
-
-    # Convert to sets for O(1) lookup time per row
     reference_atoms = set(df_reference["atoms"])
-
-    # Keep only rows whose 'atoms' are not in reference_atoms
     mask = ~df_source["atoms"].isin(reference_atoms)
-    return df_source[mask].copy().reset_index(drop=True)
+    return df_source[mask].reset_index(drop=True)
 
 
 def mix_parameters(
@@ -239,185 +138,19 @@ def mix_parameters(
     ff2_df: pd.DataFrame,
     fact1: float,
     fact2: float,
-    param_dict: dict = None,
 ):
-    """Fill tsff_df['parameter'] with the fact1/fact2-weighted average of ff1_df/ff2_df.
+    """Fill tsff_df['parameter'] with the fact1/fact2-weighted average of ff1_df/ff2_df, in place.
 
-    Per-term factors in ``param_dict`` (keyed by atom tuple) override
-    fact1/fact2 when present.
+    Terms missing in one FF take the value of the other FF.
     """
-    new_params = []
-
-    for idx, row in tsff_df.iterrows():
-        c1_series = ff1_df.loc[
-            ff1_df["atoms"].apply(lambda x: x == row["atoms"]), "parameter"
-        ]
-        c2_series = ff2_df.loc[
-            ff2_df["atoms"].apply(lambda x: x == row["atoms"]), "parameter"
-        ]
-
-        c1 = c1_series.squeeze() if not c1_series.empty else c2_series.squeeze()
-        c2 = c2_series.squeeze() if not c2_series.empty else c1_series.squeeze()
-
-        if (param_dict and row["atoms"] in param_dict) or (
-            param_dict and tuple(reversed(row["atoms"])) in param_dict
-        ):
-            fact1 = param_dict.get(
-                row["atoms"], param_dict.get(tuple(reversed(row["atoms"])))
-            )
-            fact2 = 1 - fact1
-
-        new_val = _average_c(c1, c2, fact1, fact2)
-        new_params.append((idx, new_val))
-
-    for idx, val in new_params:
-        tsff_df.at[idx, "parameter"] = val
-
-
-def hessian_mix_list(
-    info1: StructuralInformation,
-    info2: StructuralInformation,
-    atoms: tuple,
-    sharpness: float = 0.2,
-    changing_bonds: list = None,
-) -> float:
-    """Calculate the reactant mixing factor for a term based on Hessian analysis.
-
-    Only computed if at least one bond in the atom group is in ``changing_bonds``.
-
-    Args:
-        info1 (StructuralInformation): Structural information for the reactant.
-        info2 (StructuralInformation): Structural information for the product.
-        atoms (tuple): Tuple of 2, 3, or 4 atom indices.
-        sharpness (float, optional): Controls how sharply the factor changes with the Hessian ratio. Defaults to 0.2.
-        changing_bonds (list, optional): Bond tuples from WBO analysis that are changing.
-
-    Returns:
-        float or None: Mixing factor for the reactant (between 0 and 1), or
-        None if no changing bonds are present in this term.
-    """
-    if changing_bonds is None:
-        changing_bonds = []
-
-    # Generate all possible bonds for this set of atoms
-    atom_pairs = []
-    if len(atoms) == 2:
-        atom_pairs = [atoms]
-
-    elif len(atoms) == 3:
-        i, j, k = atoms
-        atom_pairs = [
-            (min(i, j), max(i, j)),
-            (min(i, k), max(i, k)),
-            (min(j, k), max(j, k)),
-        ]
-    elif len(atoms) == 4:
-        i, j, k, l = atoms
-        atom_pairs = [
-            (min(i, j), max(i, j)),
-            (min(i, k), max(i, k)),
-            (min(i, l), max(i, l)),
-            (min(j, k), max(j, k)),
-            (min(j, l), max(j, l)),
-            (min(k, l), max(k, l)),
-        ]
-    else:
-        raise ValueError(f"atoms must have 2, 3, or 4 elements, got {len(atoms)}")
-
-    # Check if any bonds are in changing_bonds
-    has_changing_bond = any(bond in changing_bonds for bond in atom_pairs)
-    if not has_changing_bond:
-        return None
-
-    # Sum Hessian blocks
-    h1_avg_sum = 0.0
-    h2_avg_sum = 0.0
-
-    for a1, a2 in atom_pairs:
-        h1_block = info1.hessian[3 * a1 : 3 * a1 + 3, 3 * a2 : 3 * a2 + 3]
-        h2_block = info2.hessian[3 * a1 : 3 * a1 + 3, 3 * a2 : 3 * a2 + 3]
-        h1_avg_sum += np.mean(np.abs(h1_block))
-        h2_avg_sum += np.mean(np.abs(h2_block))
-
-    ratio = h1_avg_sum / h2_avg_sum if h2_avg_sum != 0 else 1
-    param_reac = (ratio ** (1 - sharpness)) / (
-        (ratio ** (1 - sharpness)) + 1
-    )  # use (1 - sharpness) so that a larger "sharpness" gives a sharper transition
-
-    logger.debug(
-        f"Atoms: {atoms}, H1 avg sum: {h1_avg_sum:.4f}, H2 avg sum: {h2_avg_sum:.4f}, Ratio: {ratio:.4f}, Param reac: {param_reac:.4f}"
-    )
-
-    return param_reac
-
-
-def hessian_weighting_mix_list(
-    info1: StructuralInformation,
-    info2: StructuralInformation,
-    bonds_df: pd.DataFrame,
-    angles_df: pd.DataFrame,
-    dihedrals_df: pd.DataFrame,
-    sharpness: float = 0.2,
-    threshold: float = 0.1,
-    include_angles_dihedrals: bool = False,
-) -> dict:
-    """Build a dict of reactant mixing factors for terms touching a changing bond.
-
-    Args:
-        info1 (StructuralInformation): Structural information for the reactant.
-        info2 (StructuralInformation): Structural information for the product.
-        bonds_df (pd.DataFrame): Bonds already combined from both force fields.
-        angles_df (pd.DataFrame): Angles already combined from both force fields.
-        dihedrals_df (pd.DataFrame): Dihedrals already combined from both force fields.
-        sharpness (float, optional): Controls how sharply the factor changes with the Hessian ratio. Defaults to 0.2.
-        threshold (float, optional): Minimum WBO change to consider a bond as changing. Defaults to 0.1.
-        include_angles_dihedrals (bool, optional): Also compute Hessian-based
-            mixing factors for angle and dihedral terms, not just bonds.
-            Defaults to False.
-
-    Returns:
-        dict: Atom tuples mapped to their reactant mixing factor.
-    """
-    param_dict = {}
-    wbo_diff = compare_wbo_differences(info1, info2, threshold=threshold)
-    changing_bonds = [bond for bond, _, _, _ in wbo_diff["changing_bonds"]]
-
-    if not changing_bonds:
-        logger.info(
-            f"No changing bonds found with WBO difference above {threshold}. All mixing factors will be 0.5."
-        )
-        return param_dict  # Return empty dict, which will lead to default 0.5 mixing in mix_parameters
-
-    for idx, row in bonds_df.iterrows():
-        atoms = row["atoms"]
-        param_reac = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
-        if param_reac is not None:
-            logger.debug(f"Bond {atoms}: Mixing factor {param_reac}")
-            param_dict[atoms] = param_reac
-
-    if include_angles_dihedrals:
-        for idx, row in angles_df.iterrows():
-            atoms = row["atoms"]
-            factor = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
-            if factor is not None:
-                logger.debug(f"Angle {atoms}: Mixing factor {factor}")
-                param_dict[atoms] = factor
-
-        for idx, row in dihedrals_df.iterrows():
-            atoms = row["atoms"]
-            factor = hessian_mix_list(info1, info2, atoms, sharpness, changing_bonds)
-            if factor is not None:
-                logger.debug(f"Dihedral {atoms}: Mixing factor {factor}")
-                param_dict[atoms] = factor
-
-    return param_dict
-
-
-def _average_c(c1: float, c2: float, c1_factor: float, c2_factor: float) -> float:
-    """Weighted average of two force-constant-like values; c1_factor + c2_factor must equal 1."""
-    if round(c1_factor + c2_factor, 2) != 1.00:
-        raise ValueError(f"c1 factor {c1_factor} + c2 factor {c2_factor} needs to be 1")
-    return round(c1 * c1_factor + c2 * c2_factor, 8)
+    _check_factors(fact1, fact2)
+    if tsff_df.empty:
+        return
+    atoms = tsff_df["atoms"].tolist()
+    c1 = _lookup(atoms, ff1_df, "parameter")
+    c2 = _lookup(atoms, ff2_df, "parameter")
+    c1, c2 = np.where(np.isnan(c1), c2, c1), np.where(np.isnan(c2), c1, c2)
+    tsff_df["parameter"] = np.round(c1 * fact1 + c2 * fact2, 8)
 
 
 def mix_reference_values(
@@ -428,52 +161,30 @@ def mix_reference_values(
     info2: StructuralInformation,
     fact1: float,
     fact2: float,
-    dict_param_mix: dict = None,
+    hydrogen_covalent_radius: bool = False,
 ):
-    """Mix reference values (bond lengths, angles, dihedrals, repulsive distances) for every term of ``tsff``, in place."""
-    _mix_reference(
-        tsff.bonds,
-        ff1.bonds,
-        ff2.bonds,
-        info1,
-        info2,
-        "bonds",
-        fact1,
-        fact2,
-        dict_param_mix,
-    )
-    _mix_reference(
-        tsff.angles,
-        ff1.angles,
-        ff2.angles,
-        info1,
-        info2,
-        "angles",
-        fact1,
-        fact2,
-        dict_param_mix,
-    )
-    _mix_reference(
-        tsff.dihedrals,
-        ff1.dihedrals,
-        ff2.dihedrals,
-        info1,
-        info2,
-        "dihedrals",
-        fact1,
-        fact2,
-        dict_param_mix,
-    )
-    _mix_reference(
-        tsff.repulsive,
-        ff1.repulsive,
-        ff2.repulsive,
-        info1,
-        info2,
-        "repulsive",
-        fact1,
-        fact2,
-    )
+    """Mix reference values (bond lengths, angles, dihedrals, repulsive distances) for every term of ``tsff``, in place.
+
+    ``hydrogen_covalent_radius`` sets the missing-side length
+    of forming/breaking covalent H-X bonds (see :func:`_mix_bond_references`).
+    """
+    for term in TERMS:
+        mixer_kwargs = (
+            {"hydrogen_covalent_radius": hydrogen_covalent_radius}
+            if term == "bonds"
+            else {}
+        )
+        _mix_reference(
+            getattr(tsff, term),
+            getattr(ff1, term),
+            getattr(ff2, term),
+            info1,
+            info2,
+            term,
+            fact1,
+            fact2,
+            **mixer_kwargs,
+        )
 
 
 def _mix_reference(
@@ -485,138 +196,131 @@ def _mix_reference(
     calctype: str,
     fact1: float,
     fact2: float,
-    dict_param: dict = None,
+    **mixer_kwargs,
 ):
     """Fill tsff_df['reference_value'] for one term type ('bonds'/'angles'/'dihedrals'/'repulsive').
 
     Missing reference values on either side fall back to the van der Waals
-    distance (bonds/repulsive) or the geometric angle/dihedral computed
-    directly from the corresponding structure.
+    distance (bonds), the geometric angle/dihedral computed directly from the
+    corresponding structure (angles/dihedrals) or the value of the other FF
+    (repulsive). ``mixer_kwargs`` are passed on to the mixer of ``calctype``.
     """
-    new_params = []
-    for idx, row in tsff_df.iterrows():
-        val1_series = ff1_df.loc[
-            ff1_df["atoms"].apply(lambda x: x == row["atoms"]), "reference_value"
-        ]
-        val2_series = ff2_df.loc[
-            ff2_df["atoms"].apply(lambda x: x == row["atoms"]), "reference_value"
-        ]
-
-        # TODO when changed to python v higher match calctype:
-        if calctype == "bonds":
-            a, b = row["atoms"]
-            val1 = (
-                val1_series.squeeze()
-                if not val1_series.empty
-                else info1.vander_matrix[a, b]
-            )
-            val2 = (
-                val2_series.squeeze()
-                if not val2_series.empty
-                else info2.vander_matrix[a, b]
-            )
-            if val1 > info1.vander_matrix[a, b]:
-                val1 = info1.vander_matrix[a, b]
-            if val2 > info2.vander_matrix[a, b]:
-                val2 = info2.vander_matrix[a, b]
-            if dict_param and row["atoms"] in dict_param:
-                fact1 = dict_param[row["atoms"]]
-                fact2 = 1 - fact1
-            new_val = _average_single_bond(val1, val2, fact1, fact2)
-        elif calctype == "angles":
-            a, b, c = row["atoms"]
-            val1 = (
-                val1_series.squeeze()
-                if not val1_series.empty
-                else angle(info1.fortran_xyz, a, b, c)
-            )
-            val2 = (
-                val2_series.squeeze()
-                if not val2_series.empty
-                else angle(info2.fortran_xyz, a, b, c)
-            )
-            if dict_param and row["atoms"] in dict_param:
-                fact1 = dict_param[row["atoms"]]
-                fact2 = 1 - fact1
-            new_val = _average_single_angle(val1, val2, fact1, fact2)
-        elif calctype == "dihedrals":
-            a, b, c, d = row["atoms"]
-            val1 = (
-                val1_series.squeeze()
-                if not val1_series.empty
-                else dihedral_angle(info1.fortran_xyz, a, b, c, d)
-            )
-            val2 = (
-                val2_series.squeeze()
-                if not val2_series.empty
-                else dihedral_angle(info2.fortran_xyz, a, b, c, d)
-            )
-            if dict_param and row["atoms"] in dict_param:
-                fact1 = dict_param[row["atoms"]]
-                fact2 = 1 - fact1
-            new_val = _average_single_dihedral(val1, val2, fact1, fact2)
-        elif calctype == "repulsive":
-            a, b = row["atoms"]
-            val1 = (
-                val1_series.squeeze()
-                if not val1_series.empty
-                else val2_series.squeeze()
-            )
-            val2 = (
-                val2_series.squeeze()
-                if not val2_series.empty
-                else val1_series.squeeze()
-            )
-            new_val = _average_single_repulsive(val1, val2, fact1, fact2)
-            # TODO eigentlich ist diese operation unnötig, könnte auch einfach vander distances suchen
-        else:
-            raise Exception(f"Typ {calctype} not known.")
-
-        new_params.append((idx, new_val))
-
-    for idx, val in new_params:
-        tsff_df.at[idx, "reference_value"] = val
+    _check_factors(fact1, fact2)
+    if tsff_df.empty:
+        return
+    if calctype not in _REFERENCE_MIXERS:
+        raise ValueError(f"Term type {calctype} not known.")
+    atoms = tsff_df["atoms"].tolist()
+    val1 = _lookup(atoms, ff1_df, "reference_value")
+    val2 = _lookup(atoms, ff2_df, "reference_value")
+    new_val = _REFERENCE_MIXERS[calctype](
+        val1, val2, atoms, info1, info2, fact1, fact2, **mixer_kwargs
+    )
+    tsff_df["reference_value"] = np.round(new_val, 8)
 
 
-def _average_single_bond(val1, val2, fact1: float, fact2: float):
-    """Weighted average of two bond lengths."""
-    return round(val1 * fact1 + val2 * fact2, 8)
+def _mix_bond_references(
+    val1,
+    val2,
+    atoms,
+    info1,
+    info2,
+    f1,
+    f2,
+    hydrogen_covalent_radius: bool = False,
+) -> np.ndarray:
+    """Bond lengths, each capped at the van der Waals distance of its structure.
+
+    A bond missing on one side (forming or breaking) takes the van der Waals
+    distance there. With ``hydrogen_covalent_radius``, a forming/breaking bond
+    between hydrogen and a heavier element X that is covalent on the side where
+    it exists (an edge of ``complete_graph``) uses the covalent instead of the
+    van der Waals radius of hydrogen on the missing side, but never less than
+    the bonded length. Hydrogen bonds H...A added to the bonds keep the van der
+    Waals distance.
+    """
+    idx = np.array(atoms, dtype=int)
+    i, j = idx[:, 0], idx[:, 1]
+    vander1 = info1.vander_matrix[i, j]
+    vander2 = info2.vander_matrix[i, j]
+    breaking, forming = np.isnan(val2), np.isnan(val1)
+    val1 = np.fmin(val1, vander1)  # fmin also replaces missing (NaN) values
+    val2 = np.fmin(val2, vander2)
+    if hydrogen_covalent_radius:
+        is_h = np.char.capitalize(np.asarray(info1.atom_types, dtype=str))[idx] == "H"
+        h_heavy = is_h[:, 0] != is_h[:, 1]  # exactly one hydrogen
+        bonded1 = np.array([info1.complete_graph.has_edge(a, b) for a, b in zip(i, j)])
+        bonded2 = np.array([info2.complete_graph.has_edge(a, b) for a, b in zip(i, j)])
+        breaking &= h_heavy & bonded1
+        forming &= h_heavy & bonded2
+        shift = angstrom2bohr(VANDER_VALUES[0] - ATOMIC_RADII_TRUHLAR[0])  # H: vdW - cov
+        val2 = np.where(breaking, np.fmax(vander2 - shift, val1), val2)
+        val1 = np.where(forming, np.fmax(vander1 - shift, val2), val1)
+    return val1 * f1 + val2 * f2
 
 
-def _average_single_angle(val1, val2, fact1: float, fact2: float):
-    """Weighted average of two angles."""
-    return round(val1 * fact1 + val2 * fact2, 8)
+def _mix_angle_references(val1, val2, atoms, info1, info2, f1, f2) -> np.ndarray:
+    """Angles, missing values computed from the geometry of their structure."""
+    val1 = _fill_missing(val1, atoms, lambda a: angle(info1.fortran_xyz, *a))
+    val2 = _fill_missing(val2, atoms, lambda a: angle(info2.fortran_xyz, *a))
+    return val1 * f1 + val2 * f2
 
 
-def _average_single_dihedral(val1, val2, fact1: float, fact2: float):
-    """Weighted circular average of two dihedral angles, choosing the closest periodic image."""
-    pi = np.pi
+def _mix_dihedral_references(val1, val2, atoms, info1, info2, f1, f2) -> np.ndarray:
+    """Dihedrals, missing values computed from the geometry of their structure."""
+    val1 = _fill_missing(val1, atoms, lambda a: dihedral_angle(info1.fortran_xyz, *a))
+    val2 = _fill_missing(val2, atoms, lambda a: dihedral_angle(info2.fortran_xyz, *a))
+    return _average_dihedrals(val1, val2, f1, f2)
 
-    temp1 = abs(val1 - val2)
-    temp2 = abs(val1 + 2.0 * pi - val2)
-    temp3 = abs(val1 - (val2 + 2.0 * pi))
 
-    if temp1 < temp2 and temp1 < temp3:
-        cosphi0 = np.cos(val1) * fact1 + np.cos(val2) * fact2
-        sinphi0 = np.sin(val1) * fact1 + np.sin(val2) * fact2
-    elif temp2 < temp1 and temp2 < temp3:
-        cosphi0 = np.cos(val1 + 2.0 * pi) * fact1 + np.cos(val2) * fact2
-        sinphi0 = np.sin(val1 + 2.0 * pi) * fact1 + np.sin(val2) * fact2
-    else:  # temp3 is smallest
-        cosphi0 = np.cos(val1) * fact1 + np.cos(val2 + 2.0 * pi) * fact2
-        sinphi0 = np.sin(val1) * fact1 + np.sin(val2 + 2.0 * pi) * fact2
+def _mix_repulsive_references(val1, val2, atoms, info1, info2, f1, f2) -> np.ndarray:
+    """Repulsive distances, missing values taken from the other FF."""
+    # this lookup is not really needed, the van der Waals distances could be used directly, but if it ever changes i keep it this general
+    val1, val2 = (
+        np.where(np.isnan(val1), val2, val1),
+        np.where(np.isnan(val2), val1, val2),
+    )
+    return val1 * f1 + val2 * f2
 
+
+_REFERENCE_MIXERS = {
+    "bonds": _mix_bond_references,
+    "angles": _mix_angle_references,
+    "dihedrals": _mix_dihedral_references,
+    "repulsive": _mix_repulsive_references,
+}
+
+#### HELPERS (most of them create arrays out of given data)
+
+
+def _check_factors(fact1: float, fact2: float):
+    """Raise if the two mixing factors do not sum to 1."""
+    if round(fact1 + fact2, 2) != 1.00:
+        raise ValueError(f"c1 factor {fact1} + c2 factor {fact2} needs to be 1")
+
+
+def _lookup(atoms: list, ff_df: pd.DataFrame, column: str) -> np.ndarray:
+    """
+    Creates a list of the values in ``column`` from ``ff_df``, sorted as in ``atoms`` by looking up the corresponding atom - column pair to make it easier to combine them. 
+    """
+    values = dict(zip(ff_df["atoms"], ff_df[column])) # creating a dict is done to avoid iterating through the whole list in a for loop every search step 
+    return np.array([values.get(a, np.nan) for a in atoms], dtype=float)
+
+
+def _fill_missing(values: np.ndarray, atoms: list, compute) -> np.ndarray:
+    """Replace NaN entries of ``values`` by ``compute(atoms[i])``."""
+    values = values.copy()
+    for i in np.flatnonzero(np.isnan(values)):
+        values[i] = compute(atoms[i])
+    return values
+
+
+def _average_dihedrals(
+    val1: np.ndarray, val2: np.ndarray, fact1: float, fact2: float
+) -> np.ndarray:
+    """Weighted circular average of two arrays of dihedral angles, result in (-pi, pi]."""
+    cosphi0 = np.cos(val1) * fact1 + np.cos(val2) * fact2
+    sinphi0 = np.sin(val1) * fact1 + np.sin(val2) * fact2
     phi_avg = np.arctan2(sinphi0, cosphi0)
+    return np.where(phi_avg <= -np.pi, phi_avg + 2.0 * np.pi, phi_avg)
 
-    # phi_avg = 0.5* (val1 + val2 + 2.0 * pi)  # Alternative: simple average
-
-    if phi_avg > pi:
-        phi_avg -= 2.0 * pi
-    elif phi_avg <= -pi:
-        phi_avg += 2.0 * pi
-    return round(phi_avg, 8)
-
-
-def _average_single_repulsive(val1, val2, fact1: float, fact2: float):
-    """Weighted average of two repulsive reference distances."""
-    return round(val1 * fact1 + val2 * fact2, 8)

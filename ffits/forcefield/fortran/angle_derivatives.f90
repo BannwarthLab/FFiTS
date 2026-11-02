@@ -195,10 +195,11 @@ subroutine build_angle_hessian(costheta0, costheta, dcosdx, d2cosdxdy, k_angles,
     real(8) :: h
     integer :: m, i, j
 
-    do m=1, 45
-
-        j = floor((sqrt(8*real(m) - 7) + 1) / 2)
-        i = m - (j-1)*j/2
+    ! packed upper triangle, m = (j-1)*j/2 + i for i <= j (same as gidx)
+    m = 0
+    do j=1, 9
+    do i=1, j
+        m = m + 1
 
         call get_d2Vangledxdy(dcosdx(i), dcosdx(j), d2cosdxdy(m), k_angles, costheta0, costheta, h)
 
@@ -209,6 +210,7 @@ subroutine build_angle_hessian(costheta0, costheta, dcosdx, d2cosdxdy, k_angles,
             hessian(xhat(j), xhat(i)) = hessian(xhat(j), xhat(i)) + h
 
         endif
+    enddo
     enddo
 
 end subroutine build_angle_hessian
@@ -288,15 +290,17 @@ subroutine get_theta_hessian(aijk, bij, cjk, dadx, dbdx, dcdx, d2adxdy, d2bdxdy,
     real(8) :: cosxy
     integer :: m, i, j
    
-    do m=1, 45
-
-        j = floor((sqrt(8*real(m) - 7) + 1) / 2)
-        i = m - (j-1)*j/2
+    ! packed upper triangle, m = (j-1)*j/2 + i for i <= j (same as gidx)
+    m = 0
+    do j=1, 9
+    do i=1, j
+        m = m + 1
 
         call get_d2dxdy(aijk, bij, cjk, dadx(i), dadx(j), d2adxdy(m), dbdx(i), dbdx(j), d2bdxdy(m), &
                          dcdx(i), dcdx(j), d2cdxdy(m), cosxy)
 
-        d2cosdxdy(m) = cosxy  
+        d2cosdxdy(m) = cosxy
+    enddo
     enddo
 
 end subroutine get_theta_hessian
@@ -339,7 +343,7 @@ integer, parameter :: wp = selected_real_kind(15)
 
 dthetadcos = -1/sqrt(1-costheta**2)
 
-d2thetadcos2 = - costheta/sqrt(1-costheta**2)**1.5_wp
+d2thetadcos2 = - costheta/(1-costheta**2)**1.5_wp
 
 d2Vangledxdy = 2*k_angles*(-(dacos(costheta0)-dacos(costheta))*dthetadcos*d2cosdxdy &
             -(dacos(costheta0)-dacos(costheta))*d2thetadcos2*dcosdx*dcosdy+dthetadcos**2*dcosdx*dcosdy)

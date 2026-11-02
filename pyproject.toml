@@ -50,6 +50,7 @@ include = ["ffits*"]
   "data/*",
   "data/**/*",
   "forcefield/fortran/*.so",
+  "forcefield/fortran/build_info.txt",
   "forcefield/python_interface/*.py",
   "forcefield/python_interface/**/*.py",
   "bin/*"  

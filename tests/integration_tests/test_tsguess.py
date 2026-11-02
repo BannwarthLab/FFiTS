@@ -134,49 +134,6 @@ only_proper_dihedrals = false
     assert ff_csv_file.exists(), f"struc2.hess was not created in {temp_path}"
 
 
-def test_ffits_with_nohessweighting(tmp_workdir):
-    """
-    Test which first calculates with present hessian and then without hessian and wbo calculation but reading in the files created in the first run, by changing the filenames in the config file
-    """
-    examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
-    temp_path = tmp_workdir
-    shutil.copy2(examples_dir / "struc1.xyz", temp_path / "reac.xyz")
-    shutil.copy2(examples_dir / "struc2.xyz", temp_path / "prod.xyz")
-
-    custom_input = """
-[ts_guess.calculation]
-average_with_hess_weight = false
-"""
-    with open(temp_path / "custom_config.toml", "w") as f:
-        f.write(custom_input)
-
-    stdout, stderr, returncode = run_ffits_as_subprocess(
-        ["reac.xyz", "prod.xyz", "--config", "custom_config.toml"]
-    )
-
-    assert (
-        returncode == 0
-    ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
-
-    ts_guess_file = temp_path / "ts_guess.xyz"
-    assert ts_guess_file.exists(), f"ts_guess.xyz was not created in {temp_path}"
-
-    ff_csv_file = temp_path / "tsff.csv"
-    assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
-    ff_csv_file = temp_path / "ff1.csv"
-    assert ff_csv_file.exists(), f"ff1.csv was not created in {temp_path}"
-    ff_csv_file = temp_path / "ff2.csv"
-    assert ff_csv_file.exists(), f"ff2.csv was not created in {temp_path}"
-    ff_csv_file = temp_path / "wbo1"
-    assert ff_csv_file.exists(), f"wbo1 was not created in {temp_path}"
-    ff_csv_file = temp_path / "wbo2"
-    assert ff_csv_file.exists(), f"wbo2 was not created in {temp_path}"
-    ff_csv_file = temp_path / "struc1.hess"
-    assert ff_csv_file.exists(), f"struc1.hess was not created in {temp_path}"
-    ff_csv_file = temp_path / "struc2.hess"
-    assert ff_csv_file.exists(), f"struc2.hess was not created in {temp_path}"
-
-
 def test_ffits_with_wboreadin(tmp_workdir):
     """
     Test which first calculates with present hessian and then without hessian and wbo calculation but reading in the files created in the first run, by changing the filenames in the config file

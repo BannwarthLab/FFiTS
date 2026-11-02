@@ -131,10 +131,11 @@ class TSCalculationOptions:
         factor_reactant (float): Reactant weight when mixing into the TS force field.
         factor_product (float): Product weight when mixing into the TS force field.
         optimizer (str): Optimizer to use ("molbar-optimizer" or "scipy-optimizer").
-        average_with_hess_weight (bool): Weight reactant/product averaging by Hessian similarity.
-        hess_weight_sharpness (float): Sharpness of the Hessian-similarity weighting.
-        hess_weight_angles_dihedrals (bool): Also apply Hessian-similarity weighting to angle and dihedral terms, not just bonds.
-        perform_two_optimizations (bool): Whether to run a second TS optimization pass.
+        hydrogen_covalent_radius (bool): For forming or breaking H-X bonds (X any element but H) that are covalent on the
+            side where they exist, use the covalent radius of hydrogen (0.32 Angstrom, Mantina et al.) instead of its van der
+            Waals radius in the van der Waals distance of the side where the bond is missing, but never less than the
+            bonded length. Hydrogen bonds H...A keep the van der Waals distance.
+        perform_two_optimizations (bool): Optimize on the TS FF from both reactant and product and keep the result with the lower xtb singlepoint energy.
         molbar_optimizer_e_tol (float): Energy convergence tolerance for the molbar optimizer.
         molbar_optimizer_x_tol (float): Coordinate convergence tolerance for the molbar optimizer.
         molbar_optimizer_max_micro_steps (int): Max micro-steps per molbar optimizer iteration.
@@ -144,10 +145,8 @@ class TSCalculationOptions:
     factor_reactant: float = 0.5
     factor_product: float = 0.5
     optimizer: str = "molbar-optimizer"
-    average_with_hess_weight: bool = True
-    hess_weight_sharpness: float = 0.8
-    hess_weight_angles_dihedrals: bool = False
-    perform_two_optimizations: bool = False
+    hydrogen_covalent_radius: bool = True
+    perform_two_optimizations: bool = True
     molbar_optimizer_e_tol: float = 1e-4
     molbar_optimizer_x_tol: float = 1e-2
     molbar_optimizer_max_micro_steps: int = 1

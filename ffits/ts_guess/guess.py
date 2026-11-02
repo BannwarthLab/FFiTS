@@ -1,6 +1,8 @@
 """TS guess generation: builds a TS force field from reactant/product FFs and optimizes on it."""
 
 import logging
+import os
+import shutil
 import numpy as np
 from collections.abc import Callable
 from time import perf_counter
@@ -17,6 +19,7 @@ from ffits.forcefield.python_interface.ff_energy import (
 )
 from ffits.io.print.details import print_ts_optimization_start
 from ffits.forcefield.python_interface.optimization import optimize_with_forcefield
+from ffits.external.xtb import Xtb
 
 from ffits.ts_guess.parameterize_ff import parameterize_ff
 from ffits.io.logging_config import _record_timing
@@ -52,9 +55,8 @@ def get_ts_guess(
     timing_enabled = timing_logger is not None and timing_entries is not None
 
     #### ------- Create TS Force Field by mixing reactant and product FFs ------- ####
-    # factor reactant and product will be overwritten if weight bonds with hessian is set to True
     tsff_start = perf_counter() if timing_enabled else None
-    res = create_tsff(
+    tsff: ForceField = create_tsff(
         ff1=struc1.ff,
         info1=struc1.info,
         ff2=struc2.ff,
@@ -69,33 +71,43 @@ def get_ts_guess(
             tsff_start,
             perf_counter(),
         )
-    tsff: ForceField = res["tsff"]
     tsff.energy_calculator = energy_ff
     tsff.gradient_calculator = complete_gradient
     tsff.hessian_calculator = complete_hessian
 
     ### ---------- optimization ------------ ###
-    if tsff.start_from_reactant:
-        logger.info(
-            f"Starting TS guess optimization from reactant geometry {struc1.path.xyz_filename}."
-        )
-        initial_struc = struc1.info
-    else:
-        logger.info(
-            f"Starting TS guess optimization from product geometry {struc2.path.xyz_filename}."
-        )
-        initial_struc = struc2.info
-
     optimization_start = perf_counter() if timing_enabled else None
-    converged, energy, final_geom = optimize_with_forcefield(
-        initial_struc,
-        tsff,
-        optimizer,
-        calcdata.ts_calc,
-        trajectory_filename,
-        final_geometry_filename,
-        opt_stdout_filename="ts_optimization.out",
-    )
+    if calcdata.ts_calc.perform_two_optimizations:
+        converged, energy, final_geom = _optimize_from_both_sides(
+            struc1,
+            struc2,
+            tsff,
+            calcdata,
+            optimizer,
+            trajectory_filename,
+            final_geometry_filename,
+        )
+    else:
+        if tsff.start_from_reactant:
+            logger.info(
+                f"Starting TS guess optimization from reactant geometry {struc1.path.xyz_filename}."
+            )
+            initial_struc = struc1.info
+        else:
+            logger.info(
+                f"Starting TS guess optimization from product geometry {struc2.path.xyz_filename}."
+            )
+            initial_struc = struc2.info
+
+        converged, energy, final_geom = optimize_with_forcefield(
+            initial_struc,
+            tsff,
+            optimizer,
+            calcdata.ts_calc,
+            trajectory_filename,
+            final_geometry_filename,
+            opt_stdout_filename="ts_optimization.out",
+        )
     if timing_enabled and optimization_start is not None:
         _record_timing(
             timing_entries,
@@ -106,6 +118,66 @@ def get_ts_guess(
         )
 
     return tsff, converged, energy, final_geom
+
+
+def _optimize_from_both_sides(
+    struc1: Structure,
+    struc2: Structure,
+    tsff: ForceField,
+    calcdata: CalculationData,
+    optimizer: Callable,
+    trajectory_filename: str,
+    final_geometry_filename: str,
+) -> tuple[bool, float, np.ndarray]:
+    """Optimizes on the TS FF once from the reactant and once from the product geometry, evaluates both results with an xtb singlepoint and keeps the one with the lower xtb energy.
+
+    The selected result is copied to trajectory_filename and final_geometry_filename, the per-side files are kept with suffix _reactant/_product.
+
+    Returns:
+        tuple[bool, float, np.ndarray]: convergence status, TS FF energy and final geometry of the selected optimization
+    """
+    xtb = Xtb(
+        chrg=calcdata.system.charge,
+        mult=calcdata.system.multiplicity,
+        xtb_path=calcdata.system.xtb_path,
+        xtb_input_name=calcdata.system.xtb_input_name,
+        g_xtb=calcdata.system.use_gxtb,
+        xtb_alpb_solvent=calcdata.system.xtb_alpb_solvent,
+    )
+    traj_stem, traj_ext = os.path.splitext(trajectory_filename)
+    geom_stem, geom_ext = os.path.splitext(final_geometry_filename)
+
+    results = {}
+    for side, struc in (("reactant", struc1), ("product", struc2)):
+        logger.info(
+            f"Starting TS guess optimization from {side} geometry {struc.path.xyz_filename}."
+        )
+        side_traj = f"{traj_stem}_{side}{traj_ext}"
+        side_geom = f"{geom_stem}_{side}{geom_ext}"
+        converged, energy, final_geom = optimize_with_forcefield(
+            struc.info,
+            tsff,
+            optimizer,
+            calcdata.ts_calc,
+            side_traj,
+            side_geom,
+            opt_stdout_filename=f"ts_optimization_{side}.out",
+        )
+        xtb_energy = xtb.singlepoint(side_geom, f"ts_guess_{side}")
+        logger.info(
+            f"TS guess from {side}: xtb energy = {xtb_energy:.8f} Eh, converged = {converged}"
+        )
+        results[side] = (xtb_energy, converged, energy, final_geom, side_traj, side_geom)
+
+    best_side = min(results, key=lambda side: results[side][0])
+    xtb_energy, converged, energy, final_geom, side_traj, side_geom = results[best_side]
+    logger.info(
+        f"Using TS guess optimized from {best_side} (lower xtb energy {xtb_energy:.8f} Eh)."
+    )
+    tsff.start_from_reactant = best_side == "reactant"
+    shutil.copy(side_traj, trajectory_filename)
+    shutil.copy(side_geom, final_geometry_filename)
+    return converged, energy, final_geom
 
 
 def get_ts_guess_from_xyz(

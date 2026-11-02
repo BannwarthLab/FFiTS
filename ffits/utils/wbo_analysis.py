@@ -10,22 +10,16 @@ import numpy as np
 from ffits.datatype.structure_data import StructuralInformation, Structure
 
 
-def _normalize_wbo_to_0based(wbo_dict: Dict) -> Dict:
-    """Convert a WBO dictionary from 1-based to 0-based, sorted bond-tuple keys.
+def _sort_bond_keys(wbo_dict: Dict) -> Dict:
+    """Return the WBO dictionary with sorted bond-tuple keys (smaller index first).
 
     Args:
-        wbo_dict (dict): Dictionary with 1-based bond tuples as keys.
+        wbo_dict (dict): Dictionary with 0-based bond tuples as keys.
 
     Returns:
-        dict: Dictionary with 0-based bond tuples as keys.
+        dict: Dictionary with sorted 0-based bond tuples as keys.
     """
-    normalized = {}
-    for bond, value in wbo_dict.items():
-        new_bond = (bond[0] - 1, bond[1] - 1)
-        # Ensure consistent ordering (smaller index first)
-        new_bond = tuple(sorted(new_bond))
-        normalized[new_bond] = value
-    return normalized
+    return {tuple(sorted(bond)): value for bond, value in wbo_dict.items()}
 
 
 def compare_wbo_differences(
@@ -65,9 +59,8 @@ def compare_wbo_differences(
             f"reactant={reac_info.nat}, product={prod_info.nat}"
         )
 
-    # Convert to 0-based indexing
-    reactant_wbo = _normalize_wbo_to_0based(reac_info.wbo)
-    product_wbo = _normalize_wbo_to_0based(prod_info.wbo)
+    reactant_wbo = _sort_bond_keys(reac_info.wbo)
+    product_wbo = _sort_bond_keys(prod_info.wbo)
 
     # Initialize result containers
     changing_bonds = []
@@ -131,13 +124,12 @@ def get_wbo_matrix_difference(reactant: Structure, product: Structure) -> np.nda
     nat = reactant.info.nat
     diff_matrix = np.zeros((nat, nat))
 
-    # Convert to 0-based indexing
-    reactant_wbo = _normalize_wbo_to_0based(reactant.info.wbo)
-    product_wbo = _normalize_wbo_to_0based(product.info.wbo)
+    reactant_wbo = _sort_bond_keys(reactant.info.wbo)
+    product_wbo = _sort_bond_keys(product.info.wbo)
 
     # Get difference for all bonds
     for bond in set(reactant_wbo.keys()) | set(product_wbo.keys()):
-        i, j = bond  # Already 0-based after normalization
+        i, j = bond
         r_wbo = reactant_wbo.get(bond, 0.0)
         p_wbo = product_wbo.get(bond, 0.0)
         diff_matrix[i, j] = p_wbo - r_wbo

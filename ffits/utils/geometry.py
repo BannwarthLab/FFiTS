@@ -19,8 +19,76 @@ def angstrom2bohr(val: float | np.ndarray):
     return val * 1.8897259
 
 
+def _column_dot(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Column-wise dot product of two arrays of shape (3, n)."""
+    return (a * b).sum(axis=0)
+
+
+def bondlengths(geometry: np.ndarray, atoms: np.ndarray) -> np.ndarray:
+    """Returns bond lengths for all atom pairs in atoms.
+
+    Args:
+        geometry (np.ndarray): Coordinates, shape (3, n_atoms).
+        atoms (np.ndarray): Atom pairs (0-based), shape (n_terms, 2).
+
+    Returns:
+        np.ndarray: Bond lengths, shape (n_terms,).
+    """
+    atoms = np.asarray(atoms, dtype=int).reshape(-1, 2)
+    v12 = geometry[:, atoms[:, 0]] - geometry[:, atoms[:, 1]]
+    return np.linalg.norm(v12, axis=0)
+
+
+def angles(geometry: np.ndarray, atoms: np.ndarray) -> np.ndarray:
+    """Returns angles for all atom triples (atom1 - atom2 - atom3) in atoms.
+
+    Args:
+        geometry (np.ndarray): Coordinates, shape (3, n_atoms).
+        atoms (np.ndarray): Atom triples (0-based, vertex in the middle), shape (n_terms, 3).
+
+    Returns:
+        np.ndarray: Angles in radians, shape (n_terms,).
+    """
+    atoms = np.asarray(atoms, dtype=int).reshape(-1, 3)
+    v12 = geometry[:, atoms[:, 0]] - geometry[:, atoms[:, 1]]
+    v23 = geometry[:, atoms[:, 2]] - geometry[:, atoms[:, 1]]
+
+    dot = _column_dot(v12, v23)
+    norm = np.linalg.norm(v12, axis=0) * np.linalg.norm(v23, axis=0)
+    cos_theta = np.clip(dot / norm, -1.0, 1.0)
+
+    return np.arccos(cos_theta)
+
+
+def dihedral_angles(geometry: np.ndarray, atoms: np.ndarray) -> np.ndarray:
+    """Returns signed dihedral angles for all atom quadruples (atom1 - atom2 - atom3 - atom4) in atoms.
+
+    Args:
+        geometry (np.ndarray): Coordinates, shape (3, n_atoms).
+        atoms (np.ndarray): Atom quadruples (0-based), shape (n_terms, 4).
+
+    Returns:
+        np.ndarray: Dihedral angles in radians (-pi, pi], shape (n_terms,).
+    """
+    atoms = np.asarray(atoms, dtype=int).reshape(-1, 4)
+    v12 = geometry[:, atoms[:, 1]] - geometry[:, atoms[:, 0]]
+    v23 = geometry[:, atoms[:, 2]] - geometry[:, atoms[:, 1]]
+    v34 = geometry[:, atoms[:, 3]] - geometry[:, atoms[:, 2]]
+
+    # normal vectors
+    normal1 = np.cross(v12, v23, axis=0)
+    normal2 = np.cross(v23, v34, axis=0)
+    length3 = np.linalg.norm(v23, axis=0)
+
+    # atan2 version (preferred for signed dihedral)
+    x = _column_dot(normal1, normal2)
+    y = _column_dot(np.cross(normal1, normal2, axis=0), v23 / length3)
+
+    return np.arctan2(y, x)
+
+
 def bondlength(geometry: np.array, atom1: int, atom2: int):
-    """Returns bond length between atom1 and atom2.
+    """Returns bond length between atom1 and atom2 (single-term version of :func:`bondlengths`).
 
     Args:
         geometry (np.ndarray): Coordinates, shape (3, n_atoms).
@@ -30,12 +98,11 @@ def bondlength(geometry: np.array, atom1: int, atom2: int):
     Returns:
         float: Bond length.
     """
-    vector_12 = geometry[:, atom1] - geometry[:, atom2]
-    return np.linalg.norm(vector_12)
+    return bondlengths(geometry, [atom1, atom2])[0]
 
 
 def angle(geometry: np.array, atom1: int, atom2: int, atom3: int):
-    """Returns angle formed by atoms (atom1 - atom2 - atom3).
+    """Returns angle formed by atoms (atom1 - atom2 - atom3) (single-term version of :func:`angles`).
 
     Args:
         geometry (np.ndarray): Coordinates, shape (3, n_atoms).
@@ -46,22 +113,11 @@ def angle(geometry: np.array, atom1: int, atom2: int, atom3: int):
     Returns:
         float: Angle in radians.
     """
-    xyz1 = geometry[:, atom1]
-    xyz2 = geometry[:, atom2]
-    xyz3 = geometry[:, atom3]
-
-    v12 = xyz1 - xyz2
-    v23 = xyz3 - xyz2
-
-    dot = np.dot(v12, v23)
-    norm = np.linalg.norm(v12) * np.linalg.norm(v23)
-    cos_theta = np.clip(dot / norm, -1.0, 1.0)
-
-    return np.arccos(cos_theta)
+    return angles(geometry, [atom1, atom2, atom3])[0]
 
 
 def dihedral_angle(geometry: np.array, atom1: int, atom2: int, atom3: int, atom4: int):
-    """Returns dihedral angle formed by atoms (atom1 - atom2 - atom3 - atom4).
+    """Returns dihedral angle formed by atoms (atom1 - atom2 - atom3 - atom4) (single-term version of :func:`dihedral_angles`).
 
     Args:
         geometry (np.ndarray): Coordinates, shape (3, n_atoms).
@@ -73,25 +129,4 @@ def dihedral_angle(geometry: np.array, atom1: int, atom2: int, atom3: int, atom4
     Returns:
         float: Dihedral angle in radians.
     """
-    xyz1 = geometry[:, atom1]
-    xyz2 = geometry[:, atom2]
-    xyz3 = geometry[:, atom3]
-    xyz4 = geometry[:, atom4]
-
-    v12 = xyz2 - xyz1
-    v23 = xyz3 - xyz2
-    v34 = xyz4 - xyz3
-
-    # normal vectors
-    normal1 = np.cross(v12, v23)
-    normal2 = np.cross(v23, v34)
-    length1 = np.linalg.norm(normal1)
-    length2 = np.linalg.norm(normal2)
-    length3 = np.linalg.norm(v23)
-
-    # atan2 version (preferred for signed dihedral)
-    x = np.dot(normal1, normal2)
-    y = np.dot(np.cross(normal1, normal2), v23 / length3)
-    angle = np.arctan2(y, x)
-
-    return angle
+    return dihedral_angles(geometry, [atom1, atom2, atom3, atom4])[0]

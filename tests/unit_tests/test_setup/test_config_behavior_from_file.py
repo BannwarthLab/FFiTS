@@ -554,18 +554,6 @@ class TestTSCalculationConfig:
         finally:
             os.unlink(temp_path)
 
-    def test_ts_average_with_hess_weight_from_config(self):
-        """Verify that TS average_with_hess_weight from config is correctly loaded."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write("[ts_guess.calculation]\naverage_with_hess_weight = false\n")
-            f.flush()
-            temp_path = f.name
-        try:
-            calcdata = CalculationData.from_config(temp_path)
-            assert calcdata.ts_calc.average_with_hess_weight is False
-        finally:
-            os.unlink(temp_path)
-
     def test_ts_perform_two_optimizations_from_config(self):
         """Verify that TS perform_two_optimizations from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
@@ -715,7 +703,6 @@ factor_reactant = 0.4
 factor_product = 0.6
 optimizer = "scipy-optimizer"
 energy_threshold_two_optimizations = 0.20
-average_with_hess_weight = false
 perform_two_optimizations = true
 molbar_optimizer_e_tol = 1e-6
 molbar_optimizer_x_tol = 1e-5
@@ -785,7 +772,6 @@ relaxation = "gfn2-xtb"
             assert calcdata.ts_calc.factor_product == 0.6
             assert calcdata.ts_calc.optimizer == "scipy-optimizer"
             assert calcdata.ts_calc.energy_threshold_two_optimizations == 0.20
-            assert calcdata.ts_calc.average_with_hess_weight is False
             assert calcdata.ts_calc.perform_two_optimizations is True
             assert calcdata.ts_calc.molbar_optimizer_e_tol == 1e-6
             assert calcdata.ts_calc.molbar_optimizer_x_tol == 1e-5

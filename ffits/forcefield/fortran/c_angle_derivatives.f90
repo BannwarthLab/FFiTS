@@ -9,11 +9,10 @@ public :: get_c_angle_derivatives
 contains
 
 subroutine get_c_angle_derivatives(xkj,ykj,zkj,cjk, dcdx, d2cdxdy)
-    intrinsic :: floor, sqrt
     real(8), intent(in) :: xkj,ykj,zkj,cjk
     real(8), intent(out) :: dcdx(9), d2cdxdy(45)
     real(8) :: dbdx(9), d2bdxdy(45)
-    integer :: n, m, i, j, ij
+    integer :: m, i, j, ii, jj, ij
     integer, parameter :: wp = selected_real_kind(15)
     dcdx = 0.0_wp
     d2cdxdy = 0.0_wp
@@ -27,18 +26,23 @@ subroutine get_c_angle_derivatives(xkj,ykj,zkj,cjk, dcdx, d2cdxdy)
         dcdx(m) = dbdx(m)
     enddo
 
-    do m = 1, 21
-        j = floor((sqrt(8*real(m) - 7) + 1) / 2)
-        i = m - (j-1)*j/2
-
-        if (i < 4) then
-            i = i + 6
+    ! packed upper triangle of the 6x6 b block, m = (j-1)*j/2 + i for i <= j;
+    ! coordinates 1-3 of b map to 7-9 of the angle, 4-6 stay
+    m = 0
+    do j = 1, 6
+    do i = 1, j
+        m = m + 1
+        ii = i
+        jj = j
+        if (ii < 4) then
+            ii = ii + 6
         endif
-        if (j < 4) then
-            j = j + 6
+        if (jj < 4) then
+            jj = jj + 6
         endif
-        call gidx(i, j, ij)
+        call gidx(ii, jj, ij)
         d2cdxdy(ij) = d2bdxdy(m)
+    enddo
     enddo
 
 end subroutine get_c_angle_derivatives

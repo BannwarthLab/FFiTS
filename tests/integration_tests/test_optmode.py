@@ -1,14 +1,13 @@
 import os
 import shutil
 from pathlib import Path
-from ffits.io.reader import readin_xyz
-from ffits.utils.rmsd import kabsch_rmsd
+from molbar.barcode import get_molbar_from_file
 from tests.test_utils import run_ffits_as_subprocess
 
 
 def test_ffits_optmode(tmp_workdir):
     """
-    This test runs ffits in optimizer mode on a single structure and checks if the optimized geometry is consistent with the expected product geometry. It uses the example files for a small single molecule reaction and compares the optimized geometry to the known product geometry using RMSD. The test also checks that the optimization runs successfully without errors.
+    This test runs ffits in optimizer mode on a single structure and checks if the optimized geometry is consistent with the expected product geometry. It uses the example files for a small single molecule reaction and compares the optimized geometry to the known product geometry by MolBar (same molecule incl. stereochemistry, independent of atom labels). The test also checks that the optimization runs successfully without errors.
     """
     examples_dir = Path(__file__).parent.parent / "examples" / "small_single_molecule"
     temp_path = tmp_workdir
@@ -22,8 +21,6 @@ def test_ffits_optmode(tmp_workdir):
     assert (
         returncode == 0
     ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
-    _, _, prod_xyz, _ = readin_xyz(temp_path / "prod.xyz")
-    _, _, reac_xyz, _ = readin_xyz(temp_path / "reac.xyz")
 
     if os.path.exists(temp_path / "optimized.xyz"):
         os.remove(temp_path / "optimized.xyz")
@@ -38,10 +35,15 @@ def test_ffits_optmode(tmp_workdir):
     )
     print("STDOUT:", stdout)
     print("STDERR:", stderr)
-    _, _, optprod_xyz, _ = readin_xyz(temp_path / "optimized.xyz")
-    assert (
-        kabsch_rmsd(prod_xyz, optprod_xyz) < 5e-2
-    ), "Optimized geometries differ between runs with and without hessian calculation."
+    # Compare chemically (MolBar: constitution + stereo, independent of atom
+    # labels) instead of by RMSD: an H atom moving onto a planar C can attach
+    # from either face, which for equivalent atoms (e.g. a CH3 group) gives
+    # the same molecule with permuted labels (labelled RMSD ~1 A).
+    assert get_molbar_from_file(
+        str(temp_path / "optimized.xyz")
+    ) == get_molbar_from_file(
+        str(temp_path / "prod.xyz")
+    ), "Optimization with ff2 from the reactant did not reach the product."
 
     # with config and readin
     stdout, stderr, returncode = run_ffits_as_subprocess(
@@ -49,9 +51,8 @@ def test_ffits_optmode(tmp_workdir):
     )
     print("STDOUT:", stdout)
     print("STDERR:", stderr)
-    _, _, optreac_xyz, _ = readin_xyz(temp_path / "optimized.xyz")
-
-    # compare both ts guess through rmsd
-    assert (
-        kabsch_rmsd(reac_xyz, optreac_xyz) < 5e-2
-    ), "Optimized geometries differ between runs with and without hessian calculation."
+    assert get_molbar_from_file(
+        str(temp_path / "optimized.xyz")
+    ) == get_molbar_from_file(
+        str(temp_path / "reac.xyz")
+    ), "Optimization with ff1 from the product did not reach the reactant."

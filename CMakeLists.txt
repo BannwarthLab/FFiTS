@@ -17,6 +17,15 @@ if (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
 
+message(STATUS "Fortran compiler: ${CMAKE_Fortran_COMPILER_ID} ${CMAKE_Fortran_COMPILER_VERSION} (${CMAKE_Fortran_COMPILER})")
+
+# Intel compilers default to -fp-model fast, which replaced sqrt by an approximate
+# rsqrt and broke the angle/dihedral Hessians in the 0.9.1 ifx build. Require
+# IEEE-conforming floating point semantics.
+if(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
+  add_compile_options($<$<COMPILE_LANGUAGE:Fortran>:-fp-model=precise>)
+endif()
+
 find_package(PythonExtensions REQUIRED)
 find_package(NumPy)
 find_package(F2PY REQUIRED)
@@ -175,4 +184,19 @@ add_custom_command(TARGET ${generated_module_file} POST_BUILD
         $<TARGET_FILE:${generated_module_file}>
         ${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/
     COMMENT "Copying generated module to source directory"
+)
+
+# Record which compiler built the module (printed in the ffits header)
+string(TOUPPER "${CMAKE_BUILD_TYPE}" _build_type_upper)
+add_custom_command(TARGET ${generated_module_file} POST_BUILD
+    COMMAND ${CMAKE_COMMAND}
+        -DOUT=${CMAKE_SOURCE_DIR}/ffits/forcefield/fortran/build_info.txt
+        -DFC_ID=${CMAKE_Fortran_COMPILER_ID}
+        -DFC_VERSION=${CMAKE_Fortran_COMPILER_VERSION}
+        -DC_ID=${CMAKE_C_COMPILER_ID}
+        -DC_VERSION=${CMAKE_C_COMPILER_VERSION}
+        -DBUILD_TYPE=${CMAKE_BUILD_TYPE}
+        "-DFFLAGS=${CMAKE_Fortran_FLAGS} ${CMAKE_Fortran_FLAGS_${_build_type_upper}}"
+        -P ${CMAKE_SOURCE_DIR}/cmake/write_build_info.cmake
+    COMMENT "Writing build_info.txt"
 )

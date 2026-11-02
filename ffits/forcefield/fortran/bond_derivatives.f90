@@ -157,10 +157,11 @@ subroutine build_bond_hessian(r0, rij, drdx, d2rdxdy, k_bonds, xhat, hessian)
     real(8) :: h
     integer :: m, i, j
 
-    do m=1, 21
-
-        j = floor((sqrt(8*real(m) - 7) + 1) / 2)
-        i = m - (j-1)*j/2
+    ! packed upper triangle, m = (j-1)*j/2 + i for i <= j (same as gidx)
+    m = 0
+    do j=1, 6
+    do i=1, j
+        m = m + 1
 
         call get_d2Vbonddxdy(drdx(i), drdx(j), d2rdxdy(m), k_bonds, r0, rij, h)
 
@@ -171,6 +172,7 @@ subroutine build_bond_hessian(r0, rij, drdx, d2rdxdy, k_bonds, xhat, hessian)
             hessian(xhat(j), xhat(i)) = hessian(xhat(j), xhat(i)) + h
 
         endif
+    enddo
     enddo
 
 end subroutine build_bond_hessian
