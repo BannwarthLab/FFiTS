@@ -95,7 +95,7 @@ class StructuralInformation:
             self.seperate_molecule_list = self._split_in_subgraphs()
             self.molecule_count = len(self.seperate_molecule_list)
             logger.info(
-                f"This structure has {self.molecule_count} seperate molecule(s) based on the WBO data and the defined bond order threshold of {self.bo_threshold}."
+                f"This structure has {self.molecule_count} seperate molecule(s) based on the WBO data."
             )
         self.vander_matrix: np.ndarray = get_vander_matrix(self.atom_types)
 
@@ -135,13 +135,14 @@ class StructuralInformation:
 
     def _create_graph_from_wbo(self) -> nx.Graph:
         """
-        creates networkx Graph object with atoms as nodes and bond order values larger then 0 as edges.
+        creates networkx Graph object with atoms as nodes and bonds as edges, i.e. bond orders above the threshold
+        (``get_bo_threshold_matrix`` with ``self.bo_threshold``), the same bonds as in ``fill_ff``.
         """
         G = nx.Graph()
         thresholds = get_bo_threshold_matrix(self.atom_types, self.bo_threshold)
         for node1, node2 in self.wbo:
             bo = self.wbo[(node1, node2)]
-            if bo < thresholds[node1, node2]:
+            if bo <= thresholds[node1, node2]:
                 continue
             G.add_node(node1)
             G.add_node(node2)
@@ -191,7 +192,6 @@ class Structure:
         calcopt: CalculationOptions,
         pathdata: PathData,
         random_seed: int | None = None,
-        bondorder_threshold: float = 0.0,
     ) -> "Structure":
         """Fills Struture object according to the provided calcoptions.
 
@@ -232,7 +232,7 @@ class Structure:
             hessian_filename=pathdata.hessian_filename,
             wbo_filename=pathdata.wbo_filename,
             ff_filename=pathdata.ff_filename,
-            bondorder_threshold=bondorder_threshold,
+            bondorder_threshold=calcopt.bo_treshold,
         )
 
         strucbuilder.nat(nat)

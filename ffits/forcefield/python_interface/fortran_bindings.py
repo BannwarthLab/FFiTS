@@ -103,6 +103,33 @@ def get_single_repulsive_gradient(
     )
 
 
+def get_repulsive_gradient(
+    xyz: np.ndarray,
+    repulsive_atom_pairs: np.ndarray,
+    sigmas: np.ndarray,
+    c: np.ndarray,
+    gradient: np.ndarray,
+):
+    """Calculates the gradient of all repulsive terms on a given displaced geometry in a single Fortran call and adds it to the provided gradient array in place. Term n is defined by the indices of its two atoms, its reference distance sigmas[n] and its force constant c[n].
+
+    Args:
+        xyz (np.ndarray): displaced geometry in column-major format (shape: [3, nat])
+        repulsive_atom_pairs (np.ndarray): atoms involved in the repulsive terms (shape: [n_terms, 2], zero-based indices)
+        sigmas (np.ndarray): reference distances (shape: [n_terms])
+        c (np.ndarray): force constants (shape: [n_terms])
+        gradient (np.ndarray): FF gradient array to which the calculated gradient will be added in place (shape: [nat*3])
+    """
+    # Fortran expects the pairs as columns (shape [2, n_terms]) with one-based indices
+    lj_atom_pairs_onebased = (np.asarray(repulsive_atom_pairs, dtype=np.int32) + 1).T
+    fortran_ff.lj_derivatives.get_lj_gradient(
+        xyz,
+        lj_atom_pairs_onebased,
+        np.asarray(sigmas, dtype=float),
+        np.asarray(c, dtype=float),
+        gradient,
+    )
+
+
 def get_single_bond_hessian(
     xyz: np.ndarray,
     bond_atoms: np.ndarray,
@@ -200,4 +227,30 @@ def get_single_repulsive_hessian(
     lj_atom_pair_onebased[1] = repulsive_atom_pair[1] + 1
     fortran_ff.lj_derivatives.get_single_lj_hessian(
         xyz, lj_atom_pair_onebased, sigma, c, hessian
+    )
+
+
+def get_repulsive_hessian(
+    xyz: np.ndarray,
+    repulsive_atom_pairs: np.ndarray,
+    sigmas: np.ndarray,
+    c: np.ndarray,
+    hessian: np.ndarray,
+):
+    """Calculates the hessian of all repulsive terms on a given displaced geometry in a single Fortran call and adds it to the provided hessian array in place. Term n is defined by the indices of its two atoms, its reference distance sigmas[n] and its force constant c[n].
+
+    Args:
+        xyz (np.ndarray): displaced geometry in column-major format (shape: [3, nat])
+        repulsive_atom_pairs (np.ndarray): atoms involved in the repulsive terms (shape: [n_terms, 2], zero-based indices)
+        sigmas (np.ndarray): reference distances (shape: [n_terms])
+        c (np.ndarray): force constants (shape: [n_terms])
+        hessian (np.ndarray): FF hessian array to which the calculated hessian will be added in place (shape: [nat*3, nat*3])
+    """
+    lj_atom_pairs_onebased = (np.asarray(repulsive_atom_pairs, dtype=np.int32) + 1).T
+    fortran_ff.lj_derivatives.get_lj_hessian(
+        xyz,
+        lj_atom_pairs_onebased,
+        np.asarray(sigmas, dtype=float),
+        np.asarray(c, dtype=float),
+        hessian,
     )

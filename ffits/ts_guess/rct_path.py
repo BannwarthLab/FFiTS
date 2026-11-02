@@ -73,12 +73,6 @@ def create_path(
         tuple[list, dict | None]: The full trajectory (including reactant
         and product endpoints) and the highest-energy frame found, if any.
     """
-    if calcdata.ts_calc.average_with_hess_weight:
-        logger.warning(
-            "Weighting the reactant and product FF with the hessian is currently not implemented for the reaction path mode. The factors will be varied from minfact1 to maxfact1 for the reactant to get the reaction path."
-        )
-        calcdata.ts_calc.average_with_hess_weight = False
-
     trajectory = []
     highest_energy_frame = None
     highest_energy_value = None

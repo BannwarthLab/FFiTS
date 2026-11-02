@@ -9,8 +9,10 @@ from ffits.datatype.structure_data import (
     StructuralInformation,
     Structure,
 )
+from ffits.datatype.calculation_data import CalculationData
 from ffits.datatype.forcefield_data import ForceField
 from ffits.io.reader import readin_xyz, read_wbo_file
+from ffits.utils.bond_threshold import get_bo_threshold_matrix
 from ffits.data.vanderwaals_radii import get_vander_matrix
 from ffits.data.elements import atom_symbol_to_number
 from ffits.utils.geometry import angstrom2bohr, convert_xyz_to_fortranstyle
@@ -290,6 +292,29 @@ class TestStructure:
             "ff": str(test_dir / "ff1.csv"),
             "wbo": str(test_dir / "wbo1"),
         }
+
+    def test_from_config_uses_bo_treshold_of_calcopt(self, example_files):
+        """The bond graph of from_config uses calcopt.bo_treshold, the same bonds as fill_ff."""
+        cd = CalculationData.from_default()
+        calcopt = cd.reactant_calc
+        calcopt.hessian_calc = calcopt.wbo_calc = calcopt.ff_parameterization = False
+        calcopt.geometry_optimization = False
+        calcopt.bo_treshold = 0.95
+        cd.reactant_path.xyz_filename = example_files["xyz"]
+        cd.reactant_path.wbo_filename = example_files["wbo"]
+        cd.reactant_path.ff_filename = example_files["ff"]
+        cd.reactant_path.hessian_filename = str(
+            Path(example_files["xyz"]).with_suffix(".hess")
+        )
+        info = Structure.from_config(cd, calcopt, cd.reactant_path).info
+        assert info.bo_threshold == 0.95
+        thresholds = get_bo_threshold_matrix(info.atom_types, 0.95)
+        bonds = {
+            tuple(sorted(pair))
+            for pair, bo in info.wbo.items()
+            if bo > thresholds[pair]
+        }
+        assert {tuple(sorted(e)) for e in info.complete_graph.edges} == bonds
 
     @pytest.fixture
     def structure(self, example_files):

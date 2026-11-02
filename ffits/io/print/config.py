@@ -54,6 +54,7 @@ def print_calculation_data(calc_data: CalculationData):
     print(f"  Factor (Reactant):                {ts.factor_reactant:.2f}")
     print(f"  Factor (Product):                 {ts.factor_product:.2f}")
     print(f"  Perform two optimizations:        {ts.perform_two_optimizations}")
+    print(f"  Hydrogen covalent radius:         {ts.hydrogen_covalent_radius}")
     print(f"  Molbar optimizer E tolerance:     {ts.molbar_optimizer_e_tol}")
     print(f"  Molbar optimizer X tolerance:     {ts.molbar_optimizer_x_tol}")
     print(f"  Molbar optimizer max micro steps: {ts.molbar_optimizer_max_micro_steps}")

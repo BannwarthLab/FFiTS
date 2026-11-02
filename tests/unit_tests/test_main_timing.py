@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
+from ffits.datatype.calculation_data import CalculationData
 from ffits.main import _write_timing_report
 from ffits.ts_guess.guess import get_ts_guess, get_ts_guess_from_xyz
 
@@ -39,7 +40,7 @@ def test_get_ts_guess_records_timing_phases(monkeypatch):
         timing_entries.append(label)
 
     def fake_create_tsff(**kwargs):
-        return {"tsff": SimpleNamespace(start_from_reactant=True), "params_mix": {}}
+        return SimpleNamespace(start_from_reactant=True)
 
     def fake_optimize_with_forcefield(*args, **kwargs):
         return True, 0.0, np.zeros((1, 3))
@@ -59,9 +60,13 @@ def test_get_ts_guess_records_timing_phases(monkeypatch):
         path=SimpleNamespace(xyz_filename="input.xyz"),
     )
 
+    calcdata = CalculationData.from_default()
+    calcdata.ts_calc.perform_two_optimizations = False
+
     get_ts_guess(
         structure,
         structure,
+        calcdata=calcdata,
         timing_logger=SimpleNamespace(),
         timing_entries=entries,
     )

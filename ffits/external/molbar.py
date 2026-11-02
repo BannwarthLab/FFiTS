@@ -6,6 +6,7 @@ import logging
 from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.structure_data import StructuralInformation
 from ffits.utils.bond_threshold import get_bo_threshold_matrix
+from ffits.utils.geometry import angstrom2bohr
 from molbar.utils.optimizer import optimize_geometry
 
 from scipy.optimize import minimize
@@ -125,14 +126,25 @@ def anc_optimizer(
             "Function for hessian calculation needs to be defined in FF object when using the ANC optimization."
         )
 
+    # MolBar optimizes in Angström and uses the derivatives as given, but the FF
+    # returns them per bohr, so they are converted to per Angström here.
+    def gradient_angstrom(xyz: np.ndarray) -> np.ndarray:
+        """FF gradient in Hartree/Angström."""
+        return angstrom2bohr(ff.get_gradient(xyz))
+
+    def hessian_angstrom(xyz: np.ndarray) -> np.ndarray:
+        """FF hessian in Hartree/Angström**2."""
+        return angstrom2bohr(angstrom2bohr(ff.get_hessian(xyz)))
+
+    # MolBar updates the geometry array in place, so pass a copy to keep xyz_start unchanged
     converged, energy, final_geom, steps, time, message = optimize_geometry(
-        geometry=xyz_start,
+        geometry=xyz_start.copy(),
         elements=atom_types,
         trajectory_file=trajectory_filename,
         final_geometry_file=final_geometry_filename,
         energy_func=ff.get_energy,
-        gradient_func=ff.get_gradient,
-        hessian_func=ff.get_hessian,
+        gradient_func=gradient_angstrom,
+        hessian_func=hessian_angstrom,
         masses=None,  # Optional: provide atomic masses
         trust_radius=0.1,
         e_tol=e_tol,

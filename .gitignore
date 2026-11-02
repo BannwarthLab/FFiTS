@@ -7,6 +7,7 @@ _manual_test/
 src/forcefield/fortran_energy/.nfs000000000028a8ea00010c34
 **/__pycache__/
 ffits/forcefield/fortran/fortran_forcefield.cpython-311-x86_64-linux-gnu.so
+_KNOWN_BUGS.md
 
 # Build and distribution artifacts
 build/
@@ -22,6 +23,7 @@ dist/
 *.swp
 *.swo
 *.so
+ffits/forcefield/fortran/build_info.txt
 *~
 .DS_Store
 .vscode/settings.json

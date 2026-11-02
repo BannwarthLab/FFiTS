@@ -19,7 +19,7 @@ Produced by actually running the default ffits TS-guess pipeline
 - `wbo1`, `wbo2` -- Wiberg bond orders
 - `struc1.hess`, `struc2.hess` -- xtb Hessians
 - `ff1.csv`, `ff2.csv` -- parameterized force fields for reactant/product
-- `tsff.csv`, `tsff.mixing_factors.txt` -- the mixed transition-state force field
+- `tsff.csv` -- the mixed transition-state force field
 - `ts_guess.xyz`, `trj_ts_guess.xyz`, `ts_optimization.out` -- the TS-guess optimization output
 - `pyout` -- a captured stdout log from the run, kept for human reference only (no test reads it)
 

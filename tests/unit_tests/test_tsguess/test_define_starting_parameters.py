@@ -7,6 +7,7 @@ from ffits.ts_guess.define_starting_parameters import (
     _normalize_improper,
     filter_dihedrals,
     _find_hydrogen_bonding,
+    fill_ff,
     _remove_duplicate_improper_dihedrals,
 )
 from ffits.datatype.forcefield_data import ForceField
@@ -396,3 +397,66 @@ class TestFindHydrogenBonding:
             assert isinstance(value["bl"], (int, float))
             assert isinstance(value["angle"], (int, float))
             assert isinstance(value["bonded_atom"], (int, np.integer))
+
+    def test_key_sorted_when_acceptor_index_above_hydrogen(self):
+        """H-bond with acceptor index > H index is keyed as the sorted (H, acceptor) pair."""
+        # C-H...O nearly linear, H has the lowest index
+        xyz = np.array(
+            [
+                [1.5, 0.0, 0.0],  # H
+                [3.0, 0.0, 0.0],  # C (bonded to H)
+                [0.0, 0.0, 0.0],  # O (acceptor)
+            ]
+        )
+        atom_types = np.array(["H", "C", "O"])
+        ff = ForceField(nat=3, ff_filename="s")
+        info = StructuralInformation(
+            nat=3,
+            xyz=xyz,
+            wbo_dict={(0, 1): 1.0},
+            atom_types=atom_types,
+            hessian=np.zeros((3, 3)),
+        )
+        ff.repulsive = pd.DataFrame({"atoms": [(0, 2)]})
+
+        result = _find_hydrogen_bonding(ff, info)
+
+        assert list(result) == [(0, 2)]
+        assert result[(0, 2)]["acceptor"] == 2
+        assert result[(0, 2)]["h_atom"] == 0
+        assert result[(0, 2)]["bonded_atom"] == 1
+
+
+class TestFillFFHydrogenBonds:
+    """H-bond terms added by fill_ff are stored like all other terms."""
+
+    def test_hbond_sorted_and_removed_from_repulsive(self):
+        """H-bond with acceptor index > H index: sorted bond and angle, no repulsive term left."""
+        # H3C-O-H...O=CH2 with a linear O-H...O, acceptor O has a higher index than H
+        xyz = np.array(
+            [
+                [3.1, 1.2, 0.0],  # C
+                [2.6, 0.0, 0.0],  # O (donor)
+                [1.6, 0.0, 0.0],  # H
+                [-1.4, 0.0, 0.0],  # C
+                [-0.2, 0.0, 0.0],  # O (acceptor)
+                [4.1, 1.4, 0.8],  # H
+            ]
+        )
+        atom_types = np.array(["C", "O", "H", "C", "O", "H"])
+        ff = ForceField(nat=6, ff_filename="s")
+        info = StructuralInformation(
+            nat=6,
+            xyz=xyz,
+            wbo_dict={(0, 1): 1.0, (1, 2): 0.9, (3, 4): 2.0, (0, 5): 1.0},
+            atom_types=atom_types,
+            hessian=np.zeros((18, 18)),
+        )
+
+        fill_ff(ff, info)
+
+        assert (2, 4) in ff.bonds["atoms"].tolist()
+        assert (4, 2) not in ff.bonds["atoms"].tolist()
+        assert (1, 2, 4) in ff.angles["atoms"].tolist()
+        assert (4, 2, 1) not in ff.angles["atoms"].tolist()
+        assert (2, 4) not in ff.repulsive["atoms"].tolist()

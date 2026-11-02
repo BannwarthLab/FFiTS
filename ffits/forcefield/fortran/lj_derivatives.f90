@@ -10,40 +10,43 @@ public :: get_lj_derivatives, get_lj_gradient, get_lj_hessian
 contains
 
 subroutine get_lj_derivatives(geometry, bonds, ideal_bonds, k_bonds, gradient, hessian)
+    ! k_bonds(n) is the force constant of pair n
     real(8), intent(in) :: geometry(:, :), ideal_bonds(:)
     integer, intent(in) ::  bonds(:, :)
-    real(8), intent(in) :: k_bonds
+    real(8), intent(in) :: k_bonds(:)
     real(8), intent(inout) :: gradient(:), hessian(:,:)
     integer :: n
 
     do n=1, size(ideal_bonds)
-        call get_single_lj_derivative(geometry, bonds(:,n), ideal_bonds(n), k_bonds, gradient, hessian)
+        call get_single_lj_derivative(geometry, bonds(:,n), ideal_bonds(n), k_bonds(n), gradient, hessian)
     enddo
 
 end subroutine get_lj_derivatives
 
 subroutine get_lj_gradient(geometry, bonds, ideal_bonds, k_bonds, gradient)
+    ! k_bonds(n) is the force constant of pair n
     real(8), intent(in) :: geometry(:, :), ideal_bonds(:)
     integer, intent(in) ::  bonds(:, :)
-    real(8), intent(in) :: k_bonds
+    real(8), intent(in) :: k_bonds(:)
     real(8), intent(inout) :: gradient(:)
     integer :: n
 
     do n=1, size(ideal_bonds)
-        call get_single_lj_gradient(geometry, bonds(:,n), ideal_bonds(n), k_bonds, gradient)
+        call get_single_lj_gradient(geometry, bonds(:,n), ideal_bonds(n), k_bonds(n), gradient)
     enddo
 
 end subroutine get_lj_gradient
 
 subroutine get_lj_hessian(geometry, bonds, ideal_bonds, k_bonds, hessian)
+    ! k_bonds(n) is the force constant of pair n
     real(8), intent(in) :: geometry(:, :), ideal_bonds(:)
     integer, intent(in) ::  bonds(:, :)
-    real(8), intent(in) :: k_bonds
+    real(8), intent(in) :: k_bonds(:)
     real(8), intent(inout) :: hessian(:,:)
     integer :: n
 
     do n=1, size(ideal_bonds)
-        call get_single_lj_hessian(geometry, bonds(:,n), ideal_bonds(n), k_bonds, hessian)
+        call get_single_lj_hessian(geometry, bonds(:,n), ideal_bonds(n), k_bonds(n), hessian)
     enddo
 
 end subroutine get_lj_hessian
@@ -158,10 +161,11 @@ subroutine build_lj_hessian(sigma, rij, drdx, d2rdxdy, k_bonds, xhat, hessian)
     real(8) :: h
     integer :: m, i, j
 
-    do m=1, 21
-
-        j = floor((sqrt(8*real(m) - 7) + 1) / 2)
-        i = m - (j-1)*j/2
+    ! packed upper triangle, m = (j-1)*j/2 + i for i <= j (same as gidx)
+    m = 0
+    do j=1, 6
+    do i=1, j
+        m = m + 1
 
         call get_d2Vljdxdy(drdx(i), drdx(j), d2rdxdy(m), k_bonds, sigma, rij, h)
         hessian(xhat(i), xhat(j)) = hessian(xhat(i), xhat(j)) + h
@@ -170,6 +174,7 @@ subroutine build_lj_hessian(sigma, rij, drdx, d2rdxdy, k_bonds, xhat, hessian)
             hessian(xhat(j), xhat(i)) = hessian(xhat(j), xhat(i)) + h
 
         endif
+    enddo
     enddo
 
 end subroutine build_lj_hessian

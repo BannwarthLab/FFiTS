@@ -7,17 +7,16 @@ third period or higher) use the threshold supplied by the caller, usually the
 """
 
 import numpy as np
-
+import logging
 from ffits.data.elements import atom_symbol_to_number
 
-LIGHT_ATOM_MAX_Z = 10  # Ne, last element of the second period
-LIGHT_ATOM_BO_THRESHOLD = 0.3  # was 0.8, which cut real O-H bonds (WBO ~0.79)
-
+logger = logging.getLogger(__name__)
 
 def get_bo_threshold_matrix(
     atom_types,
     default_threshold: float = 0.0,
-    light_threshold: float = LIGHT_ATOM_BO_THRESHOLD,
+    light_threshold: float = 0.3,
+    light_atom_max_z: int = 10
 ) -> np.ndarray:
     """Build a (nat, nat) matrix with the bond order threshold for every atom pair.
 
@@ -32,8 +31,9 @@ def get_bo_threshold_matrix(
         np.ndarray: Symmetric matrix of thresholds, shape (nat, nat).
     """
     light = np.array(
-        [atom_symbol_to_number(str(a)) <= LIGHT_ATOM_MAX_Z for a in atom_types],
+        [atom_symbol_to_number(str(a)) <= light_atom_max_z for a in atom_types],
         dtype=bool,
     )
+    logger.debug(f'BO threshold matrix is build with light_treshold of {light_threshold} and bo_threshold of {default_threshold}.')
     both_light = np.outer(light, light)
     return np.where(both_light, light_threshold, default_threshold).astype(float)

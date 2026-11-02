@@ -154,3 +154,33 @@ def test_energy_ff():
     ff = ForceField(NAT, path, readff=True)
     energy = energy_ff(info.fortran_xyz * 1.01, ff)
     assert energy < 0.01
+
+
+def test_repulsive_derivatives_match_fortran():
+    """The vectorized repulsive gradient/hessian equal the sum of the Fortran single-pair routines."""
+    import ffits.forcefield.python_interface.fortran_bindings as fb
+
+    path = os.path.join(os.getcwd(), "tests/examples/small_single_molecule", "ff1.csv")
+    path2 = os.path.join(
+        os.getcwd(), "tests/examples/small_single_molecule", "struc2.xyz"
+    )
+    ff = ForceField(NAT, path, readff=True)
+    _, _, xyz_start, _ = readin_xyz(path2)
+    xyz = angstrom2bohr(convert_xyz_to_fortranstyle(xyz_start))
+    assert not ff.repulsive.empty
+
+    gradient_ref = np.zeros(3 * NAT, order="F")
+    hessian_ref = np.zeros((3 * NAT, 3 * NAT), order="F")
+    for _, row in ff.repulsive.iterrows():
+        c = row["parameter"] ** 2
+        sigma = row["reference_value"]
+        fb.get_single_repulsive_gradient(xyz, row["atoms"], sigma, c, gradient_ref)
+        fb.get_single_repulsive_hessian(xyz, row["atoms"], sigma, c, hessian_ref)
+
+    gradient = np.zeros(3 * NAT, order="F")
+    hessian = np.zeros((3 * NAT, 3 * NAT), order="F")
+    repulsive_gradient(xyz, ff, gradient)
+    repulsive_hessian(xyz, ff, hessian)
+
+    np.testing.assert_allclose(gradient, gradient_ref, rtol=1e-12, atol=1e-14)
+    np.testing.assert_allclose(hessian, hessian_ref, rtol=1e-12, atol=1e-14)
