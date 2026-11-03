@@ -36,7 +36,14 @@ class Xtb:
             xtb_path (str, optional): Path to the xtb executable. Defaults to "xtb".
             g_xtb (bool, optional): Whether to run with the --gxtb flag. Defaults to False.
         """
-        # If xtb_path not provided, try to find it
+        # xtb runs in a temp directory, so relative paths must be made absolute.
+        # A bare command name (e.g. "xtb") is left as is and found via PATH.
+        if os.sep in xtb_path:
+            xtb_path = os.path.abspath(xtb_path)
+        if xtb_input_name is not None:
+            xtb_input_name = os.path.abspath(xtb_input_name)
+            if not os.path.isfile(xtb_input_name):
+                raise FileNotFoundError(f"xtb input file {xtb_input_name} not found.")
 
         self.xtb_path = xtb_path
         self.chrg = chrg
@@ -110,10 +117,11 @@ class Xtb:
             stdout=stdout.open("w"),
             stderr=stderr.open("w"),
         )
-        print(stderr.read_text())
+        stderr_text = stderr.read_text()
+        logger.debug(stderr_text)
         if result.returncode != 0:
             raise RuntimeError(
-                f"xTB command {command} failed with code {result.returncode}. See {stderr}"
+                f"xTB command {command} failed with code {result.returncode}. See {stderr}:\n{stderr_text}"
             )
         return result.returncode
 

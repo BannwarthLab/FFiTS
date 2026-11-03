@@ -1,6 +1,10 @@
 import numpy as np
 import pytest
-from ffits.external.molbar import get_combinded_priorities, _define_bonds_for_molbar
+from ffits.external.molbar import (
+    get_combinded_priorities,
+    get_priorities,
+    _define_bonds_for_molbar,
+)
 from molbar.molecule.molecule import Molecule
 from tests.test_utils import reactant_structure_main, product_structure_main
 
@@ -102,3 +106,24 @@ class TestGetCombinedPriorities:
             reactant_structure.info, product_structure.info
         )
         assert min(priorities.values()) == 1, "The lowest priority should be 1."
+
+
+class TestGetPriorities:
+    """Test get_priorities function (single structure, parameterization mode)."""
+
+    def test_priorities_have_correct_length(self, reactant_structure):
+        """Test that priorities have one entry per atom."""
+        priorities = get_priorities(reactant_structure.info)
+        assert len(priorities) == reactant_structure.info.nat
+
+    def test_priorities_are_integers_and_lowest_is_one(self, reactant_structure):
+        """Test that priorities are integers and the lowest priority is 1."""
+        priorities = get_priorities(reactant_structure.info)
+        assert all(isinstance(priority, int) for priority in priorities.values())
+        assert min(priorities.values()) == 1
+
+    def test_missing_bo_matrix_raises(self, reactant_structure):
+        """Test that a structure without bond order matrix raises a ValueError."""
+        reactant_structure.info.bo_matrix = None
+        with pytest.raises(ValueError):
+            get_priorities(reactant_structure.info)

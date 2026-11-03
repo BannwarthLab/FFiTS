@@ -24,6 +24,13 @@ def test_setup_logger_supports_timing_level(caplog):
     )
 
 
+def test_timing_level_does_not_enable_debug():
+    logger = setup_logger("TIMING")
+
+    assert not logger.isEnabledFor(logging.DEBUG)
+    assert logger.isEnabledFor(logging.INFO)
+
+
 def test_setup_logger_defaults_to_info_when_level_is_missing():
     logger = setup_logger(None)
 

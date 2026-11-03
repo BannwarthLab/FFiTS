@@ -46,12 +46,12 @@ class TestGetWboMatrixDifference:
 
         # Get a bond from the structures to verify
         reactant_wbo = reactant_structure.info.wbo
-        product_wbo = product_structure.info.wbo 
+        product_wbo = product_structure.info.wbo
 
         # Check a specific bond that exists in both
         for bond in reactant_wbo.keys():
             if bond in product_wbo:
-                i, j = bond  
+                i, j = bond
                 expected_change = product_wbo[bond] - reactant_wbo[bond]
                 np.testing.assert_almost_equal(diff_matrix[i, j], expected_change)
                 break  # Just test one bond

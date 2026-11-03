@@ -127,13 +127,22 @@ def parse_args():
 
     args = parser.parse_args()
 
-    if not args.opt and len(args.structures) != 2 and args.version == False:
+    if args.parameterize:
+        if len(args.structures) != 1:
+            parser.error(
+                "Exactly one structure file must be provided for parameterization mode."
+            )
+    elif not args.opt and len(args.structures) != 2 and args.version == False:
         parser.error("Exactly two structure files must be provided for TS guess mode.")
     if args.opt and len(args.structures) != 1:
         parser.error("Exactly one structure file must be provided for optimizer mode.")
     if args.reaction_path and len(args.structures) != 2:
         parser.error(
             "Exactly two structure files must be provided for reaction path mode."
+        )
+    if args.reaction_path is not None and args.reaction_path < 3:
+        parser.error(
+            "Reaction path mode needs at least 3 frames (reactant, one image, product)."
         )
 
     # Validate structure files
@@ -145,15 +154,6 @@ def parse_args():
     if args.config is not None:
         if not os.path.exists(args.config):
             raise FileNotFoundError(f"Config file not found: {args.config}")
-
-    if args.config is not None and args.multiplicity is not None:
-        logger.warning(
-            "Multiplicity given in the input file differs from command line multiplicity."
-        )
-    if args.config is not None and args.charge is not None:
-        logger.warning(
-            "Charge given in the input file differs from command line charge."
-        )
 
     return {
         "structures": args.structures,

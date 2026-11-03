@@ -12,7 +12,8 @@ from pathlib import Path
 
 # Global logger instance
 _LOGGER: Optional[logging.Logger] = None
-TIMING_LEVEL = 5
+# Between DEBUG (10) and INFO (20), so --timing does not also switch on debug output
+TIMING_LEVEL = 15
 
 
 def _record_timing(

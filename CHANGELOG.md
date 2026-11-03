@@ -1,22 +1,34 @@
 # Changelog
 
-## pre [0.9.2] - 2026-11-02
+## [0.9.2] - 2026-11-03
 
 ### Added
 - **`hydrogen_covalent_radius`** option (default `True`). For forming or breaking covalent H–X bonds, the side where the bond is missing uses the covalent radius of H (0.32 Å) instead of its vdW radius as the reference distance, but never less than the bonded length. Hydrogen bonds keep the vdW distance.
 - **Fortran build info** (compiler, flags, build date) is written to `build_info.txt` and printed in the ffits header.
 - `scripts/benchmark_tsff.py` for benchmarking TS guesses against reference TSs.
+- **`start_structure`** option in `[ts_guess.calculation]` sets where the TS optimization starts: `"reactant"`, `"product"` or an xyz file with the same atoms as the reactant. If set, only one optimization runs.
 
 ### Changed
-- **Hessian-weighted mixing removed.** The TS FF is now always the plain `factor_reactant`/`factor_product` average of reactant and product. The options `average_with_hess_weight`, `hess_weight_sharpness` and `hess_weight_angles_dihedrals` no longer exist.
 - **`perform_two_optimizations` is now `True` by default.** The TS FF is optimized from both reactant and product, and the result with the lower xtb (g-xTB if `use_gxtb`) singlepoint energy is kept.
+- **Reaction-path mode scales forming/breaking bonds** (new option `scale_one_sided_bonds`, default off, always on in reaction-path mode). A bond present in only one FF gets its parameter multiplied by min(1, 2·w), w being the weight of that FF. 
 - **Faster TS FF construction and FF energy evaluation.** Parameter/reference mixing uses hash lookups instead of per-term DataFrame scans, and the FF energy and geometry functions are vectorized.
+- **Unknown config keywords raise an error.** A keyword or section in the TOML config that does not exist now raises a `ValueError`.
+- **Hessian-weighted mixing removed.** The TS FF is now always the plain `factor_reactant`/`factor_product` average of reactant and product. The options `average_with_hess_weight`, `hess_weight_sharpness` and `hess_weight_angles_dihedrals` no longer exist.
 
 ### Fixed
 - Gradient and Hessian were passed to the molbar optimizer per bohr instead of per Å (factor 1.89 / 3.57 too small).
 - Wrong second derivative of the angle term in the Fortran Hessian. Intel compilers are now forced to `-fp-model=precise`, since the default fast model broke the angle/dihedral Hessians.
 - Hydrogen-bond pairs were stored unsorted.
 - The molbar optimizer modified the input geometry in place; it now works on a copy.
+- `--timing` also switched on debug mode (kept xtb temp dirs, wrote debug files). The `TIMING` level now sits between `DEBUG` and `INFO`; `--debug --timing` gives both.
+- Relative `xtb_input_name` and `xtb_path` were not found, because xtb runs in a temp directory. They are now made absolute, and a missing xtb input file raises an error instead of being silently ignored by xtb.
+- Exactly linear angles (alkynes, nitriles, CO2 built symmetric) gave NaN angle gradients/Hessians and therefore an all-NaN fitted FF. A linear limit is now used, and dihedrals on an exactly linear angle are skipped.
+- `ffits struc.xyz --parameterize` was rejected because two structure files were required. Parameterization mode now takes exactly one.
+- Parameterization mode with `ff_parameterization = false` ran the xtb calculations before exiting. It now exits first.
+- Parameterization mode ignored `only_proper_dihedrals = false` and created only proper dihedrals. Improper dihedrals are now created from MolBar priorities of the given structure.
+- The charge/multiplicity warning for a config file plus `--charge`/`--multiplicity` was printed even for equal values and before logging was set up. It is now only printed when the command line changes the config value.
+- `--rctpath 3` (a single image) divided by zero. The image now uses the midpoint factor, and fewer than 3 frames are rejected by the command-line parser.
+- xtb's stderr (e.g. floating-point exception notes) is only shown in debug mode or when xtb fails, instead of after every xtb call.
 
 ## [0.9.1] - 2026-10-09
 

@@ -12,11 +12,12 @@ from ffits.data.elements import atom_symbol_to_number
 
 logger = logging.getLogger(__name__)
 
+
 def get_bo_threshold_matrix(
     atom_types,
     default_threshold: float = 0.0,
     light_threshold: float = 0.3,
-    light_atom_max_z: int = 10
+    light_atom_max_z: int = 10,
 ) -> np.ndarray:
     """Build a (nat, nat) matrix with the bond order threshold for every atom pair.
 
@@ -34,6 +35,8 @@ def get_bo_threshold_matrix(
         [atom_symbol_to_number(str(a)) <= light_atom_max_z for a in atom_types],
         dtype=bool,
     )
-    logger.debug(f'BO threshold matrix is build with light_treshold of {light_threshold} and bo_threshold of {default_threshold}.')
+    logger.debug(
+        f"BO threshold matrix is build with light_treshold of {light_threshold} and bo_threshold of {default_threshold}."
+    )
     both_light = np.outer(light, light)
     return np.where(both_light, light_threshold, default_threshold).astype(float)

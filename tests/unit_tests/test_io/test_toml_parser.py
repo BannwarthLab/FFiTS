@@ -70,6 +70,14 @@ class TestOverwriteFromCommandline:
 
         assert cd.system.charge == -2
 
+    def test_overwrite_charge_with_zero(self):
+        """Test that --chrg 0 overrides a non-zero config charge."""
+        cd = CalculationData()
+        cd.system.charge = 1
+        overwrite_from_commandline(cd, multiplicity=None, charge=0)
+
+        assert cd.system.charge == 0
+
     def test_overwrite_with_same_values(self, caplog):
         """Test that no message is printed when values are the same."""
         cd = CalculationData()
@@ -96,6 +104,42 @@ class TestOverwriteFromCommandline:
         assert cd.system.multiplicity == original_mult
         assert cd.system.charge == original_charge
         assert caplog.text.strip() == ""
+
+    def test_warns_when_overriding_config_values(self, caplog):
+        cd = CalculationData()
+        cd.system.charge = 1
+        cd.system.multiplicity = 2
+        with caplog.at_level(logging.WARNING):
+            overwrite_from_commandline(
+                cd, multiplicity=3, charge=0, config_file="config.toml"
+            )
+        assert cd.system.charge == 0
+        assert cd.system.multiplicity == 3
+        assert (
+            "Charge 0 from the command line overrides charge 1 from config.toml"
+            in caplog.text
+        )
+        assert (
+            "Multiplicity 3 from the command line overrides multiplicity 2 from config.toml"
+            in caplog.text
+        )
+
+    def test_no_warning_when_config_values_are_equal(self, caplog):
+        cd = CalculationData()
+        cd.system.charge = 1
+        cd.system.multiplicity = 2
+        with caplog.at_level(logging.WARNING):
+            overwrite_from_commandline(
+                cd, multiplicity=2, charge=1, config_file="config.toml"
+            )
+        assert caplog.records == []
+
+    def test_no_warning_without_config_file(self, caplog):
+        cd = CalculationData()
+        with caplog.at_level(logging.WARNING):
+            overwrite_from_commandline(cd, multiplicity=3, charge=-1)
+        assert cd.system.charge == -1
+        assert caplog.records == []
 
 
 def test_overwrite_from_commandline_no_change(caplog):

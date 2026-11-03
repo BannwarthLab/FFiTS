@@ -13,7 +13,7 @@
 ***Force Field-interpolated Transition States***
 
 **Author:** *Daria Babushkina*  
-**Version:** 0.9.1  
+**Version:** 0.9.2  
 **Status:** Development   
 **Python:** 3.12, 3.13, 3.14 (tested)     
 **License:** BSD-3-Clause   
@@ -24,7 +24,7 @@
 The goal of this program is to generate a transition state (TS) guess from a reactant and a product structure. Constructing a TS guess with FFiTS happens in three main steps through the use of harmonic force fields (FFs):
 
 1. **Calculating preliminary information**: The Hessian and Wiberg bond orders (WBO) are calculated with `xtb` (tested for version 6.7.1) on the GFN2-xTB level of theory. 
-2. **Parametrizing system-specific FFs**: The data from step 1 is used to construct two FFs - one for reactant and one for product structure - by parameterizing the FFs to represent curvature at the given minima. 
+2. **Parameterizing system-specific FFs**: The data from step 1 is used to construct two FFs - one for reactant and one for product structure - by parameterizing the FFs to represent curvature at the given minima. 
 3. **Constructing and optimizing to TS guess**: The TS FF is generated from the reactant and product FF and used as the potential for a geometry optimization to its minimum. The resulting structure is the TS. 
 
 # Requirements
@@ -75,9 +75,9 @@ ffits struc.xyz --opt ff.csv
 ffits reactant.xyz product.xyz --reaction_path nr_of_images
 ```
 
-4. Parameterization mode: Creates a parameterized FF for given `struc.xyz`. IMPORTANT: This may create different dihedral definitions as in TS guess mode for the same structure, as no comparison of reactant and product can be performed. 
+4. Parameterization mode: Creates a parameterized FF for given `struc.xyz`. Improper dihedrals (`only_proper_dihedrals = false`) are defined from the atom priorities of this structure alone. IMPORTANT: This may create different dihedral definitions as in TS guess mode for the same structure, as no comparison of reactant and product can be performed. 
 ```bash
-ffits struc.xyz --parameterization
+ffits struc.xyz --parameterize
 ```
 
 Command line keywords are:
@@ -166,14 +166,14 @@ xtb_path = "xtb"
 | `wbo_calc` | bool | true | Whether to calculate WBO at runtime. If false, read from `wbo_filename` |
 | `hessian_calc` | bool | true | Whether to calculate Hessian at runtime. If false, read from `hessian_filename` |
 | `bo_treshold` | float | 0.0 | Threshold for defining bonds based on Wiberg bond orders |
-| `only_proper_dihedrals` | bool | true | If False, improper dihedrals are also included in the FF generation |
-| `ff_parameterization` | bool | false | Whether to parameterize force field. If false, read from `ff_filename` |
+| `only_proper_dihedrals` | bool | false | If False, improper dihedrals are also included in the FF generation |
+| `ff_parameterization` | bool | true | Whether to parameterize force field. If false, read from `ff_filename` |
 | `test_parameterization` | bool | false | If true, use parameterized FF to optimize structure and print RMSD |
 | `ff_parameterization_maxiteration` | int | 1000 | Maximum iterations for FF parameterization |
 | `ff_parameterization_stepsize` | float | 0.15 | Step size for FF parameterization optimization |
 | `ff_parameterization_threshold` | float | 0.0005 | Convergence threshold for FF parameterization (lower = more prone to overfitting) |
 | `ff_parameterization_constant_repulsion` | bool | true | If true, do not change repulsive term parameters during fitting |
-| `ff_parameter_repulsion` | float | 0.01 | The FF parameter for all repulsive terms |
+| `ff_parameter_repulsion` | float | 0.001 | The FF parameter for all repulsive terms |
 
 **Example:**
 ```toml
@@ -234,10 +234,12 @@ ff_parameterization = true
 | `factor_product` | float | 0.5 | Weight of product in TS interpolation (0.0-1.0). Must sum to 1.0 with factor_reactant |
 | `optimizer` | string | "molbar-optimizer" | Which optimizer to use. Options: `"molbar-optimizer"`, `"scipy-optimizer"` |
 | `hydrogen_covalent_radius` | bool | true | For forming/breaking H–X bonds (X any element but H) that are covalent on the side where they exist, the side where the bond is missing uses the covalent radius of hydrogen (0.32 Å) instead of its vdW radius in the vdW distance, but never less than the bonded length. Covalent means the bond order is above the bond threshold (`bo_treshold`, 0.3 for first/second period pairs), so hydrogen bonds H···A keep the vdW distance |
-| `molbar_optimizer_x_tol` | float | 1e-3 | Step size tolerance for molbar optimizer |
+| `molbar_optimizer_x_tol` | float | 1e-2 | Step size tolerance for molbar optimizer |
 | `molbar_optimizer_max_micro_steps` | int | 1 | Maximum micro-steps in molbar optimizer |
 | `energy_threshold_two_optimizations` | float | 0.15 | Energy threshold for repeating optimization from product if reactant path is too high |
 | `perform_two_optimizations` | bool | true | If true, optimize from both reactant and product, then choose the structure with lower xtb (g-xTB if `use_gxtb`) singlepoint energy |
+| `start_structure` | string | "" | Start geometry of the TS optimization: `"reactant"`, `"product"` or the path to an xyz file with the same atoms in the same order as the reactant. If set, a single optimization is run from it and `perform_two_optimizations` is ignored. |
+| `scale_one_sided_bonds` | bool | false | Multiply the parameter of a bond present in only one FF (forming or breaking) by min(1, 2·w), w being the weight of that FF, so it fades out towards the other structure. No effect for weights ≥ 0.5 (e.g. the default 0.5/0.5). Always on in reaction-path mode |
 
 **Example:**
 ```toml

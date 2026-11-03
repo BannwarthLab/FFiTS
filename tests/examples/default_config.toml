@@ -34,7 +34,7 @@ ff_parameterization_threshold = 0.0005
 # the lower the threshold, the more prone to overfitting the model becomes, the higher the less precize it gets
 ff_parameterization_constant_repulsion = true
 # If set to true, the ff parameters of the repulsive terms are not changed during fitting
-ff_parameter_repulsion = 0.01 # starting parameter for the repulsive term in FF 
+ff_parameter_repulsion = 0.001 # starting parameter for the repulsive term in FF 
 
 
 # ============================
@@ -59,7 +59,7 @@ ff_parameterization_threshold = 0.0005
 # the lower the threshold, the more prone to overfitting the model becomes, the higher the less precize it gets
 ff_parameterization_constant_repulsion = true
 # If set to true, the ff parameters of the repulsive terms are not changed during fitting
-ff_parameter_repulsion = 0.01 # starting parameter for the repulsive term in FF 
+ff_parameter_repulsion = 0.001 # starting parameter for the repulsive term in FF 
 
 
 # ============================

@@ -1,6 +1,7 @@
 """Dataclasses describing calculation configuration for a full ffits run."""
 
 from dataclasses import dataclass, field, fields
+import difflib
 import os
 import logging
 import tomllib
@@ -21,7 +22,42 @@ def load_toml(path: str) -> dict:
         return tomllib.load(f)
 
 
-def _apply_section(obj, section: dict, skip: tuple = ()) -> None:
+def _check_keys(section, allowed, name: str) -> None:
+    """Raises if a TOML section is not a table or contains keys not in ``allowed``.
+
+    Args:
+        section: The TOML section (expected to be a dict).
+        allowed (Iterable[str]): Keys allowed in this section.
+        name (str): Name of the section as written in the TOML file, e.g.
+            ``"reactant.calculation"``. Empty for the top level of the file.
+
+    Raises:
+        ValueError: If ``section`` is not a table or contains unknown keys.
+    """
+    where = f"section [{name}]" if name else "the top level"
+    if not isinstance(section, dict):
+        raise ValueError(
+            f"Config entry '{name}' must be a table ([{name}]), got {section!r}."
+        )
+    allowed = list(allowed)
+    unknown = [key for key in section if key not in allowed]
+    if not unknown:
+        return
+    hints = []
+    for key in unknown:
+        close = difflib.get_close_matches(key, allowed, n=1)
+        if close:
+            hints.append(f"'{key}' -> did you mean '{close[0]}'?")
+    message = (
+        f"Unknown keyword(s) {unknown} in {where} of the config file. "
+        f"Allowed keywords: {allowed}."
+    )
+    if hints:
+        message += " " + " ".join(hints)
+    raise ValueError(message)
+
+
+def _apply_section(obj, section: dict, name: str, skip: tuple = ()) -> None:
     """Overwrites obj's dataclass fields from a TOML section dict, in place.
 
     Every field of ``obj`` not listed in ``skip`` is read from ``section``:
@@ -30,17 +66,23 @@ def _apply_section(obj, section: dict, skip: tuple = ()) -> None:
     ``obj``'s actual dataclass fields instead of a hand-maintained name
     list, any key written under the matching TOML table -- present or
     added later -- is picked up automatically, with no separate wiring
-    step required. This is the single piece of boilerplate behind the
+    step required. Keys in ``section`` that are not fields of ``obj`` raise
+    an error. This is the single piece of boilerplate behind the
     section-by-section overwriting done throughout
     :meth:`CalculationData.from_config`.
 
     Args:
         obj: Dataclass instance whose fields are updated.
         section (dict): TOML section dict to read values from.
+        name (str): Name of the section in the TOML file, used in error messages.
         skip (tuple[str, ...], optional): Field names to leave untouched
             even if present in ``section`` -- for fields that are
             deliberately not sourced from the config file.
+
+    Raises:
+        ValueError: If ``section`` contains a key that is not a field of ``obj``.
     """
+    _check_keys(section, (f.name for f in fields(obj)), name)
     for f in fields(obj):
         if f.name in skip:
             continue
@@ -136,6 +178,13 @@ class TSCalculationOptions:
             Waals radius in the van der Waals distance of the side where the bond is missing, but never less than the
             bonded length. Hydrogen bonds H...A keep the van der Waals distance.
         perform_two_optimizations (bool): Optimize on the TS FF from both reactant and product and keep the result with the lower xtb singlepoint energy.
+        start_structure (str): Start geometry of the TS optimization: "reactant", "product" or the path to an xyz file with
+            the same atoms in the same order as the reactant. Setting it runs a single optimization from that geometry,
+            ``perform_two_optimizations`` is then ignored. Empty (default) keeps the behavior of ``perform_two_optimizations``.
+            In reaction-path mode it is set for every image to the previous image (the reactant for the first one).
+        scale_one_sided_bonds (bool): Multiply the parameter of a bond present in only one FF (forming or breaking) by
+            min(1, 2 * w), w being the weight of that FF, so it fades out towards the other structure. No effect for
+            w >= 0.5, e.g. for the default factors of 0.5. Always on in reaction-path mode.
         molbar_optimizer_e_tol (float): Energy convergence tolerance for the molbar optimizer.
         molbar_optimizer_x_tol (float): Coordinate convergence tolerance for the molbar optimizer.
         molbar_optimizer_max_micro_steps (int): Max micro-steps per molbar optimizer iteration.
@@ -147,6 +196,8 @@ class TSCalculationOptions:
     optimizer: str = "molbar-optimizer"
     hydrogen_covalent_radius: bool = True
     perform_two_optimizations: bool = True
+    start_structure: str = ""
+    scale_one_sided_bonds: bool = False
     molbar_optimizer_e_tol: float = 1e-4
     molbar_optimizer_x_tol: float = 1e-2
     molbar_optimizer_max_micro_steps: int = 1
@@ -217,8 +268,9 @@ class CalculationData:
         """Builds a CalculationData object from a TOML config file, layered over the defaults.
 
         Starts from :meth:`from_default` and overwrites values found in the
-        TOML file. Unless ``test`` is True, also runs sanity checks on the
-        result (required files exist, options are consistent and valid).
+        TOML file. Unknown sections and keywords always raise an error. Unless
+        ``test`` is True, also runs sanity checks on the result (required files
+        exist, options are consistent and valid).
 
         Args:
             path_to_config (str): Path to the TOML config file.
@@ -226,7 +278,8 @@ class CalculationData:
 
         Raises:
             FileNotFoundError: If the config file or a required Hessian file is missing.
-            ValueError: If a setting fails validation (see the sanity checks below).
+            ValueError: If the config file contains an unknown section or keyword,
+                or a setting fails validation (see the sanity checks below).
 
         Returns:
             CalculationData: CalculationData object initialized with values from the config file.
@@ -236,58 +289,70 @@ class CalculationData:
             raise FileNotFoundError(f"Config file {path_to_config} not found.")
         logger.info(f"Loading calculation data from config file: {path_to_config}")
         data = load_toml(path_to_config)
+        _check_keys(
+            data,
+            ("system", "reactant", "product", "ts_guess", "postprocessing"),
+            "",
+        )
         # =======================
         # System
         # =======================
         sys_data = data.get("system", {})
-        _apply_section(cd.system, sys_data)
+        _apply_section(cd.system, sys_data, "system")
 
         # =======================
         # Reactant
         # =======================
         reactant = data.get("reactant", {})
+        _check_keys(reactant, ("path", "calculation"), "reactant")
 
         # Reactant path
         react_path = reactant.get("path", {})
         cd.reactant_path.xyz_filename = ""  # will be set from commandline
-        _apply_section(cd.reactant_path, react_path, skip=("xyz_filename",))
+        _apply_section(
+            cd.reactant_path, react_path, "reactant.path", skip=("xyz_filename",)
+        )
 
         # Reactant calculation
         react_calc = reactant.get("calculation", {})
-        _apply_section(cd.reactant_calc, react_calc)
+        _apply_section(cd.reactant_calc, react_calc, "reactant.calculation")
 
         # =======================
         # Product
         # =======================
         product = data.get("product", {})
+        _check_keys(product, ("path", "calculation"), "product")
 
         # Product path
         prod_path = product.get("path", {})
         cd.product_path.xyz_filename = ""  # will be set from commandline
-        _apply_section(cd.product_path, prod_path, skip=("xyz_filename",))
+        _apply_section(
+            cd.product_path, prod_path, "product.path", skip=("xyz_filename",)
+        )
 
         # Product calculation
         prod_calc = product.get("calculation", {})
-        _apply_section(cd.product_calc, prod_calc)
+        _apply_section(cd.product_calc, prod_calc, "product.calculation")
 
         # =======================
         # TS Guess calculation
         # =======================
         ts_guess = data.get("ts_guess", {})
+        _check_keys(ts_guess, ("path", "calculation"), "ts_guess")
 
         # TS path
         ts_path = ts_guess.get("path", {})
-        _apply_section(cd.ts_path, ts_path)
+        _apply_section(cd.ts_path, ts_path, "ts_guess.path")
 
         # TS calculation
         ts_calc = ts_guess.get("calculation", {})
-        _apply_section(cd.ts_calc, ts_calc)
+        _apply_section(cd.ts_calc, ts_calc, "ts_guess.calculation")
 
         # =======================
         # Postprocessing
         # =======================
         post = data.get("postprocessing", {})
-        _apply_section(cd.postprocessing, post)
+        _apply_section(cd.postprocessing, post, "postprocessing")
 
         # for testing purposes, return the CalculationData object without performing sanity checks, to allow testing of error handling in those checks
         if test:
@@ -330,6 +395,13 @@ class CalculationData:
         # Ensure factors sum to 1.0
         if abs(cd.ts_calc.factor_reactant + cd.ts_calc.factor_product - 1.0) > 1e-8:
             raise ValueError("Error: factor_reactant + factor_product must equal 1.0")
+
+        # Ensure the start structure of the TS optimization exists
+        start = cd.ts_calc.start_structure
+        if start not in ("", "reactant", "product") and not os.path.isfile(start):
+            raise FileNotFoundError(
+                f"start_structure must be 'reactant', 'product' or an existing xyz file, file {start} not found."
+            )
 
         # Ensure optimization option is valid
         valid_optimization = ["molbar-optimizer", "scipy-optimizer"]

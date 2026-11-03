@@ -43,6 +43,54 @@ def test_ffits_standard_tsguess_run(tmp_workdir):
     assert ff_csv_file.exists(), f"struc2.hess was not created in {temp_path}"
 
 
+TIMING_STAGES = (
+    "xTB calculations",
+    "FF parameterization",
+    "TSFF construction",
+    "Optimization",
+)
+
+
+def _run_timing(tmp_workdir, extra_args):
+    """Run the TS guess on the example reaction with --timing and return the timing report."""
+    shutil.copy2(SMALL_MOLECULE_DIR / "struc1.xyz", tmp_workdir / "reac.xyz")
+    shutil.copy2(SMALL_MOLECULE_DIR / "struc2.xyz", tmp_workdir / "prod.xyz")
+
+    stdout, stderr, returncode = run_ffits_as_subprocess(
+        ["reac.xyz", "prod.xyz", "--timing", *extra_args]
+    )
+    assert (
+        returncode == 0
+    ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
+    assert (tmp_workdir / "ts_guess.xyz").exists()
+
+    report_file = tmp_workdir / "ffits_timing.log"
+    assert report_file.exists(), f"ffits_timing.log was not created in {tmp_workdir}"
+    report = report_file.read_text()
+    assert "FFiTS timing report" in report
+    for stage in TIMING_STAGES:
+        assert f"{stage}: " in report, f"{stage} missing in timing report"
+    assert "Total time: " in report
+    assert "Status: COMPLETED" in report
+    return stdout
+
+
+def test_ffits_timing_writes_report(tmp_workdir):
+    """--timing writes ffits_timing.log with all stages, but does not switch on debug output."""
+    stdout = _run_timing(tmp_workdir, [])
+    assert "[TIMING]" in stdout
+    assert "[DEBUG]" not in stdout
+    assert not (tmp_workdir / "debug").exists(), "--timing created the debug directory"
+
+
+def test_ffits_timing_with_debug(tmp_workdir):
+    """--debug --timing writes the timing report and the debug output."""
+    stdout = _run_timing(tmp_workdir, ["--debug"])
+    assert "[TIMING]" in stdout
+    assert "[DEBUG]" in stdout
+    assert (tmp_workdir / "debug").is_dir()
+
+
 def test_ffits_with_hessreadin(tmp_workdir):
     """
     Test which first calculates with present hessian and then without hessian and wbo calculation but reading in the files created in the first run, by changing the filenames in the config file

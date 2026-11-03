@@ -1,10 +1,13 @@
 """Tests for ffits.io.print.header (program banner printed at startup)."""
 
+import logging
 import subprocess
+from pathlib import Path
 
 from ffits.io.print import header as header_mod
 from ffits.io.print.header import (
     print_program_header,
+    log_last_commit_date,
     _get_build_date,
     _get_last_commit_date,
     _load_pyproject_metadata,
@@ -108,15 +111,41 @@ def test_get_last_commit_date_parses_git_output(monkeypatch):
     assert _get_last_commit_date() == "2024-02-09 10:30"
 
 
-def test_print_program_header_omits_last_commit_when_unavailable(monkeypatch, capsys):
-    monkeypatch.setattr(header_mod, "_get_last_commit_date", lambda: None)
-    print_program_header()
-    out = capsys.readouterr().out
-    assert "Last Commit:" not in out
+def test_get_last_commit_date_runs_git_in_the_ffits_directory(monkeypatch):
+    calls = []
+
+    class FakeResult:
+        returncode = 0
+        stdout = "2024-02-09 10:30:45 +0100\n"
+
+    def fake_run(*args, **kwargs):
+        calls.append(kwargs.get("cwd"))
+        return FakeResult()
+
+    monkeypatch.setattr(header_mod.subprocess, "run", fake_run)
+    _get_last_commit_date()
+    assert calls == [Path(header_mod.__file__).parent]
 
 
-def test_print_program_header_includes_last_commit_when_available(monkeypatch, capsys):
+def test_print_program_header_omits_last_commit(monkeypatch, capsys):
     monkeypatch.setattr(header_mod, "_get_last_commit_date", lambda: "2024-02-09 10:30")
     print_program_header()
     out = capsys.readouterr().out
-    assert "Last Commit: 2024-02-09 10:30" in out
+    assert "Last Commit" not in out
+
+
+def test_log_last_commit_date_logs_in_debug_mode(monkeypatch, caplog):
+    monkeypatch.setattr(header_mod, "_get_last_commit_date", lambda: "2024-02-09 10:30")
+    with caplog.at_level(logging.DEBUG, logger="ffits"):
+        log_last_commit_date()
+    assert "Last commit of ffits: 2024-02-09 10:30" in caplog.text
+
+
+def test_log_last_commit_date_skips_git_without_debug(monkeypatch, caplog):
+    def fail():
+        raise AssertionError("git must not run without debug mode")
+
+    monkeypatch.setattr(header_mod, "_get_last_commit_date", fail)
+    with caplog.at_level(logging.INFO, logger="ffits"):
+        log_last_commit_date()
+    assert "Last commit" not in caplog.text

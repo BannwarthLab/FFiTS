@@ -9,6 +9,9 @@ use d_dihedral_derivatives, only: get_d_dihedral_derivatives
 implicit none
 public :: get_dihedral_derivatives, get_dihedral_gradient, get_dihedral_hessian
 ! integer, parameter :: wp = selected_real_kind(15)
+
+! |r_ji x r_kj| (bohr**2) below which an angle of the dihedral counts as linear
+real(8), parameter :: linear_cross_tol = 1.0d-8
 contains
 
 subroutine get_dihedral_derivatives(geometry, dihedrals, ideal_dihedrals, k_dihedrals, gradient, hessian)
@@ -94,6 +97,9 @@ subroutine get_single_dihedral_derivative(geometry, dihedral, phi0, k_dihedrals,
     
     call get_phi_derivatives(geometry, i, j, k, l, dcosdx, d2cosdxdy,dsindx, d2sindxdy, aijkl, bijk, cjkl, dijkl)
 
+    ! Dihedral is undefined if one of its angles is linear, skip the term
+    if (bijk < linear_cross_tol .or. cjkl < linear_cross_tol) return
+
     cosphi0 = cos(phi0)
     sinphi0 = sin(phi0)
     cosphi = aijkl/(bijk*cjkl)
@@ -147,6 +153,9 @@ subroutine get_single_dihedral_gradient(geometry, dihedral, phi0, k_dihedrals, g
 
     call get_phi_derivatives(geometry, i, j, k, l, dcosdx, d2cosdxdy,dsindx, d2sindxdy, aijkl, bijk, cjkl, dijkl)
 
+    ! Dihedral is undefined if one of its angles is linear, skip the term
+    if (bijk < linear_cross_tol .or. cjkl < linear_cross_tol) return
+
     cosphi0 = cos(phi0)
     sinphi0 = sin(phi0)
     cosphi = aijkl/(bijk*cjkl)
@@ -194,6 +203,9 @@ subroutine get_single_dihedral_hessian(geometry, dihedral, phi0, k_dihedrals, he
     xhat(12) = 3+3*(l-1)
 
     call get_phi_derivatives(geometry, i, j, k, l, dcosdx, d2cosdxdy,dsindx, d2sindxdy, aijkl, bijk, cjkl, dijkl)
+
+    ! Dihedral is undefined if one of its angles is linear, skip the term
+    if (bijk < linear_cross_tol .or. cjkl < linear_cross_tol) return
 
     cosphi0 = cos(phi0)
     sinphi0 = sin(phi0)

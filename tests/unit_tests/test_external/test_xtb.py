@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 import os
+import shutil
 import numpy as np
 from ffits.external.xtb import Xtb  # adjust import to your actual module path
 import logging
@@ -85,6 +86,30 @@ def test_get_command(dummy_xyz):
     assert "--opt" in cmd
     assert "--uhf 1" in cmd
     assert "--chrg 1" in cmd
+
+
+def test_relative_input_name_made_absolute(change_to_tmp_path):
+    """xtb runs in a temp dir, so a relative input file must be passed as an absolute path."""
+    (change_to_tmp_path / "xtb.inp").write_text("$end\n")
+    xtb = Xtb(chrg=0, mult=1, xtb_input_name="xtb.inp")
+    assert xtb.xtb_input_name == str(change_to_tmp_path / "xtb.inp")
+    assert f"--input {change_to_tmp_path / 'xtb.inp'}" in xtb._get_command(
+        Path("a.xyz"), "--sp"
+    )
+
+
+def test_missing_input_name_raises(change_to_tmp_path):
+    with pytest.raises(FileNotFoundError):
+        Xtb(chrg=0, mult=1, xtb_input_name="missing.inp")
+
+
+def test_relative_xtb_path_made_absolute(change_to_tmp_path):
+    """A relative path to the executable is resolved, a bare command name is kept."""
+    (change_to_tmp_path / "xtb_link").symlink_to(shutil.which("xtb"))
+    assert Xtb(chrg=0, mult=1, xtb_path="./xtb_link").xtb_path == str(
+        change_to_tmp_path / "xtb_link"
+    )
+    assert Xtb(chrg=0, mult=1).xtb_path == "xtb"
 
 
 def test_find_energy_in_output(tmp_path):
