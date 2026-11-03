@@ -37,7 +37,9 @@ def test_parameterize_run_includes_improper_dihedrals(tmp_workdir):
     shutil.copy2(SMALL_MOLECULE_DIR / "struc1.xyz", temp_path / "reac.xyz")
 
     stdout, stderr, returncode = run_ffits_as_subprocess(["reac.xyz", "--parameterize"])
-    assert returncode == 0, f"ffits failed with return code {returncode}\nstderr: {stderr}"
+    assert (
+        returncode == 0
+    ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
     dihedrals = pd.read_csv(temp_path / "ff1.csv").query("type == 'dihedrals'")
     assert (dihedrals["proper_dihedral"] == False).any()
     assert (dihedrals["proper_dihedral"] == True).any()
@@ -50,6 +52,8 @@ def test_parameterize_run_includes_improper_dihedrals(tmp_workdir):
     stdout, stderr, returncode = run_ffits_as_subprocess(
         ["reac.xyz", "--parameterize", "--config", "config.toml"]
     )
-    assert returncode == 0, f"ffits failed with return code {returncode}\nstderr: {stderr}"
+    assert (
+        returncode == 0
+    ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
     dihedrals = pd.read_csv(temp_path / "ff1.csv").query("type == 'dihedrals'")
     assert (dihedrals["proper_dihedral"] == True).all()

@@ -133,9 +133,7 @@ def _get_start_structure(
             return None
         start = "reactant" if tsff.start_from_reactant else "product"
     elif calcdata.ts_calc.perform_two_optimizations:
-        logger.info(
-            f"Start_structure = {start} is set."
-        )
+        logger.info(f"Start_structure = {start} is set.")
 
     if start == "reactant":
         logger.info(

@@ -126,7 +126,9 @@ def create_path(
         calcdata.ts_calc.factor_product = fact2
         print_rct_path_image(step, steps, fact1, fact2)
 
-        trajectory, converged = get_one_image(calcdata, struc1, struc2, trajectory, step)
+        trajectory, converged = get_one_image(
+            calcdata, struc1, struc2, trajectory, step
+        )
         energy = xtb.singlepoint(f"ts_guess_{step}.xyz", f"{step}")
         if not converged:
             logger.warning(

@@ -67,7 +67,10 @@ def test_create_path_sets_up_once_and_starts_from_previous_image(
         assert (struc1, struc2) == ("struc1", "struc2")
         assert calcdata.ts_calc.scale_one_sided_bonds
         images.append(
-            (calcdata.ts_calc.start_structure, calcdata.ts_calc.perform_two_optimizations)
+            (
+                calcdata.ts_calc.start_structure,
+                calcdata.ts_calc.perform_two_optimizations,
+            )
         )
         shutil.copy2("reac.xyz", "ts_guess.xyz")
         open(calcdata.ts_path.ff_filename, "w").close()

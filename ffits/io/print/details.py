@@ -74,4 +74,6 @@ def print_rct_path_summary(
             f"  {i:>5}  {name:<{width}}  {fact2:>9.2f}  {energy:>14.8f}  "
             f"{(energy - energies[0]) * HARTREE2KCAL:>13.2f}{marker}"
         )
-    print(f"\n  Highest-energy frame {highest} ({names[highest]}) written to ts_guess.xyz")
+    print(
+        f"\n  Highest-energy frame {highest} ({names[highest]}) written to ts_guess.xyz"
+    )

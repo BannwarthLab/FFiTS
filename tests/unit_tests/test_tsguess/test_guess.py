@@ -134,7 +134,9 @@ def test_get_ts_guess_from_start_file_runs_one_optimization(
     xyz[0] += [0.15, -0.1, 0.05]
     (tmp_workdir / "start.xyz").write_text(
         f"{nat}\n\n"
-        + "".join(f"{a} {x:.8f} {y:.8f} {z:.8f}\n" for a, (x, y, z) in zip(atom_types, xyz))
+        + "".join(
+            f"{a} {x:.8f} {y:.8f} {z:.8f}\n" for a, (x, y, z) in zip(atom_types, xyz)
+        )
     )
     calcdata = CalculationData.from_default()
     calcdata.ts_path.ff_filename = str(tmp_workdir / "tsff.csv")
@@ -151,6 +153,7 @@ def test_get_ts_guess_from_start_file_runs_one_optimization(
     first_frame = np.array(
         [line.split()[1:4] for line in frame_lines[2 : 2 + nat]], dtype=float
     )
+
     # molbar may translate/rotate the frame, so compare interatomic distances
     def distances(xyz):
         return np.linalg.norm(xyz[:, None, :] - xyz[None, :, :], axis=-1)
