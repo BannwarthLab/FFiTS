@@ -1,0 +1,5 @@
+build_date=2026-11-03 08:52
+fortran_compiler=IntelLLVM 2026.0.0
+c_compiler=IntelLLVM 2026.0.0
+build_type=Release
+fortran_flags= -O3
