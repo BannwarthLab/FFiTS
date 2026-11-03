@@ -8,7 +8,8 @@ from collections.abc import Callable
 from time import perf_counter
 from ffits.io.print.config import print_calculation_data, print_header_setup
 from ffits.ts_guess.mix_ff import create_tsff
-from ffits.datatype.structure_data import Structure
+from ffits.datatype.structure_data import Structure, StructuralInformation
+from ffits.io.reader import readin_xyz
 from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.calculation_data import CalculationData
 from ffits.external.molbar import anc_optimizer, get_combinded_priorities
@@ -51,7 +52,6 @@ def get_ts_guess(
 
     trajectory_filename: str = "trj_ts_guess.xyz"
     final_geometry_filename: str = "ts_guess.xyz"
-    print_ts_optimization_start()
     timing_enabled = timing_logger is not None and timing_entries is not None
 
     #### ------- Create TS Force Field by mixing reactant and product FFs ------- ####
@@ -77,7 +77,8 @@ def get_ts_guess(
 
     ### ---------- optimization ------------ ###
     optimization_start = perf_counter() if timing_enabled else None
-    if calcdata.ts_calc.perform_two_optimizations:
+    initial_struc = _get_start_structure(struc1, struc2, tsff, calcdata)
+    if initial_struc is None:
         converged, energy, final_geom = _optimize_from_both_sides(
             struc1,
             struc2,
@@ -88,17 +89,6 @@ def get_ts_guess(
             final_geometry_filename,
         )
     else:
-        if tsff.start_from_reactant:
-            logger.info(
-                f"Starting TS guess optimization from reactant geometry {struc1.path.xyz_filename}."
-            )
-            initial_struc = struc1.info
-        else:
-            logger.info(
-                f"Starting TS guess optimization from product geometry {struc2.path.xyz_filename}."
-            )
-            initial_struc = struc2.info
-
         converged, energy, final_geom = optimize_with_forcefield(
             initial_struc,
             tsff,
@@ -118,6 +108,55 @@ def get_ts_guess(
         )
 
     return tsff, converged, energy, final_geom
+
+
+def _get_start_structure(
+    struc1: Structure,
+    struc2: Structure,
+    tsff: ForceField,
+    calcdata: CalculationData,
+) -> StructuralInformation | None:
+    """Selects the start geometry of the TS optimization from ``ts_calc.start_structure``.
+
+    Without a start structure, ``perform_two_optimizations`` decides: both sides
+    (returns None), otherwise the side given by ``tsff.start_from_reactant``.
+
+    Raises:
+        ValueError: If the start xyz file has other atoms than the reactant.
+
+    Returns:
+        StructuralInformation | None: Start structure, or None to optimize from both reactant and product.
+    """
+    start = calcdata.ts_calc.start_structure
+    if start == "":
+        if calcdata.ts_calc.perform_two_optimizations:
+            return None
+        start = "reactant" if tsff.start_from_reactant else "product"
+    elif calcdata.ts_calc.perform_two_optimizations:
+        logger.info(
+            f"Start_structure = {start} is set."
+        )
+
+    if start == "reactant":
+        logger.info(
+            f"Starting TS guess optimization from reactant geometry {struc1.path.xyz_filename}."
+        )
+        return struc1.info
+    if start == "product":
+        logger.info(
+            f"Starting TS guess optimization from product geometry {struc2.path.xyz_filename}."
+        )
+        return struc2.info
+
+    nat, _, xyz, atom_types = readin_xyz(start)
+    if nat != struc1.info.nat or [a.capitalize() for a in atom_types] != [
+        a.capitalize() for a in struc1.info.atom_types
+    ]:
+        raise ValueError(
+            f"Start structure {start} must contain the same atoms in the same order as the reactant {struc1.path.xyz_filename}."
+        )
+    logger.info(f"Starting TS guess optimization from geometry {start}.")
+    return StructuralInformation(nat, xyz, {}, struc1.info.atom_types)
 
 
 def _optimize_from_both_sides(
@@ -167,7 +206,14 @@ def _optimize_from_both_sides(
         logger.info(
             f"TS guess from {side}: xtb energy = {xtb_energy:.8f} Eh, converged = {converged}"
         )
-        results[side] = (xtb_energy, converged, energy, final_geom, side_traj, side_geom)
+        results[side] = (
+            xtb_energy,
+            converged,
+            energy,
+            final_geom,
+            side_traj,
+            side_geom,
+        )
 
     best_side = min(results, key=lambda side: results[side][0])
     xtb_energy, converged, energy, final_geom, side_traj, side_geom = results[best_side]
@@ -203,9 +249,41 @@ def get_ts_guess_from_xyz(
         calcdata = CalculationData.from_default()
     calcdata.reactant_path.xyz_filename = reactant_filename
     calcdata.product_path.xyz_filename = product_filename
-    timing_enabled = timing_logger is not None and timing_entries is not None
 
     print_calculation_data(calcdata)
+
+    struc1, struc2 = prepare_structures(calcdata, timing_logger, timing_entries)
+
+    print_ts_optimization_start()
+    tsff, converged, energy, final_geom = get_ts_guess(
+        struc1,
+        struc2,
+        calcdata=calcdata,
+        optimizer=optimizer,
+        timing_logger=timing_logger,
+        timing_entries=timing_entries,
+    )
+
+    return tsff, converged, energy, final_geom
+
+
+def prepare_structures(
+    calcdata: CalculationData,
+    timing_logger: logging.Logger | None = None,
+    timing_entries: list[str] | None = None,
+) -> tuple[Structure, Structure]:
+    """Builds reactant and product structures (xtb WBOs/Hessians) and parameterizes their FFs.
+
+    Reads the structures from ``calcdata.reactant_path``/``product_path`` and
+    prints the SETUP section.
+
+    Args:
+        calcdata (CalculationData): Calculation data with the structure paths and options.
+
+    Returns:
+        tuple[Structure, Structure]: Reactant and product structure.
+    """
+    timing_enabled = timing_logger is not None and timing_entries is not None
 
     print_header_setup()
 
@@ -261,13 +339,4 @@ def get_ts_guess_from_xyz(
             perf_counter(),
         )
 
-    tsff, converged, energy, final_geom = get_ts_guess(
-        struc1,
-        struc2,
-        calcdata=calcdata,
-        optimizer=optimizer,
-        timing_logger=timing_logger,
-        timing_entries=timing_entries,
-    )
-
-    return tsff, converged, energy, final_geom
+    return struc1, struc2

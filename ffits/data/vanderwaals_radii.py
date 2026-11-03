@@ -8,6 +8,7 @@ for a given structure.
 import numpy as np
 from ffits.data.elements import atom_symbol_to_number
 from ffits.utils.geometry import angstrom2bohr
+
 # COVALENT RADII  taken from excprep based on
 # "Atomic Radii of the Elements, M. Mantina, R. Valero, C. J. Cramer, and D. G. Truhlar,
 # in CRC Handbook of Chemistry and Physics, 91st Edition (2010-2011),

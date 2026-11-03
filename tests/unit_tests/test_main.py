@@ -1,5 +1,8 @@
 from ffits.io.reader import readin_xyz
-from ffits.main import run_tsguess_mode, run_optimizer_mode
+from ffits.main import run_tsguess_mode, run_optimizer_mode, run_parameterization_mode
+import ffits.main as main_mod
+from ffits.datatype.calculation_data import CalculationData
+import pytest
 from tests.test_utils import SMALL_MOLECULE_DIR
 import shutil
 from ffits.utils.rmsd import kabsch_rmsd
@@ -42,3 +45,18 @@ def test_main_opt_mode_without_defining_calcopt(tmp_workdir):
     assert (
         kabsch_rmsd(xyz1, xyz2) < 0.1
     ), "Optimized geometry is not close to reactant geometry, which is expected when no calculation options are defined."
+
+
+def test_parameterization_mode_exits_before_xtb_if_ff_parameterization_is_off(
+    monkeypatch,
+):
+    """With ff_parameterization = false, parameterization mode exits without running xtb."""
+
+    def fail(*args, **kwargs):
+        raise AssertionError("Structure.from_config (xtb) must not run")
+
+    monkeypatch.setattr(main_mod.Structure, "from_config", fail)
+    calcdata = CalculationData.from_default()
+    calcdata.reactant_calc.ff_parameterization = False
+    with pytest.raises(SystemExit):
+        run_parameterization_mode("struc.xyz", calcdata=calcdata)

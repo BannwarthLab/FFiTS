@@ -1,84 +1,96 @@
-from tests.test_utils import run_ffits_as_subprocess, SMALL_MOLECULE_DIR
+import re
 import shutil
-from pathlib import Path
-import tempfile
-import os
 
-# def test_standard_rctpath_run():
-#     """
-#     Test that ffits creates ts_guess.xyz, ff.csv, etc when run with reac.xyz and prod.xyz with standard configuration
-#     """
-#     examples_dir = SMALL_MOLECULE_DIR
-#     with tempfile.TemporaryDirectory() as temp_dir:
-#         temp_path = Path(temp_dir)
-#         shutil.copy2(examples_dir / "struc1.xyz", temp_path / "reac.xyz")
-#         shutil.copy2(examples_dir / "struc2.xyz", temp_path / "prod.xyz")
+import numpy as np
+import pytest
 
-#         original_cwd = os.getcwd()
-#         os.chdir(temp_path)
+from ffits.io.reader import readin_xyz
+from tests.test_utils import run_ffits_as_subprocess, SMALL_MOLECULE_DIR
 
-#         try:
-#             stdout, stderr, returncode = run_ffits_as_subprocess(
-#                 ["reac.xyz", "prod.xyz", "--rctpath", "5"]
-#             )
-#             print("STDOUT:", stdout)
-#             print("STDERR:", stderr)
-#             assert (
-#                 returncode == 0
-#             ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
 
-#             output = temp_path / "path_trj.xyz"
-#             assert output.exists(), f"path_trj.xyz was not created in {temp_path}"
+def _read_trajectory(path):
+    """Reads a multi-frame xyz file -> list of (relative energy, atom_types, xyz)."""
+    lines = [line.strip() for line in path.read_text().splitlines() if line.strip()]
+    frames = []
+    idx = 0
+    while idx < len(lines):
+        nat = int(lines[idx])
+        assert lines[idx + 1].endswith("kcal/mol (xtb, relative to reactant)")
+        energy = float(lines[idx + 1].split()[0])
+        rows = [lines[pos].split() for pos in range(idx + 2, idx + 2 + nat)]
+        atom_types = [row[0] for row in rows]
+        xyz = np.array([row[1:4] for row in rows], dtype=float)
+        frames.append((energy, atom_types, xyz))
+        idx += nat + 2
+    return frames
 
-#             ts_guess_output = temp_path / "ts_guess.xyz"
-#             assert ts_guess_output.exists(), f"ts_guess.xyz was not created in {temp_path}"
 
-#             with open(temp_path / "path_trj.xyz", "r", encoding="utf-8") as f:
-#                 trajectory_lines = [line.strip() for line in f.readlines() if line.strip()]
+def _run_rctpath(tmp_workdir, frames):
+    shutil.copy2(SMALL_MOLECULE_DIR / "struc1.xyz", tmp_workdir / "reac.xyz")
+    shutil.copy2(SMALL_MOLECULE_DIR / "struc2.xyz", tmp_workdir / "prod.xyz")
+    stdout, stderr, returncode = run_ffits_as_subprocess(
+        ["reac.xyz", "prod.xyz", "--rctpath", str(frames)]
+    )
+    assert (
+        returncode == 0
+    ), f"ffits failed with return code {returncode}\nstderr: {stderr}"
+    return stdout
 
-#             frames = []
-#             idx = 0
-#             while idx < len(trajectory_lines):
-#                 nat = int(trajectory_lines[idx])
-#                 energy = float(trajectory_lines[idx + 1])
-#                 atom_types = []
-#                 coordinates = []
-#                 for pos in range(idx + 2, idx + 2 + nat):
-#                     parts = trajectory_lines[pos].split()
-#                     atom_types.append(parts[0])
-#                     coordinates.append([float(value) for value in parts[1:4]])
-#                 frames.append((energy, atom_types, coordinates))
-#                 idx += nat + 2
 
-#             highest_energy_frame = max(frames, key=lambda frame: frame[0])
-#             with open(ts_guess_output, "r", encoding="utf-8") as f:
-#                 optimized_lines = [line.strip() for line in f.readlines() if line.strip()]
+def test_standard_rctpath_run(tmp_workdir):
+    """Standard 5-frame run: output files, endpoints, TS guess = highest-energy frame."""
+    frames = 5
+    stdout = _run_rctpath(tmp_workdir, frames)
 
-#             optimized_nat = int(optimized_lines[0])
-#             optimized_atom_types = []
-#             optimized_coordinates = []
-#             for pos in range(2, 2 + optimized_nat):
-#                 parts = optimized_lines[pos].split()
-#                 optimized_atom_types.append(parts[0])
-#                 optimized_coordinates.append([float(value) for value in parts[1:4]])
+    for name in ("path_trj.xyz", "ts_guess.xyz", "ff1.csv", "ff2.csv", "wbo1", "wbo2"):
+        assert (tmp_workdir / name).exists(), f"{name} was not created"
+    for name in ("struc1.hess", "struc2.hess"):
+        assert (tmp_workdir / name).exists(), f"{name} was not created"
+    for step in range(frames - 2):
+        assert (tmp_workdir / f"ts_guess_{step}.xyz").exists()
+        assert (tmp_workdir / f"tsff_{step}.csv").exists()
 
-#             assert optimized_nat == nat
-#             assert optimized_atom_types == highest_energy_frame[1]
-#             assert optimized_coordinates == highest_energy_frame[2]
+    trajectory = _read_trajectory(tmp_workdir / "path_trj.xyz")
+    assert len(trajectory) == frames
+    assert trajectory[0][0] == 0.0  # energies relative to the reactant
 
-#             ff_csv_file = temp_path / "tsff_2.csv"
-#             assert ff_csv_file.exists(), f"tsff.csv was not created in {temp_path}"
-#             ff_csv_file = temp_path / "ff1.csv"
-#             assert ff_csv_file.exists(), f"ff1.csv was not created in {temp_path}"
-#             ff_csv_file = temp_path / "ff2.csv"
-#             assert ff_csv_file.exists(), f"ff2.csv was not created in {temp_path}"
-#             ff_csv_file = temp_path / "wbo1"
-#             assert ff_csv_file.exists(), f"wbo1 was not created in {temp_path}"
-#             ff_csv_file = temp_path / "wbo2"
-#             assert ff_csv_file.exists(), f"wbo2 was not created in {temp_path}"
-#             ff_csv_file = temp_path / "struc1.hess"
-#             assert ff_csv_file.exists(), f"struc1.hess was not created in {temp_path}"
-#             ff_csv_file = temp_path / "struc2.hess"
-#             assert ff_csv_file.exists(), f"struc2.hess was not created in {temp_path}"
-#         finally:
-#             os.chdir(original_cwd)
+    nat, _, reac_xyz, reac_types = readin_xyz(str(tmp_workdir / "reac.xyz"))
+    _, _, prod_xyz, _ = readin_xyz(str(tmp_workdir / "prod.xyz"))
+    for _, atom_types, xyz in trajectory:
+        assert atom_types == list(reac_types)
+        assert xyz.shape == (nat, 3)
+    np.testing.assert_allclose(trajectory[0][2], reac_xyz, atol=1e-6)
+    np.testing.assert_allclose(trajectory[-1][2], prod_xyz, atol=1e-6)
+
+    # ts_guess.xyz is the highest-energy frame of the path
+    highest = max(trajectory, key=lambda frame: frame[0])
+    _, _, ts_xyz, ts_types = readin_xyz(str(tmp_workdir / "ts_guess.xyz"))
+    assert list(ts_types) == highest[1]
+    np.testing.assert_allclose(ts_xyz, highest[2], atol=1e-6)
+
+    # every image starts from the previous one, the first from the reactant
+    starts = re.findall(r"Starting TS guess optimization from (.*)\.\n", stdout)
+    assert starts == ["reactant geometry reac.xyz"] + [
+        f"geometry ts_guess_{step}.xyz" for step in range(frames - 3)
+    ]
+
+
+@pytest.mark.parametrize(
+    "frames, product_factors",
+    [
+        (3, ["0.50"]),  # single image, used to divide by zero
+        (4, ["0.25", "0.75"]),
+    ],
+)
+def test_rctpath_number_of_images(tmp_workdir, frames, product_factors):
+    """Short paths: right number of frames and images and the expected mixing factors."""
+    stdout = _run_rctpath(tmp_workdir, frames)
+
+    trajectory = _read_trajectory(tmp_workdir / "path_trj.xyz")
+    assert len(trajectory) == frames
+    assert (tmp_workdir / "ts_guess.xyz").exists()
+    for step in range(frames - 2):
+        assert (tmp_workdir / f"ts_guess_{step}.xyz").exists()
+    assert not (tmp_workdir / f"ts_guess_{frames - 2}.xyz").exists()
+
+    assert re.findall(r"factor_product = (\d\.\d\d)", stdout) == product_factors

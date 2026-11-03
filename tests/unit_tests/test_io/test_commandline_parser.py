@@ -76,6 +76,19 @@ def test_reaction_path_mode_requires_exactly_two_structures(monkeypatch, tmp_pat
         parse_args()
 
 
+@pytest.mark.parametrize("frames", ["0", "1", "2"])
+def test_reaction_path_mode_needs_at_least_three_frames(monkeypatch, tmp_path, frames):
+    reac = tmp_path / "reac.xyz"
+    prod = tmp_path / "prod.xyz"
+    reac.write_text("1\n\nC 0.0 0.0 0.0\n")
+    prod.write_text("1\n\nC 0.0 0.0 0.0\n")
+    monkeypatch.setattr(
+        "sys.argv", ["ffits", str(reac), str(prod), "--reaction_path", frames]
+    )
+    with pytest.raises(SystemExit):
+        parse_args()
+
+
 def test_missing_structure_file_raises_file_not_found(monkeypatch, tmp_path):
     reac = tmp_path / "reac.xyz"
     reac.write_text("1\n\nC 0.0 0.0 0.0\n")
@@ -120,19 +133,29 @@ def test_valid_tsguess_args_are_parsed_and_returned(monkeypatch, tmp_path):
 
 
 def test_debug_and_parameterize_flags_are_parsed(monkeypatch, tmp_path):
-    reac = tmp_path / "reac.xyz"
-    prod = tmp_path / "prod.xyz"
-    reac.write_text("1\n\nC 0.0 0.0 0.0\n")
-    prod.write_text("1\n\nC 0.0 0.0 0.0\n")
-    monkeypatch.setattr(
-        "sys.argv", ["ffits", str(reac), str(prod), "--parameterize", "--debug"]
-    )
+    struc = tmp_path / "struc.xyz"
+    struc.write_text("1\n\nC 0.0 0.0 0.0\n")
+    monkeypatch.setattr("sys.argv", ["ffits", str(struc), "--parameterize", "--debug"])
     result = parse_args()
+    assert result["structures"] == [str(struc)]
     assert result["parameterize"] is True
     assert result["debug"] is True
 
 
-def test_config_with_multiplicity_logs_warning(monkeypatch, tmp_path, caplog):
+def test_parameterization_mode_requires_exactly_one_structure(monkeypatch, tmp_path):
+    reac = tmp_path / "reac.xyz"
+    prod = tmp_path / "prod.xyz"
+    reac.write_text("1\n\nC 0.0 0.0 0.0\n")
+    prod.write_text("1\n\nC 0.0 0.0 0.0\n")
+    monkeypatch.setattr("sys.argv", ["ffits", str(reac), str(prod), "--parameterize"])
+    with pytest.raises(SystemExit):
+        parse_args()
+
+
+def test_config_with_charge_and_multiplicity_logs_no_warning(
+    monkeypatch, tmp_path, caplog
+):
+    """The override warning is logged later by overwrite_from_commandline, only if the values differ."""
     reac = tmp_path / "reac.xyz"
     prod = tmp_path / "prod.xyz"
     config = tmp_path / "config.toml"
@@ -147,29 +170,15 @@ def test_config_with_multiplicity_logs_warning(monkeypatch, tmp_path, caplog):
             str(prod),
             "--config",
             str(config),
+            "--charge",
+            "-1",
             "--multiplicity",
             "2",
         ],
     )
     with caplog.at_level(logging.WARNING):
         parse_args()
-    assert any("Multiplicity" in record.message for record in caplog.records)
-
-
-def test_config_with_charge_logs_warning(monkeypatch, tmp_path, caplog):
-    reac = tmp_path / "reac.xyz"
-    prod = tmp_path / "prod.xyz"
-    config = tmp_path / "config.toml"
-    reac.write_text("1\n\nC 0.0 0.0 0.0\n")
-    prod.write_text("1\n\nC 0.0 0.0 0.0\n")
-    config.write_text("")
-    monkeypatch.setattr(
-        "sys.argv",
-        ["ffits", str(reac), str(prod), "--config", str(config), "--charge", "-1"],
-    )
-    with caplog.at_level(logging.WARNING):
-        parse_args()
-    assert any("Charge" in record.message for record in caplog.records)
+    assert caplog.records == []
 
 
 def test_optimizer_mode_with_one_structure_succeeds(monkeypatch, tmp_path):

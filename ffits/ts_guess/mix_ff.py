@@ -26,7 +26,10 @@ def create_tsff(
     Mixing factors come from ``calcdata.ts_calc`` (factor_reactant/
     factor_product). With ``ts_calc.hydrogen_covalent_radius``, forming or
     breaking covalent H-X bonds use the covalent radius of hydrogen on the side
-    where they are missing (see :func:`_mix_bond_references`).
+    where they are missing (see :func:`_mix_bond_references`). With
+    ``ts_calc.scale_one_sided_bonds``, the parameters of bonds present in only
+    one FF are scaled down when that FF has a weight below 0.5 (see
+    :func:`mix_parameters`).
 
     Args:
         ff1 (ForceField): Force field of the reactant structure.
@@ -54,6 +57,7 @@ def create_tsff(
             getattr(ff2, term),
             fact1,
             fact2,
+            scale_one_sided=ts_calc.scale_one_sided_bonds and term == "bonds",
         )
 
     mix_reference_values(
@@ -138,10 +142,14 @@ def mix_parameters(
     ff2_df: pd.DataFrame,
     fact1: float,
     fact2: float,
+    scale_one_sided: bool = False,
 ):
     """Fill tsff_df['parameter'] with the fact1/fact2-weighted average of ff1_df/ff2_df, in place.
 
-    Terms missing in one FF take the value of the other FF.
+    Terms missing in one FF take the value of the other FF. With
+    ``scale_one_sided``, such a term is additionally multiplied by
+    min(1, 2 * w), w being the weight of the FF it is present in: it fades out
+    towards the other structure and is unchanged for w >= 0.5.
     """
     _check_factors(fact1, fact2)
     if tsff_df.empty:
@@ -149,8 +157,13 @@ def mix_parameters(
     atoms = tsff_df["atoms"].tolist()
     c1 = _lookup(atoms, ff1_df, "parameter")
     c2 = _lookup(atoms, ff2_df, "parameter")
-    c1, c2 = np.where(np.isnan(c1), c2, c1), np.where(np.isnan(c2), c1, c2)
-    tsff_df["parameter"] = np.round(c1 * fact1 + c2 * fact2, 8)
+    only2, only1 = np.isnan(c1), np.isnan(c2)
+    c1, c2 = np.where(only2, c2, c1), np.where(only1, c1, c2)
+    mixed = c1 * fact1 + c2 * fact2
+    if scale_one_sided:
+        mixed = np.where(only1, mixed * min(1.0, 2 * fact1), mixed)
+        mixed = np.where(only2, mixed * min(1.0, 2 * fact2), mixed)
+    tsff_df["parameter"] = np.round(mixed, 8)
 
 
 def mix_reference_values(
@@ -253,7 +266,9 @@ def _mix_bond_references(
         bonded2 = np.array([info2.complete_graph.has_edge(a, b) for a, b in zip(i, j)])
         breaking &= h_heavy & bonded1
         forming &= h_heavy & bonded2
-        shift = angstrom2bohr(VANDER_VALUES[0] - ATOMIC_RADII_TRUHLAR[0])  # H: vdW - cov
+        shift = angstrom2bohr(
+            VANDER_VALUES[0] - ATOMIC_RADII_TRUHLAR[0]
+        )  # H: vdW - cov
         val2 = np.where(breaking, np.fmax(vander2 - shift, val1), val2)
         val1 = np.where(forming, np.fmax(vander1 - shift, val2), val1)
     return val1 * f1 + val2 * f2
@@ -301,9 +316,11 @@ def _check_factors(fact1: float, fact2: float):
 
 def _lookup(atoms: list, ff_df: pd.DataFrame, column: str) -> np.ndarray:
     """
-    Creates a list of the values in ``column`` from ``ff_df``, sorted as in ``atoms`` by looking up the corresponding atom - column pair to make it easier to combine them. 
+    Creates a list of the values in ``column`` from ``ff_df``, sorted as in ``atoms`` by looking up the corresponding atom - column pair to make it easier to combine them.
     """
-    values = dict(zip(ff_df["atoms"], ff_df[column])) # creating a dict is done to avoid iterating through the whole list in a for loop every search step 
+    values = dict(
+        zip(ff_df["atoms"], ff_df[column])
+    )  # creating a dict is done to avoid iterating through the whole list in a for loop every search step
     return np.array([values.get(a, np.nan) for a in atoms], dtype=float)
 
 
@@ -323,4 +340,3 @@ def _average_dihedrals(
     sinphi0 = np.sin(val1) * fact1 + np.sin(val2) * fact2
     phi_avg = np.arctan2(sinphi0, cosphi0)
     return np.where(phi_avg <= -np.pi, phi_avg + 2.0 * np.pi, phi_avg)
-

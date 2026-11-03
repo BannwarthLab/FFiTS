@@ -8,6 +8,9 @@ use c_angle_derivatives, only: get_c_angle_derivatives
 implicit none
 public :: get_angle_derivatives, get_angle_gradient, get_angle_hessian
 
+! Angles with sin(theta)**2 below this are treated as exactly linear (sin(theta) < 1e-6)
+real(8), parameter :: linear_sin2_tol = 1.0d-12
+
 contains
 
 subroutine get_angle_derivatives(geometry, angles, ideal_angles, k_angles, gradient, hessian)
@@ -331,6 +334,12 @@ subroutine get_dVangledx(dcosdx, k_angles, costheta0, costheta, dVangledx)
 real(8), intent(in) :: dcosdx, k_angles, costheta0, costheta
 real(8), intent(out) :: dVangledx
 
+! (Numerically) linear angle: dcos/dx = 0 and 1/sin(theta) diverges, use the limit 0
+if (1-costheta**2 < linear_sin2_tol) then
+    dVangledx = 0.0d0
+    return
+endif
+
 dVangledx = -2*k_angles*(dacos(costheta0)-dacos(costheta))*(-dcosdx/(sqrt(1-costheta**2)))
 
 end subroutine get_dVangledx
@@ -340,6 +349,15 @@ real(8), intent(in) :: dcosdx, dcosdy, d2cosdxdy, k_angles, costheta0, costheta
 real(8), intent(out) :: d2Vangledxdy
 real(8) :: dthetadcos, d2thetadcos2
 integer, parameter :: wp = selected_real_kind(15)
+
+! (Numerically) linear angle: near theta = pi, (pi - theta)**2 = 2*(1 + cos(theta)) + O((1 + cos)**2)
+! and dcos/dx = 0, so the Hessian becomes 2*k*d2cos/dxdy (exact for theta0 = pi, as when the FF
+! is fitted on a linear structure). For theta0 /= pi the potential has a cusp there, this is
+! the finite choice that keeps the angle linear.
+if (1-costheta**2 < linear_sin2_tol) then
+    d2Vangledxdy = -2*k_angles*sign(1.0_wp, costheta)*d2cosdxdy
+    return
+endif
 
 dthetadcos = -1/sqrt(1-costheta**2)
 

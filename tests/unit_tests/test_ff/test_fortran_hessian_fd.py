@@ -3,7 +3,7 @@
 The terms are tested away from their reference values (r != r0, theta != theta0,
 phi != phi0): every Hessian part that is multiplied by (theta - theta0) etc.
 vanishes at the reference geometry, so a test there cannot catch errors in it.
-This is exactly the situation of the TS FF optimisation (reference values are
+This is exactly the situation of the TS FF optimization (reference values are
 a mix of reactant and product values), while during fitting theta == theta0.
 
 Regression tests for:
@@ -115,9 +115,7 @@ def test_angle_hessian_matches_fd(dtheta_deg):
     grad, hess = _single_term(
         "angle_derivatives", "angle", GEO_ANGLE, [1, 2, 3], theta0
     )
-    np.testing.assert_allclose(
-        hess(GEO_ANGLE), _fd_hessian(grad, GEO_ANGLE), atol=1e-7
-    )
+    np.testing.assert_allclose(hess(GEO_ANGLE), _fd_hessian(grad, GEO_ANGLE), atol=1e-7)
 
 
 @pytest.mark.parametrize("dphi_deg", [0.0, 17.0, 57.0, 120.0, -90.0])
@@ -131,6 +129,38 @@ def test_dihedral_hessian_matches_fd(dphi_deg):
     )
 
 
+# exactly collinear (alkynes, nitriles, CO2): 1/sin(theta) used to give NaN
+GEO_LINEAR = np.array([[0.0, 0.0, 0.0], [2.2, 0.0, 0.0], [4.4, 0.0, 0.0]])
+
+
+def test_linear_angle_hessian_matches_fd():
+    """theta0 = theta = pi (FF fitted on a linear structure): finite and exact."""
+    grad, hess = _single_term(
+        "angle_derivatives", "angle", GEO_LINEAR, [1, 2, 3], np.pi
+    )
+    assert not grad(GEO_LINEAR).any()
+    np.testing.assert_allclose(
+        hess(GEO_LINEAR), _fd_hessian(grad, GEO_LINEAR), atol=1e-7
+    )
+
+
+def test_linear_angle_with_bent_reference_is_finite():
+    grad, hess = _single_term(
+        "angle_derivatives", "angle", GEO_LINEAR, [1, 2, 3], np.radians(170.0)
+    )
+    assert np.isfinite(grad(GEO_LINEAR)).all()
+    assert np.isfinite(hess(GEO_LINEAR)).all()
+
+
+def test_dihedral_on_linear_angle_is_skipped():
+    geo = np.vstack([GEO_LINEAR, [[5.4, 1.5, 0.3]]])
+    grad, hess = _single_term(
+        "dihedral_derivatives", "dihedral", geo, [1, 2, 3, 4], 0.5
+    )
+    assert not grad(geo).any()
+    assert not hess(geo).any()
+
+
 # ---------------------------------------------------------------------------
 # building blocks: second derivatives of cos(theta), cos/sin(phi)
 # (covers get_theta_hessian / get_phi_hessian and the c-remap loops)
@@ -139,7 +169,9 @@ def test_dihedral_hessian_matches_fd(dphi_deg):
 
 def test_theta_second_derivatives_match_fd():
     def first(g):
-        return F.angle_derivatives.get_theta_derivatives(np.asfortranarray(g.T), 1, 2, 3)
+        return F.angle_derivatives.get_theta_derivatives(
+            np.asfortranarray(g.T), 1, 2, 3
+        )
 
     d2cos = first(GEO_ANGLE)[1]
     fd = _fd_hessian(lambda g: first(g)[0], GEO_ANGLE)
@@ -201,8 +233,18 @@ def _expected_index_matrix(n):
             "dihedral",
             12,
             lambda d2, x, H: F.dihedral_derivatives.build_dihedral_hessian(
-                1.0, np.cos(1.0), np.sin(1.0), np.sin(1.5), np.cos(1.5),
-                np.zeros(12), d2, np.zeros(12), np.zeros_like(d2), 1.0, x, H,
+                1.0,
+                np.cos(1.0),
+                np.sin(1.0),
+                np.sin(1.5),
+                np.cos(1.5),
+                np.zeros(12),
+                d2,
+                np.zeros(12),
+                np.zeros_like(d2),
+                1.0,
+                x,
+                H,
             ),
         ),
     ],

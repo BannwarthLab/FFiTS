@@ -26,7 +26,11 @@ from ffits.ts_guess.mix_ff import (
 from ffits.datatype.calculation_data import CalculationData
 from ffits.utils.geometry import angle, angstrom2bohr, dihedral_angle
 from ffits.datatype.forcefield_data import ForceField
-from tests.test_utils import reactant_structure_main, product_structure_main
+from tests.test_utils import (
+    SMALL_MOLECULE_DIR,
+    reactant_structure_main,
+    product_structure_main,
+)
 
 
 @pytest.fixture
@@ -301,6 +305,7 @@ class TestMixParameters:
         assert len(combined_bonds) == original_len
         assert not np.isnan(combined_bonds["parameter"]).any()
 
+
 class TestMixReferenceValues:
     """Tests for mixing reference values with physical constraints."""
 
@@ -530,8 +535,65 @@ def _forcefield(nat: int, **terms) -> ForceField:
     return ff
 
 
-class TestCombineFFAtomsBehaviour:
-    """Exact behaviour of combine_ff_atoms on small hand-made inputs."""
+class TestScaleOneSidedBonds:
+    """mix_parameters(scale_one_sided=True): bonds present in one FF fade out towards the other."""
+
+    @staticmethod
+    def _mixed(fact1, fact2, scale_one_sided=True):
+        # (0, 1) in both, (1, 2) breaking (reactant only), (2, 3) forming (product only)
+        df1 = _term_df("bonds", [((0, 1), 0.4, 2.0), ((1, 2), 0.3, 2.0)])
+        df2 = _term_df("bonds", [((0, 1), 0.2, 2.0), ((2, 3), 0.5, 2.0)])
+        tsff_df = combine_ff_atoms(df1, df2)
+        mix_parameters(tsff_df, df1, df2, fact1, fact2, scale_one_sided=scale_one_sided)
+        return dict(zip(tsff_df["atoms"], tsff_df["parameter"]))
+
+    def test_close_to_reactant(self):
+        mixed = self._mixed(0.99, 0.01)
+        assert mixed[(0, 1)] == pytest.approx(0.99 * 0.4 + 0.01 * 0.2)
+        assert mixed[(1, 2)] == pytest.approx(0.3)  # reactant weight >= 0.5
+        assert mixed[(2, 3)] == pytest.approx(0.5 * 0.02)  # 2 * 0.01
+
+    def test_close_to_product(self):
+        mixed = self._mixed(0.1, 0.9)
+        assert mixed[(1, 2)] == pytest.approx(0.3 * 0.2)
+        assert mixed[(2, 3)] == pytest.approx(0.5)
+
+    @pytest.mark.parametrize("fact1", [0.5, 0.0, 1.0])
+    def test_limits(self, fact1):
+        mixed = self._mixed(fact1, 1 - fact1)
+        assert mixed[(1, 2)] == pytest.approx(0.3 * min(1, 2 * fact1))
+        assert mixed[(2, 3)] == pytest.approx(0.5 * min(1, 2 * (1 - fact1)))
+
+    def test_off_keeps_full_parameter(self):
+        mixed = self._mixed(0.99, 0.01, scale_one_sided=False)
+        assert mixed[(2, 3)] == pytest.approx(0.5)
+
+    def test_tsff_unchanged_for_equal_factors(self, ff1, info1, ff2, info2, tmp_path):
+        """With the default factors 0.5/0.5 the option does not change the TS FF."""
+        frames = []
+        for scale in (False, True):
+            cd = CalculationData.from_default()
+            cd.ts_path.ff_filename = str(tmp_path / f"tsff_{scale}.csv")
+            cd.ts_calc.scale_one_sided_bonds = scale
+            frames.append(create_tsff(ff1, info1, ff2, info2, cd).bonds)
+        pd.testing.assert_frame_equal(frames[0], frames[1])
+
+    def test_create_tsff_scales_forming_bond(self, ff1, info1, ff2, info2, tmp_path):
+        cd = CalculationData.from_default()
+        cd.ts_path.ff_filename = str(tmp_path / "tsff.csv")
+        cd.ts_calc.factor_reactant, cd.ts_calc.factor_product = 0.99, 0.01
+        cd.ts_calc.scale_one_sided_bonds = True
+        tsff = create_tsff(ff1, info1, ff2, info2, cd)
+        forming = set(ff2.bonds["atoms"]) - set(ff1.bonds["atoms"])
+        assert forming
+        p2 = dict(zip(ff2.bonds["atoms"], ff2.bonds["parameter"]))
+        for atoms, parameter in zip(tsff.bonds["atoms"], tsff.bonds["parameter"]):
+            if atoms in forming:
+                assert parameter == pytest.approx(0.02 * p2[atoms], abs=1e-8)
+
+
+class TestCombineFFAtomsBehavior:
+    """Exact behavior of combine_ff_atoms on small hand-made inputs."""
 
     def test_keeps_first_and_sorts(self):
         df1 = _term_df("bonds", [((2, 3), 1.0, 1.0), ((0, 1), 2.0, 2.0)])
@@ -720,7 +782,7 @@ class TestMixReferenceValuesRules:
 
 
 class TestCreateTsff:
-    """Interface and behaviour of create_tsff on the example reaction."""
+    """Interface and behavior of create_tsff on the example reaction."""
 
     @pytest.fixture
     def calcdata(self, tmp_path):
@@ -729,7 +791,9 @@ class TestCreateTsff:
         return cd
 
     def test_returns_tsff(self, ff1, info1, ff2, info2, calcdata):
-        tsff = create_tsff(ff1=ff1, info1=info1, ff2=ff2, info2=info2, calcdata=calcdata)
+        tsff = create_tsff(
+            ff1=ff1, info1=info1, ff2=ff2, info2=info2, calcdata=calcdata
+        )
         assert isinstance(tsff, ForceField)
         assert tsff.nat == ff1.nat
         assert tsff.ff_filename == calcdata.ts_path.ff_filename
@@ -777,6 +841,25 @@ class TestCreateTsff:
             c1, c2 = p1.get(atoms, p2.get(atoms)), p2.get(atoms, p1.get(atoms))
             assert mixed == pytest.approx(0.7 * c1 + 0.3 * c2, abs=1e-8)
 
+    def test_matches_example_tsff(self, ff1, info1, ff2, info2, calcdata):
+        """Regression test: the default mixing must reproduce the example tsff.csv.
+
+        If this fails after an intended change to the mixing, regenerate the
+        fixtures with scripts/regenerate_examples.py.
+        """
+        tsff = create_tsff(ff1, info1, ff2, info2, calcdata)
+        reference = ForceField(
+            ff1.nat, str(SMALL_MOLECULE_DIR / "tsff.csv"), readff=True
+        )
+        for term in ("bonds", "angles", "dihedrals", "repulsive"):
+            new = getattr(tsff, term).set_index("atoms").sort_index()
+            ref = getattr(reference, term).set_index("atoms").sort_index()
+            assert new.index.tolist() == ref.index.tolist(), term
+            for column in ("reference_value", "parameter"):
+                np.testing.assert_allclose(
+                    new[column], ref[column], atol=1e-6, err_msg=f"{term} {column}"
+                )
+
 
 @pytest.mark.parametrize(
     "module, name, parameters",
@@ -788,7 +871,7 @@ class TestCreateTsff:
         (
             mix_ff,
             "mix_parameters",
-            ["tsff_df", "ff1_df", "ff2_df", "fact1", "fact2"],
+            ["tsff_df", "ff1_df", "ff2_df", "fact1", "fact2", "scale_one_sided"],
         ),
         (
             mix_ff,

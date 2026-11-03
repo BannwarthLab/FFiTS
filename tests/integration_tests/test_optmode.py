@@ -38,7 +38,7 @@ def test_ffits_optmode(tmp_workdir):
     # Compare chemically (MolBar: constitution + stereo, independent of atom
     # labels) instead of by RMSD: an H atom moving onto a planar C can attach
     # from either face, which for equivalent atoms (e.g. a CH3 group) gives
-    # the same molecule with permuted labels (labelled RMSD ~1 A).
+    # the same molecule with permuted labels (labeled RMSD ~1 A).
     assert get_molbar_from_file(
         str(temp_path / "optimized.xyz")
     ) == get_molbar_from_file(

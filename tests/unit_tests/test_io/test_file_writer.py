@@ -107,6 +107,20 @@ def test_write_trajectory_to_xyz(tmp_path):
     assert lines[5] == "0.00000000"
 
 
+def test_write_trajectory_to_xyz_uses_comment(tmp_path):
+    target = tmp_path / "trajectory.xyz"
+    frame = {
+        "nat": 1,
+        "atom_types": np.array(["C"]),
+        "xyz": np.array([[0.0, 0.0, 0.0]]),
+        "energy": -1.23456789,
+        "comment": "12.3456 kcal/mol",
+    }
+    write_trajectory_to_xyz([frame], target)
+
+    assert target.read_text().splitlines()[1] == "12.3456 kcal/mol"
+
+
 def test_write_all_molecules_to_file(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 

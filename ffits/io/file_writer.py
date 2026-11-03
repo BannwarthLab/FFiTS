@@ -123,7 +123,8 @@ def write_trajectory_to_xyz(trajectory: list, filename: Path) -> None:
 
     Args:
         trajectory (list): List of dicts, one per frame, each with keys
-            'nat', 'atom_types' (np.ndarray), 'xyz', and optionally 'energy'.
+            'nat', 'atom_types' (np.ndarray), 'xyz', and optionally 'comment'
+            (written as comment line) or 'energy' (written if no comment is given).
         filename (Path): Output xyz file path.
     """
     with open(filename, "w") as f:
@@ -133,7 +134,7 @@ def write_trajectory_to_xyz(trajectory: list, filename: Path) -> None:
             xyz = frame["xyz"]
 
             f.write(f"{nat}\n")
-            f.write(f"{frame.get('energy', 0):.8f}\n")
+            f.write(f"{frame.get('comment', format(frame.get('energy', 0), '.8f'))}\n")
             for i, atom_type in enumerate(atom_types):
                 f.write(
                     f"{atom_type} {xyz[i][0]:.8f} {xyz[i][1]:.8f} {xyz[i][2]:.8f}\n"

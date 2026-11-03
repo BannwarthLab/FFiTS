@@ -21,7 +21,7 @@ def parameterize_ff(struc: Structure, calcopt: CalculationOptions, priorities):
     Args:
         struc (Structure): The structure whose FF is to be parameterized. Must have a reference Hessian in struc.info.hessian.
         calcopt (CalculationOptions): Calculation options containing fitting parameters such as max iterations, stepsize, and threshold for convergence.
-        priorities (list): Atom priority information used for determining which parameters to update first (not implemented in this simplified version).
+        priorities (dict | None): MolBar atom priorities used to pick one proper dihedral per central bond and turn the rest into impropers. None gives only proper dihedrals.
     """
     fill_ff(
         struc.ff,

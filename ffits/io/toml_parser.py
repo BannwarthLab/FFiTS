@@ -11,11 +11,23 @@ def overwrite_from_commandline(
     multiplicity: int | None,
     charge: int | None,
     structures: list | None = None,
+    config_file: str | None = None,
 ):
-    """overwrites information in CalculationData object if given via commandline"""
-    if multiplicity:
+    """overwrites information in CalculationData object if given via commandline
+
+    Warns if the command line changes a charge/multiplicity set by ``config_file``.
+    """
+    if multiplicity is not None:
+        if config_file is not None and multiplicity != calcdata.system.multiplicity:
+            logger.warning(
+                f"Multiplicity {multiplicity} from the command line overrides multiplicity {calcdata.system.multiplicity} from {config_file}."
+            )
         calcdata.system.multiplicity = multiplicity
-    if charge:
+    if charge is not None:
+        if config_file is not None and charge != calcdata.system.charge:
+            logger.warning(
+                f"Charge {charge} from the command line overrides charge {calcdata.system.charge} from {config_file}."
+            )
         calcdata.system.charge = charge
     if structures:
         if len(structures) >= 1:

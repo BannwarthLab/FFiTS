@@ -12,13 +12,13 @@ from ffits.io.toml_parser import overwrite_from_commandline
 from ffits.io.commandline_parser import parse_args
 from ffits.ts_guess.parameterize_ff import parameterize_ff
 from ffits.ts_guess.guess import get_ts_guess_from_xyz
-from ffits.io.print.header import print_program_header
+from ffits.io.print.header import print_program_header, log_last_commit_date
 from ffits.io.print.summary import print_run_summary
 from ffits.ts_guess.rct_path import create_path
 from ffits.forcefield.python_interface.optimization import (
     optimize_with_forcefield_from_file,
 )
-from ffits.external.molbar import anc_optimizer
+from ffits.external.molbar import anc_optimizer, get_priorities
 import sys
 
 logger = logging.getLogger(__name__)
@@ -72,19 +72,28 @@ def run_parameterization_mode(
     logger.warning(
         "In parameterization mode the dihedral values may be different then when the parameterization is performed in a full TS guess calculation as no comparison of reactant and product structures is available."
     )
+    if not calcdata.reactant_calc.ff_parameterization:
+        logger.error(
+            "FF parameterization mode was selected but ff_parameterization is not set to True in the config. Please rethink your choices and either set ff_parameterization to True or do not select --parameterize mode."
+        )
+        sys.exit(1)
     calcdata.reactant_path.xyz_filename = structure_filename
     struc1 = Structure.from_config(
         cd=calcdata,
         calcopt=calcdata.reactant_calc,
         pathdata=calcdata.reactant_path,
     )
-    if not calcdata.reactant_calc.ff_parameterization:
-        logger.error(
-            "FF parameterization mode was selected but ff_parameterization is not set to True in the config. Please rethink your choices and either set ff_parameterization to True or do not select --parameterize mode."
-        )
-        sys.exit(1)
 
-    parameterize_ff(struc1, calcdata.reactant_calc, priorities=None)
+    priorities = None
+    if not calcdata.reactant_calc.only_proper_dihedrals:
+        logger.info(
+            "The option only_proper_dihedrals is set to False. This means that improper dihedrals will be included in the FF, using atom priorities of the given structure."
+        )
+        priorities = get_priorities(
+            struc1.info, bo_threshold=calcdata.reactant_calc.bo_treshold
+        )
+
+    parameterize_ff(struc1, calcdata.reactant_calc, priorities=priorities)
 
 
 def run_reaction_path_mode(
@@ -165,9 +174,10 @@ def main():
     timing_entries: list[str] = []
     timing_mode_start = None
 
-    # Initialize logging - TIMING level if --timing flag, DEBUG if --debug, otherwise INFO
-    log_level = "TIMING" if timing_enabled else "DEBUG" if args.get("debug") else "INFO"
+    # Initialize logging - DEBUG if --debug (also shows TIMING), TIMING if --timing flag, otherwise INFO
+    log_level = "DEBUG" if args.get("debug") else "TIMING" if timing_enabled else "INFO"
     timing_logger = setup_logger(log_level)
+    log_last_commit_date()
 
     if args.get("timing", False) and not is_tsguess_mode:
         timing_logger.warning("--timing is currently supported only for TS guess mode.")
@@ -184,6 +194,7 @@ def main():
             multiplicity=args["multiplicity"],
             charge=args["charge"],
             structures=args["structures"],
+            config_file=args.get("config_file"),
         )
         if args["optff"] is not None:
             run_optimizer_mode(

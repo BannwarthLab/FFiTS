@@ -40,16 +40,37 @@ def _define_bonds_for_molbar(
             "Both struc1 and struc2 must have bond order matrices to define bonds for MolBar."
         )
 
-    mixed_bo_matrix = struc1.bo_matrix + struc2.bo_matrix
-    mol.cn_matrix = np.zeros(mixed_bo_matrix.shape, dtype=int)
+    _set_molbar_connectivity(
+        mol,
+        struc1.bo_matrix + struc2.bo_matrix,
+        struc1.atom_types,
+        bo_threshold=bo_threshold,
+    )
 
-    thresholds = get_bo_threshold_matrix(struc1.atom_types, bo_threshold)
-    for i in range(mixed_bo_matrix.shape[0]):
-        for j in range(i + 1, mixed_bo_matrix.shape[1]):
-            if mixed_bo_matrix[i, j] > thresholds[i, j]:
+
+def _set_molbar_connectivity(
+    mol: Molecule,
+    bo_matrix: np.ndarray,
+    atom_types: np.ndarray,
+    bo_threshold: float = 0.5,
+) -> None:
+    """Fills mol.cn_matrix and mol.cn with the bonds of bo_matrix that exceed the bond order threshold."""
+    mol.cn_matrix = np.zeros(bo_matrix.shape, dtype=int)
+
+    thresholds = get_bo_threshold_matrix(atom_types, bo_threshold)
+    for i in range(bo_matrix.shape[0]):
+        for j in range(i + 1, bo_matrix.shape[1]):
+            if bo_matrix[i, j] > thresholds[i, j]:
                 mol.cn_matrix[i, j] = 1
                 mol.cn_matrix[j, i] = 1
     mol.cn = np.sum(mol.cn_matrix, axis=1)
+
+
+def _molbar_priorities(mol: Molecule) -> dict:
+    """MolBar priorities of mol (connectivity must be set) as a dict atom index -> priority."""
+    _get_topology_barcode(mol)
+    _calculate_priorities(mol)
+    return {i: int(mol.priorities[i]) for i in range(len(mol.priorities))}
 
 
 def get_combinded_priorities(
@@ -77,12 +98,44 @@ def get_combinded_priorities(
         )
 
     _define_bonds_for_molbar(mol, struc1, struc2, bo_threshold=bo_threshold)
-    _get_topology_barcode(mol)
-    _calculate_priorities(mol)
+    priorities = _molbar_priorities(mol)
 
     logger.debug(f"Combined priorities for atoms: {mol.priorities}")
 
-    return {i: int(mol.priorities[i]) for i in range(len(mol.priorities))}
+    return priorities
+
+
+def get_priorities(
+    struc: StructuralInformation,
+    bo_threshold: float = 0.5,
+) -> dict:
+    """Calculates MolBar priorities for each atom from the connectivity of a single structure.
+
+    Used in parameterization mode, where no second structure is available for combined priorities.
+
+    Args:
+        struc (StructuralInformation): Structural information of the structure.
+        bo_threshold (float, optional): Threshold for defining bonds between atom pairs with at least one atom from the third period or higher (e.g. the config value). Pairs of two first/second period atoms always use 0.3. Defaults to 0.5.
+
+    Raises:
+        ValueError: If struc is missing the bond order matrix.
+
+    Returns:
+        dict: Dictionary mapping atom indices to their priorities based on the connectivity of the structure.
+    """
+    if struc.bo_matrix is None:
+        raise ValueError(
+            "struc must have a bond order matrix to define bonds for MolBar."
+        )
+    mol = Molecule(coordinates=struc.xyz, elements=struc.atom_types)
+    _set_molbar_connectivity(
+        mol, struc.bo_matrix, struc.atom_types, bo_threshold=bo_threshold
+    )
+    priorities = _molbar_priorities(mol)
+
+    logger.debug(f"Priorities for atoms: {mol.priorities}")
+
+    return priorities
 
 
 def anc_optimizer(

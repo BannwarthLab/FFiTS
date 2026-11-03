@@ -1,12 +1,14 @@
 """Prints the FFiTS program header (logo, version, build date, citation)."""
 
 import datetime
+import logging
 import textwrap
 import subprocess
 import os
 from pathlib import Path
 from importlib import metadata
 
+logger = logging.getLogger(__name__)
 
 BUILD_INFO_FILE = (
     Path(__file__).resolve().parents[2] / "forcefield" / "fortran" / "build_info.txt"
@@ -22,9 +24,7 @@ def _read_build_info(path: Path = BUILD_INFO_FILE) -> dict:
     """
     try:
         with open(path) as f:
-            return dict(
-                line.strip().split("=", 1) for line in f if "=" in line
-            )
+            return dict(line.strip().split("=", 1) for line in f if "=" in line)
     except OSError:
         return {}
 
@@ -64,6 +64,7 @@ def _get_last_commit_date():
             capture_output=True,
             text=True,
             timeout=5,
+            cwd=Path(__file__).parent,
         )
         if result.returncode == 0:
             # Format: "2024-02-09 10:30:45 +0100" -> extract "2024-02-09 10:30"
@@ -72,6 +73,15 @@ def _get_last_commit_date():
     except Exception:
         pass
     return None
+
+
+def log_last_commit_date():
+    """Logs the date of the last ffits commit at DEBUG level (git only runs in debug mode)."""
+    if not logger.isEnabledFor(logging.DEBUG):
+        return
+    last_commit_date = _get_last_commit_date()
+    if last_commit_date:
+        logger.debug(f"Last commit of ffits: {last_commit_date}")
 
 
 def _load_pyproject_metadata():
@@ -112,8 +122,6 @@ def print_program_header(version: str = None):
 
     build_date = _get_build_date()
 
-    last_commit_date = _get_last_commit_date()
-
     logo = r"""
                 ███████╗███████╗██╗████████╗███████╗                
                 ██╔════╝██╔════╝╚═╝╚══██╔══╝██╔════╝                
@@ -132,8 +140,6 @@ def print_program_header(version: str = None):
     print(f" Build Date:  {build_date}")
     fortran_compiler = _read_build_info().get("fortran_compiler", "unknown")
     print(f" Compiler:    {fortran_compiler}")
-    if last_commit_date:
-        print(f" Last Commit: {last_commit_date}")
     print(f" Authors:     {metadata['authors']}")
     print(f" License:     {metadata['license']}")
     print("-" * 70)

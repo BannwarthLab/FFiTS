@@ -566,6 +566,28 @@ class TestTSCalculationConfig:
         finally:
             os.unlink(temp_path)
 
+    @pytest.mark.parametrize("value", ["reactant", "product"])
+    def test_ts_start_structure_from_config(self, value, tmp_path):
+        """Verify that TS start_structure from config is correctly loaded."""
+        config = tmp_path / "config.toml"
+        config.write_text(f'[ts_guess.calculation]\nstart_structure = "{value}"\n')
+        calcdata = CalculationData.from_config(str(config))
+        assert calcdata.ts_calc.start_structure == value
+
+    def test_ts_start_structure_xyz_file_from_config(self, tmp_path):
+        start = tmp_path / "start.xyz"
+        start.write_text("1\n\nH 0.0 0.0 0.0\n")
+        config = tmp_path / "config.toml"
+        config.write_text(f'[ts_guess.calculation]\nstart_structure = "{start}"\n')
+        calcdata = CalculationData.from_config(str(config))
+        assert calcdata.ts_calc.start_structure == str(start)
+
+    def test_ts_start_structure_missing_file_raises(self, tmp_path):
+        config = tmp_path / "config.toml"
+        config.write_text('[ts_guess.calculation]\nstart_structure = "missing.xyz"\n')
+        with pytest.raises(FileNotFoundError, match="start_structure"):
+            CalculationData.from_config(str(config))
+
     def test_ts_molbar_optimizer_e_tol_from_config(self):
         """Verify that TS molbar_optimizer_e_tol from config is correctly loaded."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
