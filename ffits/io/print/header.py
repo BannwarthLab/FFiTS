@@ -5,6 +5,8 @@ import logging
 import textwrap
 import subprocess
 import os
+import shlex
+import sys
 from pathlib import Path
 from importlib import metadata
 
@@ -107,6 +109,23 @@ def _load_pyproject_metadata():
     return metadata_dict
 
 
+def get_command_line(argv: list[str] | None = None) -> str:
+    """
+    Return the command line ffits was invoked with, shell-quoted so it can be
+    copied and re-run. The program is shown by its basename (``ffits`` for the
+    console script); a direct ``python .../main.py`` call is shown as
+    ``python -m ffits.main``.
+    """
+    argv = list(sys.argv if argv is None else argv)
+    if not argv:
+        return ""
+    prog = os.path.basename(argv[0])
+    args = shlex.join(argv[1:])
+    if prog in ("main.py", "__main__.py"):
+        prog = f"{os.path.basename(sys.executable)} -m ffits.main"
+    return f"{prog} {args}".rstrip()
+
+
 def print_program_header(version: str = None):
     """
     Prints a formatted header for the FFiTS program.
@@ -142,6 +161,8 @@ def print_program_header(version: str = None):
     print(f" Compiler:    {fortran_compiler}")
     print(f" Authors:     {metadata['authors']}")
     print(f" License:     {metadata['license']}")
+    print(f" Command:     {get_command_line()}")
+    print(f" Workdir:     {os.getcwd()}")
     print("-" * 70)
 
     # --- Reference / Citation Info TODO ---

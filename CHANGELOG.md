@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.9.3] - 2026-11-16
+
+### Added
+- **g-xTB check.** With `use_gxtb`, the xTB output is checked for g-xTB. An xtb binary without g-xTB support only warns about `--gxtb`, runs GFN2-xTB instead and exits with code 0; this now raises an error.
+- The ffits header prints the command line ffits was called with and the working directory.
+
+### Changed
+- **Repulsive term.** The sigma of the repulsive term is now the vdW distance divided by 2^(1/6), so the minimum of the full Lennard-Jones potential lies at the vdW distance. To keep the repulsive energy unchanged, `ff_parameter_repulsion` is now `0.002` (was `0.001`). FF csv files written by earlier versions still work on their own, but should not be mixed with new ones.
+- **Missing bond lengths.** A bond present in only one FF now takes the distance between its atoms in the other structure, capped at the vdW distance (with `hydrogen_covalent_radius`, the cap uses the covalent radius of H for covalent H-X bonds). Before, it always took the cap.
+
+### Fixed
+- Structures without dihedrals (e.g. CH4, H2O) crashed in `fill_ff`. Without proper dihedrals, improper dihedrals are now built around atoms with at least three bonded atoms; if there are none, or with `only_proper_dihedrals = true`, the FF has no dihedral terms.
+- Three-atom structures failed, as `(3, nat)` and `(nat, 3)` coordinates have the same shape there.
+- Linear start structures (e.g. HCN) crashed in the molbar optimizer, which needs masses for them.
+
 ## [0.9.2] - 2026-11-03
 
 ### Added

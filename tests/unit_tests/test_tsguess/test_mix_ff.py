@@ -24,7 +24,7 @@ from ffits.ts_guess.mix_ff import (
     mix_reference_values,
 )
 from ffits.datatype.calculation_data import CalculationData
-from ffits.utils.geometry import angle, angstrom2bohr, dihedral_angle
+from ffits.utils.geometry import angle, angstrom2bohr, bondlength, dihedral_angle
 from ffits.datatype.forcefield_data import ForceField
 from tests.test_utils import (
     SMALL_MOLECULE_DIR,
@@ -549,7 +549,8 @@ class TestScaleOneSidedBonds:
 
     def test_close_to_reactant(self):
         mixed = self._mixed(0.99, 0.01)
-        assert mixed[(0, 1)] == pytest.approx(0.99 * 0.4 + 0.01 * 0.2)
+        # k = c**2 is mixed linearly: c = sqrt(f1 * c1**2 + f2 * c2**2)
+        assert mixed[(0, 1)] == pytest.approx(np.sqrt(0.99 * 0.4**2 + 0.01 * 0.2**2))
         assert mixed[(1, 2)] == pytest.approx(0.3)  # reactant weight >= 0.5
         assert mixed[(2, 3)] == pytest.approx(0.5 * 0.02)  # 2 * 0.01
 
@@ -677,14 +678,39 @@ class TestMixReferenceValuesRules:
         )
         return tsff
 
-    def test_bonds_capped_at_vdw(self, infos):
+    def test_existing_bonds_not_capped_at_vdw(self, infos):
         ff1 = _forcefield(
             4, bonds=_term_df("bonds", [((0, 1), 1, 6.0), ((1, 2), 1, 2.0)])
         )
         ff2 = _forcefield(4, bonds=_term_df("bonds", [((0, 1), 1, 3.0)]))
         tsff = self._mix(infos, ff1, ff2)
-        # (0, 1): min(6, vdW 5) and 3; (1, 2): 2 and the vdW distance 5 for the missing bond
-        assert tsff.bonds["reference_value"].tolist() == [4.0, 3.5]
+        # (0, 1): 6 stays above vdW 5
+        assert tsff.bonds["reference_value"].iloc[0] == pytest.approx(4.5)
+
+    def test_only_missing_side_capped_for_long_existing_bond(self, infos):
+        info2 = infos[1]
+        ff1 = _forcefield(4, bonds=_term_df("bonds", [((0, 3), 1, 6.0)]))
+        assert bondlength(info2.fortran_xyz, 0, 3) > 5.0
+        tsff = self._mix(infos, ff1, _forcefield(4))
+        # existing side stays at 6, missing side takes vdW 5
+        assert tsff.bonds["reference_value"].iloc[0] == pytest.approx(5.5)
+
+    def test_missing_bond_takes_distance_of_its_structure(self, infos):
+        info2 = infos[1]
+        ff1 = _forcefield(4, bonds=_term_df("bonds", [((1, 2), 1, 2.0)]))
+        distance = bondlength(info2.fortran_xyz, 1, 2)
+        assert distance < 5.0
+        tsff = self._mix(infos, ff1, _forcefield(4))
+        assert tsff.bonds["reference_value"].iloc[0] == pytest.approx(
+            (2.0 + distance) / 2, abs=1e-7
+        )
+
+    def test_missing_bond_capped_at_vdw(self, infos):
+        info2 = infos[1]
+        ff1 = _forcefield(4, bonds=_term_df("bonds", [((0, 3), 1, 2.0)]))
+        assert bondlength(info2.fortran_xyz, 0, 3) > 5.0
+        tsff = self._mix(infos, ff1, _forcefield(4))
+        assert tsff.bonds["reference_value"].iloc[0] == pytest.approx(3.5)
 
     def test_hydrogen_covalent_radius_only_for_changing_covalent_h_heavy_bonds(
         self, infos
@@ -707,14 +733,29 @@ class TestMixReferenceValuesRules:
             4, bonds=_term_df("bonds", [((0, 1), 1, 3.0), ((0, 3), 1, 2.0)])
         )
         shift = angstrom2bohr(0.91 - 0.32)  # vdW - covalent radius of H
+        info1, info2 = infos
+        dist1 = lambda a, b: bondlength(info1.fortran_xyz, a, b)
+        dist2 = lambda a, b: bondlength(info2.fortran_xyz, a, b)
+        assert dist1(0, 3) > 5.0 - shift > dist2(2, 3)  # only (0, 3) reaches the cap
         tsff = self._mix(infos, ff1, ff2, hydrogen_covalent_radius=True)
         mixed = dict(zip(tsff.bonds["atoms"], tsff.bonds["reference_value"]))
         assert mixed[(0, 1)] == pytest.approx(2.5)  # C-H: present in both
-        assert mixed[(0, 2)] == pytest.approx(3.5)  # C-O: no hydrogen
-        assert mixed[(1, 3)] == pytest.approx(3.5)  # H-h: no heavier element
-        assert mixed[(1, 2)] == pytest.approx(4.75)  # H...O: hydrogen bond only
+        # no covalent radius for these: C-O, H-h and the hydrogen bond H...O
+        assert mixed[(0, 2)] == pytest.approx((2.0 + dist2(0, 2)) / 2, abs=1e-7)
+        assert mixed[(1, 3)] == pytest.approx((2.0 + dist2(1, 3)) / 2, abs=1e-7)
+        assert mixed[(1, 2)] == pytest.approx((4.5 + dist2(1, 2)) / 2, abs=1e-7)
         assert mixed[(0, 3)] == pytest.approx((5.0 - shift + 2.0) / 2)  # C-h forming
-        assert mixed[(2, 3)] == pytest.approx((2.0 + 5.0 - shift) / 2)  # O-h breaking
+        assert mixed[(2, 3)] == pytest.approx((2.0 + dist2(2, 3)) / 2, abs=1e-7)  # O-h
+
+    def test_hydrogen_covalent_radius_not_for_h_bond_cap(self, infos):
+        info2 = infos[1]
+        far = SimpleNamespace(**vars(info2))
+        far.fortran_xyz = info2.fortran_xyz * 10.0
+        ff1 = _forcefield(4, bonds=_term_df("bonds", [((1, 2), 1, 4.5)]))
+        tsff = self._mix(
+            (infos[0], far), ff1, _forcefield(4), hydrogen_covalent_radius=True
+        )
+        assert tsff.bonds["reference_value"].iloc[0] == pytest.approx(4.75)
 
     def test_hydrogen_covalent_radius_not_below_bonded_length(self, infos):
         ff1 = _forcefield(4, bonds=_term_df("bonds", [((2, 3), 1, 4.5)]))
@@ -839,7 +880,9 @@ class TestCreateTsff:
         p2 = dict(zip(ff2.bonds["atoms"], ff2.bonds["parameter"]))
         for atoms, mixed in zip(tsff.bonds["atoms"], tsff.bonds["parameter"]):
             c1, c2 = p1.get(atoms, p2.get(atoms)), p2.get(atoms, p1.get(atoms))
-            assert mixed == pytest.approx(0.7 * c1 + 0.3 * c2, abs=1e-8)
+            assert mixed == pytest.approx(
+                np.sqrt(0.7 * c1**2 + 0.3 * c2**2), abs=1e-8
+            )
 
     def test_matches_example_tsff(self, ff1, info1, ff2, info2, calcdata):
         """Regression test: the default mixing must reproduce the example tsff.csv.

@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "FFiTS"
 copyright = "2026, Daria Babushkina"
 author = "Daria Babushkina"
-release = "0.9.2"
+release = "0.9.3"
 
 extensions = [
     "sphinx.ext.autodoc",

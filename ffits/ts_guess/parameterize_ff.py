@@ -243,7 +243,9 @@ def fit_ff_to_hessian(
         counter += 1
 
         # 1. FF Hessian for the current parameters and its difference to the reference
-        hessian_ff = ff.get_hessian(info.fortran_xyz)
+        # the calculator directly: get_hessian would take (3, 3) bohr coordinates of a
+        # three-atom structure for (nat, 3) Angstrom coordinates
+        hessian_ff = ff.hessian_calculator(info.fortran_xyz, ff)
         hessian_difference = hessian_ff[between_atoms] - reference_entries
 
         # 2. One Newton step for all parameters at once

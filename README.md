@@ -13,7 +13,7 @@
 ***Force Field-interpolated Transition States***
 
 **Author:** *Daria Babushkina*  
-**Version:** 0.9.2  
+**Version:** 0.9.3  
 **Status:** Development   
 **Python:** 3.12, 3.13, 3.14 (tested)     
 **License:** BSD-3-Clause   
@@ -173,7 +173,7 @@ xtb_path = "xtb"
 | `ff_parameterization_stepsize` | float | 0.15 | Step size for FF parameterization optimization |
 | `ff_parameterization_threshold` | float | 0.0005 | Convergence threshold for FF parameterization (lower = more prone to overfitting) |
 | `ff_parameterization_constant_repulsion` | bool | true | If true, do not change repulsive term parameters during fitting |
-| `ff_parameter_repulsion` | float | 0.001 | The FF parameter for all repulsive terms |
+| `ff_parameter_repulsion` | float | 0.002 | The FF parameter for all repulsive terms |
 
 **Example:**
 ```toml
@@ -233,7 +233,8 @@ ff_parameterization = true
 | `factor_reactant` | float | 0.5 | Weight of reactant in TS interpolation (0.0-1.0) |
 | `factor_product` | float | 0.5 | Weight of product in TS interpolation (0.0-1.0). Must sum to 1.0 with factor_reactant |
 | `optimizer` | string | "molbar-optimizer" | Which optimizer to use. Options: `"molbar-optimizer"`, `"scipy-optimizer"` |
-| `hydrogen_covalent_radius` | bool | true | For forming/breaking H–X bonds (X any element but H) that are covalent on the side where they exist, the side where the bond is missing uses the covalent radius of hydrogen (0.32 Å) instead of its vdW radius in the vdW distance, but never less than the bonded length. Covalent means the bond order is above the bond threshold (`bo_treshold`, 0.3 for first/second period pairs), so hydrogen bonds H···A keep the vdW distance |
+| `hydrogen_covalent_radius` | bool | true | For forming/breaking H–X bonds (X any element but H) that are covalent on the side where they exist, the side where the bond is missing, which takes the distance in that structure capped at the vdW distance, uses the covalent radius of hydrogen (0.32 Å) instead of its vdW radius in that cap, but never less than the bonded length. Covalent means the bond order is above the bond threshold (`bo_treshold`, 0.3 for first/second period pairs), so hydrogen bonds H···A keep the vdW distance |
+| `molbar_optimizer_e_tol` | float | 1e-4 | Energy convergence tolerance for molbar optimizer |
 | `molbar_optimizer_x_tol` | float | 1e-2 | Step size tolerance for molbar optimizer |
 | `molbar_optimizer_max_micro_steps` | int | 1 | Maximum micro-steps in molbar optimizer |
 | `energy_threshold_two_optimizations` | float | 0.15 | Energy threshold for repeating optimization from product if reactant path is too high |
@@ -294,7 +295,7 @@ hessian_calc = true
 bo_treshold = 0.0
 ff_parameterization = false
 test_parameterization = false
-ff_parameter_repulsion = 0.01
+ff_parameter_repulsion = 0.002
 ff_parameterization_maxiteration = 1000
 ff_parameterization_stepsize = 0.15
 ff_parameterization_threshold = 0.0005
@@ -312,7 +313,7 @@ hessian_calc = true
 bo_treshold = 0.0
 ff_parameterization = false
 test_parameterization = false
-ff_parameter_repulsion = 0.01
+ff_parameter_repulsion = 0.002
 ff_parameterization_maxiteration = 1000
 ff_parameterization_stepsize = 0.15
 ff_parameterization_threshold = 0.0005

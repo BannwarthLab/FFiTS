@@ -9,8 +9,8 @@
 
 ======================================================================
  Program:     FFiTS  —  Force Field-interpolated Transition States
- Version:     0.9.1
- Build Date:  2026-11-02 13:48
+ Version:     0.9.2
+ Build Date:  2026-11-04 15:01
  Compiler:    IntelLLVM 2026.0.0
  Authors:     Daria Babushkina
  License:     BSD-3-Clause
@@ -70,6 +70,8 @@ If you use FFiTS in your work, please cite:
   Factor (Reactant):                0.50
   Factor (Product):                 0.50
   Perform two optimizations:        True
+  Start structure:                  —
+  Scale one-sided bonds:            False
   Hydrogen covalent radius:         True
   Molbar optimizer E tolerance:     0.0001
   Molbar optimizer X tolerance:     0.01
@@ -84,24 +86,12 @@ If you use FFiTS in your work, please cite:
 ============================================================
 [INFO] xTB will be run with uhf = 0, chrg = 0
 [INFO] Using xTB executable: xtb
-Note: The following floating-point exceptions are signalling: IEEE_DIVIDE_BY_ZERO IEEE_DENORMAL
-normal termination of xtb
-
 [INFO] Hessian calculation for struc1.xyz finished successfully.
-Note: The following floating-point exceptions are signalling: IEEE_DIVIDE_BY_ZERO IEEE_DENORMAL
-normal termination of xtb
-
 [INFO] WBO calculation for struc1.xyz finished successfully.
 [INFO] This structure has 1 seperate molecule(s) based on the WBO data.
 [INFO] xTB will be run with uhf = 0, chrg = 0
 [INFO] Using xTB executable: xtb
-Note: The following floating-point exceptions are signalling: IEEE_DIVIDE_BY_ZERO IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
-normal termination of xtb
-
 [INFO] Hessian calculation for struc2.xyz finished successfully.
-Note: The following floating-point exceptions are signalling: IEEE_DIVIDE_BY_ZERO IEEE_DENORMAL
-normal termination of xtb
-
 [INFO] WBO calculation for struc2.xyz finished successfully.
 [INFO] This structure has 1 seperate molecule(s) based on the WBO data.
 [INFO] The option only_proper_dihedrals is set to False for either the reactant or product structure. This means that improper dihedrals will be included in the TS FF creation and optimization.
@@ -137,13 +127,10 @@ normal termination of xtb
 
   Status:         CONVERGED
   Steps taken:    14
-  Final energy:    0.034582
-  Total time:      0.07 s
-  Message:        Geometry convergence: max distance change 2.20e-03 Å < 1.00e-02 Å over last 5 steps
-Note: The following floating-point exceptions are signalling: IEEE_DIVIDE_BY_ZERO IEEE_DENORMAL
-normal termination of xtb
-
-[INFO] TS guess from reactant: xtb energy = -10.21831348 Eh, converged = True
+  Final energy:    0.034679
+  Total time:      0.05 s
+  Message:        Geometry convergence: max distance change 2.84e-03 Å < 1.00e-02 Å over last 5 steps
+[INFO] TS guess from reactant: xtb energy = -10.21857209 Eh, converged = True
 [INFO] Starting TS guess optimization from product geometry struc2.xyz.
 
 ------------------------------------------------------------
@@ -151,22 +138,19 @@ normal termination of xtb
 
 
   Status:         CONVERGED
-  Steps taken:    19
-  Final energy:    0.034582
-  Total time:      0.09 s
-  Message:        Geometry convergence: max distance change 9.10e-03 Å < 1.00e-02 Å over last 5 steps
-Note: The following floating-point exceptions are signalling: IEEE_DIVIDE_BY_ZERO IEEE_DENORMAL
-normal termination of xtb
-
-[INFO] TS guess from product: xtb energy = -10.21831351 Eh, converged = True
-[INFO] Using TS guess optimized from product (lower xtb energy -10.21831351 Eh).
+  Steps taken:    18
+  Final energy:    0.034679
+  Total time:      0.07 s
+  Message:        Geometry convergence: max distance change 1.36e-03 Å < 1.00e-02 Å over last 5 steps
+[INFO] TS guess from product: xtb energy = -10.21857201 Eh, converged = True
+[INFO] Using TS guess optimized from reactant (lower xtb energy -10.21857209 Eh).
                                                                       
 ======================================================================
  Run Summary
 ======================================================================
  Status:       Calculation COMPLETED
- Start Time:   2026-11-02 13:50:29
- End Time:     2026-11-02 13:50:30
+ Start Time:   2026-11-05 09:24:44
+ End Time:     2026-11-05 09:24:45
  Total Time:   0s
 ======================================================================
 

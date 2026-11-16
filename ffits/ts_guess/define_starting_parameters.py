@@ -162,6 +162,27 @@ def filter_dihedrals(dihedrals: list, priorities: dict, A: np.ndarray) -> list:
     return _remove_duplicate_improper_dihedrals(result)
 
 
+def improper_dihedrals_only(priorities: dict, A: np.ndarray) -> list:
+    """
+    Improper dihedrals for a structure without any chain of three bonds, so without
+    proper dihedrals, built around every atom with at least three bonded atoms.
+
+    Args:
+        priorities: dict mapping atom index to priority value
+        A: adjacency matrix for connectivity checking
+
+    Returns:
+        list of tuples [(dihedral, False), ...], empty if no atom has three bonded atoms
+    """
+    result = []
+    for central_atom in range(len(A)):
+        candidates = _sort_candidates_canonical(
+            set(np.where(A[central_atom])[0]), priorities
+        )
+        _create_improper_dihedrals(central_atom, candidates, result)
+    return _remove_duplicate_improper_dihedrals(result)
+
+
 def _remove_duplicate_proper_dihedrals(dihedrals: list) -> list:
     """
     Remove duplicate dihedrals keeping improper (False) over proper (True) when duplicates exist.
@@ -231,17 +252,17 @@ def fill_ff(
     ff: ForceField,
     info: StructuralInformation,
     priorities: dict = None,
-    repulsive_start: float = 0.01,
+    repulsive_start: float = 0.002,
     bo_threshold: float = 0.0,
     linear_angle_tolerance_deg: float = 5.0,
 ) -> None:
-    """Fills the ForceField object with bonds, angles, dihedrals, and repulsive terms based on the structural information. With priorities, one proper dihedral is kept per central bond and the rest become impropers. Dihedrals on a (near-)linear bond angle are dropped.
+    """Fills the ForceField object with bonds, angles, dihedrals, and repulsive terms based on the structural information. Each hydrogen bond D-H...A adds only its H...A bond and its D-H...A angle, after the covalent terms are built, and its H...A repulsive term is removed. With priorities, one proper dihedral is kept per central bond and the rest become impropers; a structure without proper dihedrals gets impropers around atoms with at least three bonded atoms, if there are any. Dihedrals on a (near-)linear bond angle are dropped.
 
     Args:
         ff (ForceField): ForceField object to be filled with parameters.
         info (StructuralInformation): Structural information for the molecule.
         priorities (dict, optional): Dictionary mapping atom indices to their priorities. Defaults to None.
-        repulsive_start (float, optional): Initial value for the FF parameter of the repulsive terms. Defaults to 0.01.
+        repulsive_start (float, optional): Initial value for the FF parameter of the repulsive terms. Defaults to 0.002.
         bo_threshold (float, optional): Threshold for defining bonds based on bond order, used for all atom pairs with at least one atom from the third period or higher. Pairs of two atoms from the first or second period always use a threshold of 0.3. Defaults to 0.0.
         linear_angle_tolerance_deg (float, optional): A dihedral is dropped if the bond angle at either of its inner two atoms is within this many degrees of 0 or 180. Defaults to 5.0.
 
@@ -326,11 +347,9 @@ def fill_ff(
         return round(dihedral_angle(info.fortran_xyz, i, j, k, l), 8)
 
     def ref_repulsive(atoms):
-        """Reference van der Waals distance for a non-bonded atom pair."""
+        """Lennard-Jones sigma of a non-bonded atom pair, chosen so that the minimum of the full potential (at 2^(1/6) * sigma) lies at the van der Waals distance."""
         i, j = atoms
-        return round(
-            info.vander_matrix[i, j], 8
-        )  # / (2 ** (1 / 6)) For some reason we dont need this and i dont know why
+        return round(info.vander_matrix[i, j] / 2 ** (1 / 6), 8)
 
     # ---- Parameter calculations ----
     def param_bond(atoms):
@@ -393,6 +412,8 @@ def fill_ff(
         filtered_result = filter_dihedrals(
             ff.dihedrals["atoms"].tolist(), priorities, A
         )
+        if not filtered_result:
+            filtered_result = improper_dihedrals_only(priorities, A)
         filtered_result = _remove_duplicate_proper_dihedrals(filtered_result)
         atoms_list = [d[0] for d in filtered_result]
         is_proper = [d[1] for d in filtered_result]
@@ -407,11 +428,14 @@ def fill_ff(
     ff.dihedrals["parameter"] = ff.dihedrals["atoms"].apply(param_dihedral)
 
     # Drop dihedrals built on a (near-)linear bond angle (undefined torsion, diverging Hessian).
-    is_linear = ff.dihedrals.apply(
-        lambda row: _is_at_linear_angle(
-            row["atoms"], row["proper_dihedral"], info, linear_angle_tolerance_deg
-        ),
-        axis=1,
+    is_linear = np.array(
+        [
+            _is_at_linear_angle(atoms, proper, info, linear_angle_tolerance_deg)
+            for atoms, proper in zip(
+                ff.dihedrals["atoms"], ff.dihedrals["proper_dihedral"]
+            )
+        ],
+        dtype=bool,
     )
     if is_linear.any():
         logger.warning(
@@ -424,9 +448,12 @@ def fill_ff(
     ff.repulsive = pd.DataFrame({"type": "repulsive", "atoms": get_repulsive_atoms(A)})
     ff.repulsive["reference_value"] = ff.repulsive["atoms"].apply(ref_repulsive)
     ff.repulsive["parameter"] = ff.repulsive["atoms"].apply(param_repulsive)
-    hydrogen_bonds = _find_hydrogen_bonding(ff=ff, info=info)
 
-    # Add hydrogen bonds to ff.bonds and remove from ff.repulsive
+    # Hydrogen bonds are an add-on to the covalent topology: each D-H...A adds its H...A bond
+    # and its D-H...A angle, but no angles or dihedrals through H...A. Those would be one-sided
+    # terms whenever the hydrogen bond exists in only one structure, with a TS reference mixed
+    # from an arbitrary geometry of the other structure.
+    hydrogen_bonds = _find_hydrogen_bonding(ff=ff, info=info)
     if hydrogen_bonds:
         hbond_bonds = list(hydrogen_bonds.keys())
         # stored like get_angle_atoms (outer atoms sorted), so the same angle in the other FF matches
@@ -439,31 +466,24 @@ def fill_ff(
             for data in hydrogen_bonds.values()
         ]
 
-        # Add hydrogen bonds to bonds dataframe
         hbond_df = pd.DataFrame({"type": "bonds", "atoms": hbond_bonds})
         hbond_df["reference_value"] = hbond_df["atoms"].apply(ref_bond)
         hbond_df["parameter"] = 0.5
         ff.bonds = pd.concat([ff.bonds, hbond_df], ignore_index=True)
-
-        # Sort bonds
         atoms_array = np.array(ff.bonds["atoms"].tolist())
         ff.bonds = ff.bonds.iloc[
             np.lexsort((atoms_array[:, 1], atoms_array[:, 0]))
         ].reset_index(drop=True)
 
-        # Add hydrogen bond angles to angles dataframe
         hangle_df = pd.DataFrame({"type": "angles", "atoms": hbond_angles})
         hangle_df["reference_value"] = hangle_df["atoms"].apply(ref_angle)
         hangle_df["parameter"] = 0.25
         ff.angles = pd.concat([ff.angles, hangle_df], ignore_index=True)
-
-        # Sort angles
         angles_array = np.array(ff.angles["atoms"].tolist())
         ff.angles = ff.angles.iloc[
             np.lexsort((angles_array[:, 2], angles_array[:, 1], angles_array[:, 0]))
         ].reset_index(drop=True)
 
-        # Remove hydrogen bonds from repulsive
         ff.repulsive = ff.repulsive[
             ~ff.repulsive["atoms"].isin(hbond_bonds)
         ].reset_index(drop=True)

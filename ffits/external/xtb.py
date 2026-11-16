@@ -52,8 +52,6 @@ class Xtb:
         self.xtb_alpb_solvent = xtb_alpb_solvent
         self._check_xtb_loaded()
         self.g_xtb = g_xtb
-        # if self.g_xtb:
-        #     self._check_xtb_loaded('g_xtb')
         logger.info(f"xTB will be run with uhf = {self.uhf}, chrg = {self.chrg}")
         logger.info(f"Using xTB executable: {self.xtb_path}")
         if self.g_xtb and self.xtb_alpb_solvent is not None:
@@ -123,7 +121,37 @@ class Xtb:
             raise RuntimeError(
                 f"xTB command {command} failed with code {result.returncode}. See {stderr}:\n{stderr_text}"
             )
+        if self.g_xtb:
+            self._check_gxtb_used(stdout)
         return result.returncode
+
+    # Printed only by the g-xTB SCC; GFN1/GFN2 outputs never contain it.
+    _GXTB_MARKER = "core increment energy"
+
+    def _check_gxtb_used(self, output: Path) -> None:
+        """Make sure that xTB actually ran g-xTB and not GFN2-xTB.
+
+        An xtb binary without g-xTB support only warns about the unknown
+        --gxtb flag, runs GFN2-xTB instead and still exits with code 0.
+
+        Args:
+            output (Path): xTB stdout file
+
+        Raises:
+            RuntimeError: If the output shows that g-xTB was not used.
+        """
+        text = output.read_text(errors="replace")
+        if "Unknown option '--gxtb'" in text:
+            reason = "xTB does not know the --gxtb option"
+        elif self._GXTB_MARKER not in text:
+            reason = f"'{self._GXTB_MARKER}' (printed only by g-xTB) is missing"
+        else:
+            return
+        raise RuntimeError(
+            f"g-xTB was requested, but {output} shows it was not used: {reason}.\n"
+            f"The xTB executable '{self.xtb_path}' probably has no g-xTB support.\n"
+            f"Set [system] >> xtb_path in the config file to an xtb build with g-xTB."
+        )
 
     def _get_command(self, input_xyz: Path, keyword: str) -> str:
         """Build xTB command string."""

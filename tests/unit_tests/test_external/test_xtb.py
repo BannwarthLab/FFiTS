@@ -123,6 +123,71 @@ def test_find_energy_in_output(tmp_path):
     assert energy == pytest.approx(-12.3456)
 
 
+# Excerpts of real xtb outputs (g-xtb 2.0.1 and xtb 6.7.1 on water).
+GXTB_OUT = (
+    "          program call               : xtb h2o.xyz --gxtb\n"
+    "core increment energy         -6.9427417220700E+01 Eh\n"
+    "          | TOTAL ENERGY              -76.437509499718 Eh   |\n"
+)
+PLAIN_XTB_WITH_GXTB_FLAG_OUT = (
+    "          program call               : xtb h2o.xyz --gxtb\n"
+    "-1- prog_main_parseArguments: Unknown option '--gxtb' provided\n"
+    "          |                 G F N 2 - x T B                 |\n"
+    "          | TOTAL ENERGY               -5.070364532464 Eh   |\n"
+)
+GFN2_OUT = (
+    "          program call               : xtb h2o.xyz\n"
+    "          |                 G F N 2 - x T B                 |\n"
+    "          | TOTAL ENERGY               -5.070364532464 Eh   |\n"
+)
+
+
+class TestGxtbCheck:
+    """The output check that g-xTB was really used when g_xtb=True."""
+
+    def test_gxtb_output_passes(self, tmp_path):
+        f = tmp_path / "xtb.out"
+        f.write_text(GXTB_OUT)
+        Xtb(0, 1, g_xtb=True)._check_gxtb_used(f)
+
+    def test_unknown_gxtb_option_raises(self, tmp_path):
+        f = tmp_path / "xtb.out"
+        f.write_text(PLAIN_XTB_WITH_GXTB_FLAG_OUT)
+        with pytest.raises(RuntimeError, match="does not know the --gxtb option"):
+            Xtb(0, 1, g_xtb=True)._check_gxtb_used(f)
+
+    def test_gfn2_output_raises(self, tmp_path):
+        f = tmp_path / "xtb.out"
+        f.write_text(GFN2_OUT)
+        with pytest.raises(RuntimeError, match="g-xTB was requested"):
+            Xtb(0, 1, g_xtb=True)._check_gxtb_used(f)
+
+    @pytest.mark.parametrize(
+        "output, g_xtb, raises",
+        [
+            (GXTB_OUT, True, False),
+            (PLAIN_XTB_WITH_GXTB_FLAG_OUT, True, True),
+            (GFN2_OUT, True, True),
+            (GFN2_OUT, False, False),
+        ],
+    )
+    def test_run_xtb_checks_output(self, tmp_path, output, g_xtb, raises):
+        """_run_xtb runs the check only for g_xtb, even if xtb exits with code 0."""
+        (tmp_path / "fake.out").write_text(output)
+        fake_xtb = tmp_path / "fake_xtb"
+        fake_xtb.write_text(f"#!/bin/sh\ncat {tmp_path / 'fake.out'}\n")
+        fake_xtb.chmod(0o755)
+        xtb = Xtb(0, 1, xtb_path=str(fake_xtb), g_xtb=g_xtb)
+        run_dir = tmp_path / "run"
+        run_dir.mkdir()
+        command = xtb._get_command(Path("h2o.xyz"), "")
+        if raises:
+            with pytest.raises(RuntimeError, match="g-xTB was requested"):
+                xtb._run_xtb(command, run_dir)
+        else:
+            assert xtb._run_xtb(command, run_dir) == 0
+
+
 # =====================================================================
 # INTEGRATION TESTS - Actual xtb calculations
 # =====================================================================

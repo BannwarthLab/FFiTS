@@ -23,7 +23,7 @@ def _define_bonds_for_molbar(
     struc2: StructuralInformation,
     bo_threshold: float = 0.5,
 ) -> None:
-    """Fills mol with connectivity from the combined bond order matrices of struc1 and struc2.
+    """Fills mol with the bonds of both structures: a pair is bonded if it is bonded in struc1 or in struc2.
 
     Args:
         mol (Molecule): MolBar Molecule object to be filled with connectivity information.
@@ -42,7 +42,7 @@ def _define_bonds_for_molbar(
 
     _set_molbar_connectivity(
         mol,
-        struc1.bo_matrix + struc2.bo_matrix,
+        np.maximum(struc1.bo_matrix, struc2.bo_matrix),
         struc1.atom_types,
         bo_threshold=bo_threshold,
     )
@@ -198,7 +198,8 @@ def anc_optimizer(
         energy_func=ff.get_energy,
         gradient_func=gradient_angstrom,
         hessian_func=hessian_angstrom,
-        masses=None,  # Optional: provide atomic masses
+        # only used to find the axis of a linear molecule, which the masses do not change
+        masses=np.ones(len(atom_types)),
         trust_radius=0.1,
         e_tol=e_tol,
         x_tol=x_tol,

@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 from ffits.external.molbar import (
@@ -5,6 +7,7 @@ from ffits.external.molbar import (
     get_priorities,
     _define_bonds_for_molbar,
 )
+from ffits.utils.bond_threshold import get_bo_threshold_matrix
 from molbar.molecule.molecule import Molecule
 from tests.test_utils import reactant_structure_main, product_structure_main
 
@@ -35,14 +38,35 @@ class TestDefineBondsForMolbar:
             product_structure.info,
             bo_threshold=bo_threshold,
         )
-        for i in range(mol.cn_matrix.shape[0]):
-            for j in range(1, mol.cn_matrix.shape[1]):
-                if mol.cn_matrix[i, j] == 1:
-                    assert (
-                        reactant_structure.info.bo_matrix[i, j]
-                        + product_structure.info.bo_matrix[i, j]
-                        > bo_threshold
-                    )
+        thresholds = get_bo_threshold_matrix(
+            reactant_structure.info.atom_types, bo_threshold
+        )
+        bonded = (reactant_structure.info.bo_matrix > thresholds) | (
+            product_structure.info.bo_matrix > thresholds
+        )
+        np.fill_diagonal(bonded, False)
+        assert np.array_equal(mol.cn_matrix, bonded.astype(int))
+
+    def test_weak_pair_in_both_structures_is_not_a_bond(self):
+        """Bond orders of the two structures are not added up."""
+        atom_types = np.array(["C", "C"])
+        bo = np.array([[0.0, 0.2], [0.2, 0.0]])
+        struc = SimpleNamespace(bo_matrix=bo, atom_types=atom_types)
+        mol = Molecule(coordinates=np.eye(2, 3), elements=atom_types)
+        _define_bonds_for_molbar(mol, struc, struc)
+        assert mol.cn_matrix[0, 1] == 0
+
+    def test_bond_of_one_structure_is_included(self):
+        """A bond that exists in only one structure is part of the connectivity."""
+        atom_types = np.array(["C", "C"])
+        bonded = SimpleNamespace(
+            bo_matrix=np.array([[0.0, 0.9], [0.9, 0.0]]), atom_types=atom_types
+        )
+        broken = SimpleNamespace(bo_matrix=np.zeros((2, 2)), atom_types=atom_types)
+        for struc1, struc2 in ((bonded, broken), (broken, bonded)):
+            mol = Molecule(coordinates=np.eye(2, 3), elements=atom_types)
+            _define_bonds_for_molbar(mol, struc1, struc2)
+            assert mol.cn_matrix[0, 1] == 1
 
     def test_cn_matrix_is_symmetric(self, reactant_structure, product_structure):
         """Test that the connectivity matrix is symmetric."""
