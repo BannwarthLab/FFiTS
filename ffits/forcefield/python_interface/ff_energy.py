@@ -26,7 +26,7 @@ def _create_term_arrays(df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.nd
 
 def _check_geometry(xyz_displaced: np.ndarray, ff: ForceField) -> None:
     """Raise if the geometry is not column-major or its atom count doesn't match the force field."""
-    if np.shape(xyz_displaced) == (ff.nat, 3):
+    if np.shape(xyz_displaced)[0] != 3:
         raise Exception("Please give xyz in column-major format.")
 
     if np.shape(xyz_displaced)[1] != ff.nat:

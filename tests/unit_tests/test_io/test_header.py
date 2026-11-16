@@ -149,3 +149,22 @@ def test_log_last_commit_date_skips_git_without_debug(monkeypatch, caplog):
     with caplog.at_level(logging.INFO, logger="ffits"):
         log_last_commit_date()
     assert "Last commit" not in caplog.text
+
+
+def test_get_command_line_console_script():
+    argv = ["/some/venv/bin/ffits", "r.xyz", "p.xyz", "-c", "1", "--config", "my cfg.toml"]
+    assert header_mod.get_command_line(argv) == "ffits r.xyz p.xyz -c 1 --config 'my cfg.toml'"
+
+
+def test_get_command_line_module_call(monkeypatch):
+    monkeypatch.setattr(header_mod.sys, "executable", "/usr/bin/python3")
+    assert header_mod.get_command_line(["/x/ffits/main.py", "a.xyz"]) == "python3 -m ffits.main a.xyz"
+    assert header_mod.get_command_line(["/x/ffits/main.py"]) == "python3 -m ffits.main"
+
+
+def test_print_program_header_shows_command(monkeypatch, capsys):
+    monkeypatch.setattr(header_mod.sys, "argv", ["/bin/ffits", "r.xyz", "p.xyz"])
+    print_program_header()
+    out = capsys.readouterr().out
+    assert "Command:     ffits r.xyz p.xyz" in out
+    assert "Workdir:" in out

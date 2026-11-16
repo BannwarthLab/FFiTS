@@ -4,6 +4,7 @@ from ffits.datatype.structure_data import (
     angstrom2bohr,
 )
 
+from ffits.datatype.calculation_data import CalculationOptions
 from ffits.datatype.forcefield_data import ForceField
 import numpy as np
 import pandas as pd
@@ -332,12 +333,51 @@ class TestFillForceField:
 
         for row in ff.repulsive.itertuples():
             i, j = row.atoms
-            assert row.reference_value == pytest.approx(vdw[i, j], abs=1e-7)
+            # sigma: the minimum of the full LJ potential lies at the vdW distance
+            assert row.reference_value == pytest.approx(
+                vdw[i, j] / 2 ** (1 / 6), abs=1e-7
+            )
             # repulsive_start=0.0 was passed above; every repulsive term
             # starts at that constant regardless of atom pair.
             assert row.parameter == pytest.approx(0.0, abs=1e-9)
 
-        # Van der Waals (repulsive) reference distances should be a
-        # physically reasonable magnitude in Bohr, independent of exactly
-        # which geometry the fixture currently holds.
+        # Lennard-Jones sigmas should be a physically reasonable magnitude in
+        # Bohr, independent of exactly which geometry the fixture currently holds.
         assert all(ff.repulsive["reference_value"] > 3.0)
+
+    def test_three_atom_structure(self):
+        """(3, nat) coordinates of a three-atom structure are not taken for (nat, 3)."""
+        xyz = np.array([[0.0, 0.0, 0.0], [0.96, 0.0, 0.0], [-0.24, 0.93, 0.0]])
+        info = StructuralInformation(
+            3, xyz, {(0, 1): 0.9, (0, 2): 0.9}, np.array(["O", "H", "H"])
+        )
+        ff = ForceField(
+            3,
+            "dummy_path",
+            readff=False,
+            energy_calculator=energy_ff,
+            gradient_calculator=complete_gradient,
+            hessian_calculator=complete_hessian,
+        )
+        fill_ff(ff, info)
+
+        assert energy_ff(info.fortran_xyz, ff) == pytest.approx(ff.get_energy(xyz))
+        np.testing.assert_allclose(
+            complete_gradient(info.fortran_xyz, ff), ff.get_gradient(xyz)
+        )
+        np.testing.assert_allclose(
+            complete_hessian(info.fortran_xyz, ff), ff.get_hessian(xyz)
+        )
+
+    def test_repulsive_energy_equals_former_definition(self):
+        """sigma = vdW / 2^(1/6) with c = 0.002 gives the energy of the former sigma = vdW with c = 0.001."""
+        info = StructuralInformation(NAT, XYZ, WBO, ATOM_TYPES)
+        ff = ForceField(NAT, "dummy_path", readff=False)
+        fill_ff(ff, info, repulsive_start=CalculationOptions().ff_parameter_repulsion)
+
+        for row in ff.repulsive.itertuples():
+            i, j = row.atoms
+            r = bondlength(info.fortran_xyz, i, j)
+            former = 4 * 0.001**2 * (info.vander_matrix[i, j] / r) ** 12
+            current = 4 * row.parameter**2 * (row.reference_value / r) ** 12
+            assert current == pytest.approx(former, rel=1e-6)

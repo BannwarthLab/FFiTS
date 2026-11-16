@@ -155,7 +155,7 @@ class CalculationOptions:
     only_proper_dihedrals: bool = False
     ff_parameterization: bool = True
     test_parameterization: bool = False
-    ff_parameter_repulsion: float = 0.001
+    ff_parameter_repulsion: float = 0.002
     ff_parameterization_maxiteration: int = 1000
     ff_parameterization_stepsize: float = 0.15
     ff_parameterization_threshold: float = 0.0005
@@ -175,7 +175,7 @@ class TSCalculationOptions:
         optimizer (str): Optimizer to use ("molbar-optimizer" or "scipy-optimizer").
         hydrogen_covalent_radius (bool): For forming or breaking H-X bonds (X any element but H) that are covalent on the
             side where they exist, use the covalent radius of hydrogen (0.32 Angstrom, Mantina et al.) instead of its van der
-            Waals radius in the van der Waals distance of the side where the bond is missing, but never less than the
+            Waals radius in the van der Waals distance that caps the side where the bond is missing, but never less than the
             bonded length. Hydrogen bonds H...A keep the van der Waals distance.
         perform_two_optimizations (bool): Optimize on the TS FF from both reactant and product and keep the result with the lower xtb singlepoint energy.
         start_structure (str): Start geometry of the TS optimization: "reactant", "product" or the path to an xyz file with

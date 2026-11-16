@@ -427,6 +427,60 @@ class TestFindHydrogenBonding:
         assert result[(0, 2)]["bonded_atom"] == 1
 
 
+class TestFillFFWithoutProperDihedrals:
+    """Structures without a chain of three bonds get impropers, or no dihedrals at all."""
+
+    @staticmethod
+    def _filled_ff(atom_types, xyz, wbo, priorities=True):
+        nat = len(atom_types)
+        ff = ForceField(nat=nat, ff_filename="s")
+        info = StructuralInformation(
+            nat=nat,
+            xyz=np.array(xyz, dtype=float),
+            wbo_dict=wbo,
+            atom_types=np.array(atom_types),
+            hessian=np.zeros((3 * nat, 3 * nat)),
+        )
+        fill_ff(ff, info, priorities={i: 1 for i in range(nat)} if priorities else None)
+        return ff
+
+    @pytest.fixture
+    def nh3(self):
+        return (
+            ["N", "H", "H", "H"],
+            [[0, 0, 0.1], [0, 0.94, -0.3], [0.81, -0.47, -0.3], [-0.81, -0.47, -0.3]],
+            {(0, 1): 0.95, (0, 2): 0.95, (0, 3): 0.95},
+        )
+
+    def test_improper_around_atom_with_three_neighbors(self, nh3):
+        ff = self._filled_ff(*nh3)
+        assert ff.dihedrals["atoms"].tolist() == [(0, 1, 2, 3)]
+        assert ff.dihedrals["proper_dihedral"].tolist() == [False]
+        assert ff.dihedrals["parameter"].iloc[0] > 0
+
+    def test_methane_gets_one_improper(self):
+        t = 0.63
+        xyz = [[0, 0, 0], [t, t, t], [-t, -t, t], [-t, t, -t], [t, -t, -t]]
+        wbo = {(0, i): 0.95 for i in range(1, 5)}
+        ff = self._filled_ff(["C", "H", "H", "H", "H"], xyz, wbo)
+        assert len(ff.dihedrals) == 1
+        assert ff.dihedrals["atoms"].iloc[0][0] == 0
+
+    def test_no_impropers_with_only_proper_dihedrals(self, nh3):
+        ff = self._filled_ff(*nh3, priorities=False)
+        assert ff.dihedrals.empty
+
+    @pytest.mark.parametrize("priorities", [True, False])
+    def test_no_dihedrals_if_no_atom_has_three_neighbors(self, priorities):
+        xyz = [[0, 0, 0], [0.96, 0, 0], [-0.24, 0.93, 0]]
+        ff = self._filled_ff(
+            ["O", "H", "H"], xyz, {(0, 1): 0.9, (0, 2): 0.9}, priorities
+        )
+        assert ff.dihedrals.empty
+        assert len(ff.bonds) == 2
+        assert len(ff.angles) == 1
+
+
 class TestFillFFHydrogenBonds:
     """H-bond terms added by fill_ff are stored like all other terms."""
 
@@ -459,4 +513,37 @@ class TestFillFFHydrogenBonds:
         assert (4, 2) not in ff.bonds["atoms"].tolist()
         assert (1, 2, 4) in ff.angles["atoms"].tolist()
         assert (4, 2, 1) not in ff.angles["atoms"].tolist()
+        assert (2, 4) not in ff.repulsive["atoms"].tolist()
+
+    def test_hbond_is_addon_only(self):
+        """The H-bond adds only its H...A bond and D-H...A angle, no other angles or dihedrals through it."""
+        # H3C-O-H...O=CH2 of the test above, with O-H...O bent by 20 degrees
+        xyz = np.array(
+            [
+                [3.1, 1.2, 0.3],  # C
+                [2.6, 0.0, 0.0],  # O (donor)
+                [1.6, 0.0, 0.0],  # H
+                [-0.9, 1.7, 0.5],  # C
+                [-0.1, 0.6, 0.0],  # O (acceptor)
+                [4.1, 1.4, 0.8],  # H
+            ]
+        )
+        ff = ForceField(nat=6, ff_filename="s")
+        info = StructuralInformation(
+            nat=6,
+            xyz=xyz,
+            wbo_dict={(0, 1): 1.0, (1, 2): 0.9, (3, 4): 2.0, (0, 5): 1.0},
+            atom_types=np.array(["C", "O", "H", "C", "O", "H"]),
+            hessian=np.zeros((18, 18)),
+        )
+
+        fill_ff(ff, info)
+
+        angles = dict(zip(ff.angles["atoms"], ff.angles["parameter"]))
+        assert angles[(1, 2, 4)] == 0.25  # donor-H...acceptor
+        assert (2, 4, 3) not in angles and (3, 4, 2) not in angles  # no H...O=C
+        bonds = dict(zip(ff.bonds["atoms"], ff.bonds["parameter"]))
+        assert bonds[(2, 4)] == 0.5
+        dihedrals = [set(d) for d in ff.dihedrals["atoms"]]
+        assert not any({2, 4} <= d for d in dihedrals)  # nothing through H...O
         assert (2, 4) not in ff.repulsive["atoms"].tolist()

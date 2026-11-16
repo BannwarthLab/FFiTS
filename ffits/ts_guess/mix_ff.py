@@ -4,7 +4,7 @@ import logging
 import numpy as np
 import pandas as pd
 from ffits.data.vanderwaals_radii import VANDER_VALUES, ATOMIC_RADII_TRUHLAR
-from ffits.utils.geometry import angle, angstrom2bohr, dihedral_angle
+from ffits.utils.geometry import angle, angstrom2bohr, bondlengths, dihedral_angle
 from ffits.datatype.forcefield_data import ForceField
 from ffits.datatype.structure_data import StructuralInformation
 from ffits.datatype.calculation_data import CalculationData
@@ -144,7 +144,9 @@ def mix_parameters(
     fact2: float,
     scale_one_sided: bool = False,
 ):
-    """Fill tsff_df['parameter'] with the fact1/fact2-weighted average of ff1_df/ff2_df, in place.
+    """Fill tsff_df['parameter'] with sqrt(fact1 * c1**2 + fact2 * c2**2) of ff1_df/ff2_df, in place.
+
+    The force constant k = c**2 is mixed linearly.
 
     Terms missing in one FF take the value of the other FF. With
     ``scale_one_sided``, such a term is additionally multiplied by
@@ -159,7 +161,7 @@ def mix_parameters(
     c2 = _lookup(atoms, ff2_df, "parameter")
     only2, only1 = np.isnan(c1), np.isnan(c2)
     c1, c2 = np.where(only2, c2, c1), np.where(only1, c1, c2)
-    mixed = c1 * fact1 + c2 * fact2
+    mixed = np.sqrt(c1**2 * fact1 + c2**2 * fact2)
     if scale_one_sided:
         mixed = np.where(only1, mixed * min(1.0, 2 * fact1), mixed)
         mixed = np.where(only2, mixed * min(1.0, 2 * fact2), mixed)
@@ -213,10 +215,10 @@ def _mix_reference(
 ):
     """Fill tsff_df['reference_value'] for one term type ('bonds'/'angles'/'dihedrals'/'repulsive').
 
-    Missing reference values on either side fall back to the van der Waals
-    distance (bonds), the geometric angle/dihedral computed directly from the
-    corresponding structure (angles/dihedrals) or the value of the other FF
-    (repulsive). ``mixer_kwargs`` are passed on to the mixer of ``calctype``.
+    Missing reference values on either side fall back to the geometric
+    distance/angle/dihedral computed directly from the corresponding structure
+    (bonds, capped at the van der Waals distance; angles/dihedrals) or the value
+    of the other FF (repulsive). ``mixer_kwargs`` are passed on to the mixer of ``calctype``.
     """
     _check_factors(fact1, fact2)
     if tsff_df.empty:
@@ -242,23 +244,28 @@ def _mix_bond_references(
     f2,
     hydrogen_covalent_radius: bool = False,
 ) -> np.ndarray:
-    """Bond lengths, each capped at the van der Waals distance of its structure.
+    """Bond lengths, missing ones capped at the van der Waals distance of their structure.
 
-    A bond missing on one side (forming or breaking) takes the van der Waals
-    distance there. With ``hydrogen_covalent_radius``, a forming/breaking bond
-    between hydrogen and a heavier element X that is covalent on the side where
-    it exists (an edge of ``complete_graph``) uses the covalent instead of the
-    van der Waals radius of hydrogen on the missing side, but never less than
-    the bonded length. Hydrogen bonds H...A added to the bonds keep the van der
-    Waals distance.
+    A bond present in a force field keeps its reference length. A bond missing
+    on one side (forming or breaking) takes the distance between its atoms in
+    that structure, capped at the van der Waals distance, which makes the result
+    independent of the relative position of separated molecules. With
+    ``hydrogen_covalent_radius``, a forming/breaking bond between hydrogen and a
+    heavier element X that is covalent on the side where it exists (an edge of
+    ``complete_graph``) uses the covalent instead of the van der Waals radius of
+    hydrogen in the cap of the missing side, but never less than the bonded
+    length. Hydrogen bonds H...A added to the bonds keep the van der Waals
+    distance as cap.
     """
     idx = np.array(atoms, dtype=int)
     i, j = idx[:, 0], idx[:, 1]
     vander1 = info1.vander_matrix[i, j]
     vander2 = info2.vander_matrix[i, j]
     breaking, forming = np.isnan(val2), np.isnan(val1)
-    val1 = np.fmin(val1, vander1)  # fmin also replaces missing (NaN) values
-    val2 = np.fmin(val2, vander2)
+    dist1 = bondlengths(info1.fortran_xyz, idx)
+    dist2 = bondlengths(info2.fortran_xyz, idx)
+    val1 = np.where(forming, np.minimum(dist1, vander1), val1)
+    val2 = np.where(breaking, np.minimum(dist2, vander2), val2)
     if hydrogen_covalent_radius:
         is_h = np.char.capitalize(np.asarray(info1.atom_types, dtype=str))[idx] == "H"
         h_heavy = is_h[:, 0] != is_h[:, 1]  # exactly one hydrogen
@@ -269,8 +276,10 @@ def _mix_bond_references(
         shift = angstrom2bohr(
             VANDER_VALUES[0] - ATOMIC_RADII_TRUHLAR[0]
         )  # H: vdW - cov
-        val2 = np.where(breaking, np.fmax(vander2 - shift, val1), val2)
-        val1 = np.where(forming, np.fmax(vander1 - shift, val2), val1)
+        missing2 = np.minimum(dist2, vander2 - shift)
+        missing1 = np.minimum(dist1, vander1 - shift)
+        val2 = np.where(breaking, np.maximum(missing2, val1), val2)
+        val1 = np.where(forming, np.maximum(missing1, val2), val1)
     return val1 * f1 + val2 * f2
 
 
